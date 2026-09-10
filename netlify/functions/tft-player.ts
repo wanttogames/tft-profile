@@ -1,0 +1,329 @@
+import type { Account, Asset, Game, League, Match, PlayerData } from '../../src/types/riot';
+export class ApiError extends Error {
+  constructor(
+    public status: number,
+    message: string,
+    public retryAfter = 0,
+  ) {
+    super(message);
+  }
+}
+type Entry<T> = { value: T; expires: number };
+const cache = new Map<string, Entry<unknown>>();
+const pending = new Map<string, Promise<unknown>>();
+let cooldown = 0;
+const recentRequests: number[] = [];
+const pause = (ms: number) => new Promise((r) => setTimeout(r, ms));
+export async function cached<T>(key: string, ttl: number, fn: () => Promise<T>): Promise<T> {
+  const hit = cache.get(key);
+  if (hit && hit.expires > Date.now()) return hit.value as T;
+  if (pending.has(key)) return pending.get(key) as Promise<T>;
+  const promise = fn()
+    .then((value) => {
+      if (cache.size >= 500) cache.delete(cache.keys().next().value!);
+      cache.set(key, { value, expires: Date.now() + ttl });
+      return value;
+    })
+    .finally(() => pending.delete(key));
+  pending.set(key, promise);
+  return promise;
+}
+async function reserve() {
+  while (true) {
+    if (Date.now() < cooldown)
+      throw new ApiError(
+        429,
+        '요청 한도에 도달했습니다. 잠시 후 다시 검색해 주세요.',
+        Math.ceil((cooldown - Date.now()) / 1000),
+      );
+    const now = Date.now();
+    while (recentRequests.length && recentRequests[0]! < now - 120000) recentRequests.shift();
+    if (recentRequests.length >= 90)
+      throw new ApiError(429, '조회가 많아 잠시 쉬고 있습니다. 약 2분 뒤 다시 검색해 주세요.', 120);
+    const last = recentRequests.at(-1) || 0;
+    if (now - last >= 80) {
+      recentRequests.push(now);
+      return;
+    }
+    await pause(80 - (now - last));
+  }
+}
+async function riot<T>(host: string, path: string, key: string): Promise<T> {
+  await reserve();
+  let r: Response;
+  try {
+    r = await fetch(`https://${host}.api.riotgames.com${path}`, {
+      headers: { 'X-Riot-Token': key },
+      signal: AbortSignal.timeout(7000),
+    });
+  } catch {
+    throw new ApiError(504, 'Riot API 응답이 지연되고 있습니다. 잠시 후 다시 시도해 주세요.');
+  }
+  if (!r.ok) {
+    if (r.status === 429) {
+      const raw = Number(r.headers.get('retry-after'));
+      const seconds = Number.isFinite(raw) && raw > 0 ? Math.min(raw, 300) : 120;
+      cooldown = Date.now() + seconds * 1000;
+      throw new ApiError(
+        429,
+        'Riot API 요청 한도에 도달했습니다. 안내된 시간 후 다시 시도해 주세요.',
+        seconds,
+      );
+    }
+    const messages: Record<number, string> = {
+      401: 'Riot API Key 인증에 실패했습니다.',
+      403: 'Riot API Key가 만료되었거나 TFT API 권한이 없습니다.',
+      404: '플레이어 또는 경기 정보를 찾을 수 없습니다. Riot ID와 한국 서버를 확인해 주세요.',
+    };
+    throw new ApiError(
+      r.status >= 500 ? 502 : r.status,
+      messages[r.status] || 'Riot API에서 요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+    );
+  }
+  return r.json() as Promise<T>;
+}
+/** Bounded fan-out; no new work starts after any request fails, including 429. */
+export async function limitedMap<T, R>(
+  input: T[],
+  limit: number,
+  fn: (v: T) => Promise<R>,
+): Promise<R[]> {
+  const output: R[] = new Array(input.length);
+  let next = 0;
+  let failed = false;
+  let failure: unknown;
+  await Promise.all(
+    Array.from({ length: Math.min(limit, input.length) }, async () => {
+      while (!failed) {
+        const i = next++;
+        if (i >= input.length) return;
+        try {
+          output[i] = await fn(input[i]!);
+        } catch (e) {
+          failed = true;
+          failure = e;
+        }
+      }
+    }),
+  );
+  if (failed) throw failure;
+  return output;
+}
+function validMatch(m: Match): boolean {
+  return (
+    !!m?.metadata?.match_id &&
+    Number.isFinite(m?.info?.game_datetime) &&
+    Number.isFinite(m.info.game_length) &&
+    typeof m.info.game_version === 'string' &&
+    Number.isInteger(m.info.tft_set_number) &&
+    Number.isInteger(m.info.queue_id) &&
+    Array.isArray(m.info.participants)
+  );
+}
+export function toGame(m: Match, puuid: string): Game | null {
+  if (!validMatch(m)) throw new ApiError(502, 'Riot 경기 데이터 형식을 확인할 수 없습니다.');
+  if (m.info.queue_id !== 1100) return null;
+  const p = m.info.participants.find((p) => p.puuid === puuid);
+  if (!p) return null;
+  if (
+    !Number.isInteger(p.placement) ||
+    p.placement < 1 ||
+    p.placement > 8 ||
+    !Number.isFinite(p.level) ||
+    !Number.isFinite(p.last_round) ||
+    !Number.isFinite(p.time_eliminated) ||
+    !Array.isArray(p.units) ||
+    !Array.isArray(p.traits) ||
+    p.units.some(
+      (u) =>
+        typeof u.character_id !== 'string' ||
+        !Number.isInteger(u.tier) ||
+        u.tier < 1 ||
+        u.tier > 4 ||
+        !Array.isArray(u.items) ||
+        (u.itemNames !== undefined &&
+          (!Array.isArray(u.itemNames) || u.itemNames.some((i) => typeof i !== 'string'))),
+    ) ||
+    p.traits.some(
+      (t) =>
+        typeof t.name !== 'string' ||
+        !Number.isFinite(t.num_units) ||
+        !Number.isFinite(t.tier_current),
+    )
+  )
+    throw new ApiError(502, 'Riot 참가자 데이터 형식을 확인할 수 없습니다.');
+  return {
+    id: m.metadata.match_id,
+    date: m.info.game_datetime,
+    duration: m.info.game_length,
+    version: m.info.game_version,
+    set: m.info.tft_set_number,
+    player: {
+      puuid: p.puuid,
+      placement: p.placement,
+      level: p.level,
+      last_round: p.last_round,
+      time_eliminated: p.time_eliminated,
+      units: p.units.map((u) => ({
+        character_id: u.character_id,
+        tier: u.tier,
+        rarity: u.rarity,
+        items: u.items,
+        itemNames: u.itemNames,
+      })),
+      traits: p.traits.map((t) => ({
+        name: t.name,
+        num_units: t.num_units,
+        style: t.style,
+        tier_current: t.tier_current,
+        tier_total: t.tier_total,
+      })),
+    },
+  };
+}
+async function staticJson(url: string) {
+  const r = await fetch(url, { signal: AbortSignal.timeout(4500) });
+  if (!r.ok) throw new Error('static');
+  return r.json();
+}
+async function assetsFor(version: string): Promise<Record<string, Asset>> {
+  const patch = version.match(/(?:Version\s+)?(\d+)\.(\d+)\./);
+  if (!patch) return {};
+  return cached('assets:' + patch[1] + '.' + patch[2], 3600000, async () => {
+    const versions = await cached<string[]>('versions', 3600000, () =>
+      staticJson('https://ddragon.leagueoflegends.com/api/versions.json'),
+    );
+    const v = versions.find((v) => v.startsWith(`${patch[1]}.${patch[2]}.`));
+    if (!v) return {};
+    const result: Record<string, Asset> = {};
+    await Promise.all(
+      ['champion', 'trait', 'item'].map(async (type) => {
+        const json = await staticJson(
+          `https://ddragon.leagueoflegends.com/cdn/${v}/data/ko_KR/tft-${type}.json`,
+        );
+        for (const [id, raw] of Object.entries(json.data || {})) {
+          const x = raw as {
+            name: string;
+            id?: string;
+            tier?: number;
+            image?: { full: string; group: string };
+          };
+          if (typeof x.name !== 'string') continue;
+          const a: Asset = {
+            name: x.name,
+            cost: type === 'champion' ? x.tier : undefined,
+            image: x.image
+              ? `https://ddragon.leagueoflegends.com/cdn/${v}/img/${encodeURIComponent(x.image.group)}/${encodeURIComponent(x.image.full)}`
+              : undefined,
+          };
+          result[id] = a;
+          if (x.id) result[x.id] = a;
+        }
+      }),
+    );
+    return result;
+  });
+}
+export async function loadPlayer(
+  gameName: string,
+  tagLine: string,
+  key: string,
+): Promise<PlayerData> {
+  return cached(`player:${gameName.toLowerCase()}#${tagLine.toLowerCase()}`, 120000, async () => {
+    const enc = encodeURIComponent;
+    const account = await riot<Account>(
+      'asia',
+      `/riot/account/v1/accounts/by-riot-id/${enc(gameName)}/${enc(tagLine)}`,
+      key,
+    );
+    if (typeof account?.puuid !== 'string')
+      throw new ApiError(502, 'Riot 계정 데이터 형식을 확인할 수 없습니다.');
+    const [leagues, ids] = await Promise.all([
+      riot<League[]>('kr', `/tft/league/v1/by-puuid/${enc(account.puuid)}`, key),
+      riot<string[]>(
+        'asia',
+        `/tft/match/v1/matches/by-puuid/${enc(account.puuid)}/ids?start=0&count=30`,
+        key,
+      ),
+    ]);
+    if (!Array.isArray(ids) || ids.some((id) => typeof id !== 'string') || !Array.isArray(leagues))
+      throw new ApiError(502, 'Riot 전적 데이터 형식을 확인할 수 없습니다.');
+    const matches = await limitedMap([...new Set(ids)].slice(0, 30), 3, (id) =>
+      cached<Match>('match:' + id, 3600000, () =>
+        riot('asia', `/tft/match/v1/matches/${enc(id)}`, key),
+      ),
+    );
+    const eligible = matches
+      .map((m) => toGame(m, account.puuid))
+      .filter((g): g is Game => !!g)
+      .sort((a, b) => b.date - a.date);
+    const set = eligible[0]?.set;
+    const games = eligible.filter((g) => g.set === set).slice(0, 20);
+    const warnings: string[] = [];
+    if (games.length < 20)
+      warnings.push(
+        `최근 ${ids.length}경기를 조회해 최신 플레이 세트의 랭크 ${games.length}경기를 찾았습니다. 일반·더블 업·이전 세트는 제외합니다.`,
+      );
+    let assets: Record<string, Asset> = {};
+    if (games[0])
+      try {
+        assets = await assetsFor(games[0].version);
+      } catch {
+        warnings.push('공식 정적 데이터를 불러오지 못해 일부 이름을 Riot 식별자로 표시합니다.');
+      }
+    const used = new Set(
+      games.flatMap((g) => [
+        ...g.player.units.flatMap((u) => [
+          u.character_id,
+          ...(u.itemNames?.length ? u.itemNames : u.items.map(String)),
+        ]),
+        ...g.player.traits.map((t) => t.name),
+      ]),
+    );
+    assets = Object.fromEntries(Object.entries(assets).filter(([id]) => used.has(id)));
+    return {
+      account: {
+        puuid: account.puuid,
+        gameName: account.gameName || gameName,
+        tagLine: account.tagLine || tagLine,
+      },
+      rank: leagues.find((l) => l.queueType === 'RANKED_TFT') || null,
+      games,
+      assets,
+      warnings,
+      fetchedAt: Date.now(),
+      scanned: ids.length,
+    };
+  });
+}
+export default async function handler(request: Request): Promise<Response> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Cache-Control': 'no-store',
+  };
+  try {
+    if (request.method !== 'GET')
+      return Response.json(
+        { message: 'GET 요청만 지원합니다.' },
+        { status: 405, headers: { ...headers, Allow: 'GET' } },
+      );
+    const params = new URL(request.url).searchParams;
+    const name = (params.get('gameName') || '').trim(),
+      tag = (params.get('tagLine') || '').trim().replace(/^#/, '');
+    if (!name || !tag || name.length > 50 || tag.length > 16 || /[\x00-\x1f/#?]/.test(name + tag))
+      throw new ApiError(400, '게임 이름과 태그를 올바르게 입력해 주세요.');
+    const key = process.env.RIOT_API_KEY?.trim();
+    if (!key) throw new ApiError(503, 'Riot API Key가 설정되지 않았습니다.');
+    return Response.json(await loadPlayer(name, tag, key), { headers });
+  } catch (e) {
+    const err =
+      e instanceof ApiError
+        ? e
+        : new ApiError(502, '전적을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+    if (err.retryAfter) headers['Retry-After'] = String(err.retryAfter);
+    return Response.json(
+      { message: err.message, retryAfter: err.retryAfter },
+      { status: err.status, headers },
+    );
+  }
+}
