@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { parseRiotId } from './utils/riotId';
 import type { PlayerData } from './types/riot';
 import { fetchPlayer, recentSearches, saveSearch } from './api/player';
 import { demoPlayer } from './data/demo';
@@ -41,12 +42,16 @@ const tier = computed(() =>
 );
 async function search(n = name.value, t = tag.value) {
   if (busy.value) return;
-  name.value = n;
-  tag.value = t;
-  if (!n.trim() || !t.trim()) {
-    error.value = '게임 이름과 태그를 입력해 주세요.';
+  try {
+    const id = parseRiotId(n, t);
+    n = id.gameName;
+    t = id.tagLine;
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'Riot ID를 확인해 주세요.';
     return;
   }
+  name.value = n;
+  tag.value = t;
   busy.value = true;
   error.value = '';
   data.value = null;
@@ -92,7 +97,7 @@ const deckName = (key: string) =>
               ><span>Riot ID</span
               ><input
                 v-model="name"
-                placeholder="게임 이름"
+                placeholder="게임 이름 또는 게임이름#KR1"
                 required
                 maxlength="50"
                 autocomplete="off"
@@ -105,7 +110,7 @@ const deckName = (key: string) =>
                   v-model="tag"
                   aria-label="태그"
                   placeholder="KR1"
-                  required
+                  :required="!name.includes('#')"
                   maxlength="16"
                   autocomplete="off"
                   :disabled="busy"

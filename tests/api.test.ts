@@ -1,3 +1,4 @@
+import publishedMatch from './fixtures/riot-match-v5.anonymized.json';
 import { afterEach, describe, it, expect, vi } from 'vitest';
 import handler, { limitedMap, toGame } from '../netlify/functions/tft-player';
 import { demoPlayer } from '../src/data/demo';
@@ -108,6 +109,52 @@ describe('Netlify function contract', () => {
     expect(body.games).toHaveLength(1);
     expect(body.rank.leaguePoints).toBe(30);
     expect(urls).toHaveLength(4);
+    expect(JSON.stringify(body)).not.toContain('secret-fixture');
+  });
+  it('resolves a combined Riot ID through ACCOUNT-V1 before selecting the published participant', async () => {
+    vi.stubEnv('RIOT_API_KEY', 'secret-fixture');
+    // Explicit derived ranked variant of the captured NORMAL response.
+    const match = structuredClone(publishedMatch);
+    match.info.queue_id = 1100;
+    const requested: string[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        requested.push(url);
+        if (url.includes('/riot/account/v1/accounts/by-riot-id/'))
+          return Response.json({
+            puuid: 'fixture-player-7',
+            gameName: '회귀 테스트',
+            tagLine: 'TAG',
+          });
+        if (url.includes('/tft/league/v1/by-puuid/')) return Response.json([]);
+        if (url.includes('/ids?')) return Response.json([match.metadata.match_id]);
+        if (url.endsWith('/' + match.metadata.match_id)) return Response.json(match);
+        if (url.endsWith('/api/versions.json')) return Response.json([]);
+        throw new Error('Unexpected URL');
+      }),
+    );
+    const request = new Request(
+      'https://test/?' + new URLSearchParams({ riotId: '회귀 테스트#TAG' }),
+    );
+    const result = await handler(request);
+    expect(result.status).toBe(200);
+    const body = await result.json();
+    expect(body.games[0].player.puuid).toBe('fixture-player-7');
+    expect(body.games[0].player.placement).toBe(1);
+    expect(body.games[0].player.units[1].itemNames).toEqual([
+      'TFT_Item_WarmogsArmor',
+      'TFT_Item_RedBuff',
+      'TFT_Item_BrambleVest',
+    ]);
+    expect(requested[0]).toBe(
+      'https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/' +
+        encodeURIComponent('회귀 테스트') +
+        '/TAG',
+    );
+    expect(requested).toContain(
+      'https://asia.api.riotgames.com/tft/match/v1/matches/by-puuid/fixture-player-7/ids?start=0&count=30',
+    );
     expect(JSON.stringify(body)).not.toContain('secret-fixture');
   });
   it('returns Retry-After for 429', async () => {

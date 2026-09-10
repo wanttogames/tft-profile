@@ -1,3 +1,5 @@
+import { parseParticipant, ParticipantParseError } from '../lib/matchParticipant';
+import { parseRiotId } from '../../src/utils/riotId';
 import type { Account, Asset, Game, League, Match, PlayerData } from '../../src/types/riot';
 export class ApiError extends Error {
   constructor(
@@ -123,62 +125,22 @@ function validMatch(m: Match): boolean {
 export function toGame(m: Match, puuid: string): Game | null {
   if (!validMatch(m)) throw new ApiError(502, 'Riot 경기 데이터 형식을 확인할 수 없습니다.');
   if (m.info.queue_id !== 1100) return null;
-  const p = m.info.participants.find((p) => p.puuid === puuid);
-  if (!p) return null;
-  if (
-    !Number.isInteger(p.placement) ||
-    p.placement < 1 ||
-    p.placement > 8 ||
-    !Number.isFinite(p.level) ||
-    !Number.isFinite(p.last_round) ||
-    !Number.isFinite(p.time_eliminated) ||
-    !Array.isArray(p.units) ||
-    !Array.isArray(p.traits) ||
-    p.units.some(
-      (u) =>
-        typeof u.character_id !== 'string' ||
-        !Number.isInteger(u.tier) ||
-        u.tier < 1 ||
-        u.tier > 4 ||
-        !Array.isArray(u.items) ||
-        (u.itemNames !== undefined &&
-          (!Array.isArray(u.itemNames) || u.itemNames.some((i) => typeof i !== 'string'))),
-    ) ||
-    p.traits.some(
-      (t) =>
-        typeof t.name !== 'string' ||
-        !Number.isFinite(t.num_units) ||
-        !Number.isFinite(t.tier_current),
-    )
-  )
-    throw new ApiError(502, 'Riot 참가자 데이터 형식을 확인할 수 없습니다.');
+  let participant;
+  try {
+    participant = parseParticipant(m.info.participants, puuid);
+  } catch (error) {
+    if (error instanceof ParticipantParseError) throw new ApiError(502, error.message);
+    throw error;
+  }
+  if (!participant)
+    throw new ApiError(502, '검색한 PUUID와 일치하는 참가자가 경기 응답에 없습니다.');
   return {
     id: m.metadata.match_id,
     date: m.info.game_datetime,
     duration: m.info.game_length,
     version: m.info.game_version,
     set: m.info.tft_set_number,
-    player: {
-      puuid: p.puuid,
-      placement: p.placement,
-      level: p.level,
-      last_round: p.last_round,
-      time_eliminated: p.time_eliminated,
-      units: p.units.map((u) => ({
-        character_id: u.character_id,
-        tier: u.tier,
-        rarity: u.rarity,
-        items: u.items,
-        itemNames: u.itemNames,
-      })),
-      traits: p.traits.map((t) => ({
-        name: t.name,
-        num_units: t.num_units,
-        style: t.style,
-        tier_current: t.tier_current,
-        tier_total: t.tier_total,
-      })),
-    },
+    player: participant,
   };
 }
 async function staticJson(url: string) {
@@ -308,10 +270,16 @@ export default async function handler(request: Request): Promise<Response> {
         { status: 405, headers: { ...headers, Allow: 'GET' } },
       );
     const params = new URL(request.url).searchParams;
-    const name = (params.get('gameName') || '').trim(),
-      tag = (params.get('tagLine') || '').trim().replace(/^#/, '');
-    if (!name || !tag || name.length > 50 || tag.length > 16 || /[\x00-\x1f/#?]/.test(name + tag))
-      throw new ApiError(400, '게임 이름과 태그를 올바르게 입력해 주세요.');
+    let id;
+    try {
+      id = parseRiotId(
+        params.get('riotId') ?? params.get('gameName') ?? '',
+        params.get('tagLine') ?? '',
+      );
+    } catch (error) {
+      throw new ApiError(400, error instanceof Error ? error.message : 'Riot ID를 확인해 주세요.');
+    }
+    const { gameName: name, tagLine: tag } = id;
     const key = process.env.RIOT_API_KEY?.trim();
     if (!key) throw new ApiError(503, 'Riot API Key가 설정되지 않았습니다.');
     return Response.json(await loadPlayer(name, tag, key), { headers });

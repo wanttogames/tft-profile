@@ -1,8 +1,10 @@
+import { parseRiotId } from '../utils/riotId';
 import type { PlayerData } from '../types/riot';
 const cache = new Map<string, { data: PlayerData; expires: number }>();
 const pending = new Map<string, Promise<PlayerData>>();
 let blockedUntil = 0;
-export async function fetchPlayer(gameName: string, tagLine: string): Promise<PlayerData> {
+export async function fetchPlayer(gameName: string, tagLine = ''): Promise<PlayerData> {
+  ({ gameName, tagLine } = parseRiotId(gameName, tagLine));
   const key = `${gameName.trim().toLowerCase()}#${tagLine.replace(/^#/, '').trim().toLowerCase()}`;
   const hit = cache.get(key);
   if (hit && hit.expires > Date.now()) return hit.data;

@@ -40,3 +40,9 @@ TraitDto: name, num_units, style, tier_current, tier_total. 활성 판단은 tie
 ## 정책 설계
 
 완료 경기의 자가 회고를 위한 통계입니다. 실시간 경기/상대 scouting API는 호출하지 않습니다. 독립적인 MMR/실력 순위나 증강체 승률을 생성하지 않습니다. Production 자가 통계 사용 사례의 RSO 요구는 정식 출시 전에 별도로 충족해야 합니다.
+
+## 2026-09-10 participant 호환성 수정
+
+최신 공식 `/api-details/tft-match-v1`의 ParticipantDto, UnitDto 표를 다시 읽었습니다. 표에는 `items`와 `itemNames`가 모두 있지만 둘 다 항상 존재한다는 required 제약은 없습니다. 공개된 data_version 5 실응답은 itemNames만 포함합니다. 이 차이를 반영해 wire DTO의 두 장비 필드를 선택적으로 선언하고, 파서에서 한쪽 표현이 유효하면 다른 쪽 생략을 허용합니다. PUUID는 info.participants에서 직접 비교합니다. 단순 형변환으로 누락된 수치를 만들지 않습니다.
+
+실응답 fixture는 `tests/fixtures/riot-match-v5.anonymized.json`이며 2023년 과거 응답입니다. 원본 출처·해시·익명화·파생 테스트 범위는 동봉 README에 기록했습니다. 최신 실응답을 직접 조회했다는 의미는 아닙니다. 최신 실패 경기의 정확한 응답이 제공되면 이 테스트군에 추가할 수 있습니다.

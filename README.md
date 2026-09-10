@@ -142,9 +142,9 @@ npm run build
 npm run format:check
 ```
 
-- 분석/API fixture 테스트 **27개 통과**. 평균·TOP4·1등률·폼·다양성·고점력·안정성·스타일·부족 표본·동시성·HTTP 오류·공식 경로를 사용하는 모의 전체 조회를 검증했습니다.
+- 분석/API fixture 테스트 **46개 통과**. 평균·TOP4·1등률·폼·다양성·고점력·안정성·스타일·부족 표본·동시성·HTTP 오류·공식 경로를 사용하는 모의 전체 조회를 검증했습니다.
 - TypeScript 검사 및 Vite 프로덕션 빌드 통과.
-- **실제 Riot API 키는 제공되지 않아 실제 계정 end-to-end 조회는 미검증**입니다. 테스트는 실응답을 채집한 fixture가 아니라 공식 DTO에 맞춘 합성 fixture와 모의 HTTP 응답을 사용합니다.
+- **실제 Riot API 키는 제공되지 않아 실제 계정 end-to-end 조회는 미검증**입니다. 기존 합성 fixture 외에 공개된 과거 실제 Match-V1 응답(PUUID 익명화)을 추가해 items 누락과 PUUID 선택을 검증했습니다. 최신 실제 계정의 응답을 이 환경에서 직접 수집한 것은 아닙니다. 출처와 변형 범위는 tests/fixtures/README.md를 참조하세요.
 - **브라우저 실행 화면 검증은 환경의 접근 차단으로 완료하지 못했습니다.** 미리보기 서버는 정상 실행됐으나 연결된 브라우저가 접근을 거부했습니다. 배포 후 데스크톱·모바일에서 검색, 샘플, 전적 펼치기 및 데이터 없는 계정을 확인하세요.
 
 ## 공식 문서
@@ -155,3 +155,9 @@ npm run format:check
 - [TFT 정책·Data Dragon](https://developer.riotgames.com/docs/tft)
 
 필드 및 엔드포인트 확인 기록은 [docs/API.md](docs/API.md)에 있습니다.
+
+## Participant 파싱 오류 수정
+
+`units[].itemNames`만 있는 응답에 숫자 배열 `items`까지 요구하던 검증을 수정했습니다. 원본 DTO와 앱 내부 타입을 분리하고, 장비 표현 한쪽이 빠져 있어도 다른 쪽이 유효하면 파싱합니다. items가 없는 경우 앱 내부의 레거시 배열만 빈 배열로 정규화하며, 실제 itemNames 내용은 그대로 보존합니다. 둘 다 없거나 값이 잘못된 경우는 정상 데이터로 가장하지 않습니다. 오류 메시지에는 실패한 필드 경로를 포함합니다.
+
+`info.participants`에서 ACCOUNT-V1이 반환한 PUUID와 정확히 일치하는 객체를 선택합니다. metadata.participants의 순서에 의존하지 않으며 대상이 없으면 명확한 오류를 반환합니다. 검색창에서 게임 이름과 태그를 나눠 입력하거나 이름 칸에 `게임이름#태그`를 붙여넣을 수 있습니다. Function은 `riotId` 파라미터와 기존 gameName/tagLine 파라미터를 모두 지원합니다.

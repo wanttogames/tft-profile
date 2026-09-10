@@ -35,6 +35,14 @@ export interface Participant {
   units: Unit[];
   traits: Trait[];
 }
+/** Wire DTOs differ from normalized application units: legacy items may be absent. */
+export interface RiotUnitDto extends Omit<Unit, 'items' | 'itemNames'> {
+  items?: number[] | null;
+  itemNames?: string[] | null;
+}
+export interface RiotParticipantDto extends Omit<Participant, 'units'> {
+  units: RiotUnitDto[];
+}
 export interface Match {
   metadata: { match_id: string };
   info: {
@@ -43,7 +51,7 @@ export interface Match {
     game_version: string;
     queue_id: number;
     tft_set_number: number;
-    participants: Participant[];
+    participants: RiotParticipantDto[];
   };
 }
 export interface Game {
