@@ -1,0 +1,24 @@
+{
+  "companion": {
+    "content_ID": "5897ad9f-4665-4372-8f3e-6c878adb8918",
+    "item_ID": 1,
+    "skin_ID": 0,
+    "species": ""
+  },
+  "gold_left": 43,
+  "last_round": 34,
+  "level": 10,
+  "missions": {
+    "PlayerScore2": 210
+  },
+  "placement": 4,
+  "players_eliminated": 0,
+  "puuid": "fixture-set18-player",
+  "riotIdGameName": "fixture-player",
+  "riotIdTagline": "TEST",
+  "time_eliminated": 2132,
+  "total_damage_to_players": 0,
+  "units": [],
+  "traits": [],
+  "win": true
+}

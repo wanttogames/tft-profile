@@ -26,6 +26,7 @@ export interface Trait {
   tier_current: number;
   tier_total: number;
 }
+export type AugmentStatus = 'available' | 'empty' | 'missing' | 'parse-error';
 export interface Participant {
   puuid: string;
   placement: number;
@@ -36,13 +37,18 @@ export interface Participant {
   traits: Trait[];
   /** Missing means unavailable; an empty array means no recorded selections. */
   augments?: string[];
+  /** Normalized parsing result, never a Riot wire field. */
+  augmentStatus?: AugmentStatus;
 }
 /** Wire DTOs differ from normalized application units: legacy items may be absent. */
 export interface RiotUnitDto extends Omit<Unit, 'items' | 'itemNames'> {
   items?: number[] | null;
   itemNames?: string[] | null;
 }
-export interface RiotParticipantDto extends Omit<Participant, 'units' | 'augments'> {
+export interface RiotParticipantDto extends Omit<
+  Participant,
+  'units' | 'augments' | 'augmentStatus'
+> {
   units: RiotUnitDto[];
   augments?: string[] | null;
 }

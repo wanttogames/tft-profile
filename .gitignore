@@ -6,3 +6,4 @@ dist/
 .netlify/
 .sites-runtime/
 coverage/
+diagnostics/

@@ -30,9 +30,14 @@ const title = computed(() =>
       {{ kind === 'augment' ? '증강 기록 확인' : '특성 확인' }} {{ result.available }}경기<span
         v-if="result.missing"
       >
-        · 정보 없음 {{ result.missing }}경기</span
+        · 실제 데이터 없음(API 필드 누락·null) {{ result.missing }}경기</span
       >
     </p>
+    <p v-if="result.parseErrors" class="small">
+      파싱 오류 {{ result.parseErrors }}경기 · 증강 관련 데이터 형식을 읽지 못해 증강 통계에서
+      제외했습니다.
+    </p>
+    <p v-if="result.empty" class="small muted">선택 기록 없음(빈 배열) {{ result.empty }}경기</p>
     <div v-if="result.top.length" class="table-scroll">
       <table>
         <thead>
@@ -62,7 +67,9 @@ const title = computed(() =>
     <p v-else class="empty-note">
       {{
         kind === 'augment'
-          ? '조회된 경기에서 증강체 정보가 제공되지 않았거나 선택 기록이 없습니다.'
+          ? result.parseErrors
+            ? '증강 데이터 파싱 오류가 있습니다. 실제 응답 확인이 필요합니다.'
+            : 'API 응답에 증강 선택 기록이 없습니다. 게임에서 증강을 선택하지 않았다는 뜻은 아닙니다.'
           : '조회된 경기에서 활성화된 특성 기록이 없습니다.'
       }}
     </p>

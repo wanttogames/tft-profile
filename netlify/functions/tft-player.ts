@@ -197,7 +197,10 @@ export async function loadPlayer(
       );
     const staticResult = games.length ? await loadGameAssets(games) : null;
     if (staticResult) warnings.push(...staticResult.warnings);
-    const missingAugments = games.filter((g) => g.player.augments === undefined).length;
+    const augmentErrors = games.filter((g) => g.player.augmentStatus === 'parse-error').length;
+    if (augmentErrors)
+      warnings.push(`증강 데이터 파싱 오류 ${augmentErrors}경기: 증강 통계에서 제외했습니다.`);
+    const missingAugments = games.filter((g) => g.player.augmentStatus === 'missing').length;
     if (missingAugments)
       warnings.push(
         `증강체 정보가 없는 ${missingAugments}경기는 증강체 분석의 분모에서 제외합니다.`,

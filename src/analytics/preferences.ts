@@ -17,6 +17,8 @@ export interface PreferenceAnalysis {
   total: number;
   available: number;
   missing: number;
+  parseErrors: number;
+  empty: number;
   rows: PreferenceRow[];
   top: PreferenceRow[];
   baseline: number | null;
@@ -25,8 +27,23 @@ export interface PreferenceAnalysis {
 // Conservatively withhold performance for that entire historical set. See docs/API.md policy sources.
 const RESTRICTED_AUGMENT_SETS = new Set([9]);
 export function preferenceAnalysis(games: Game[], kind: PreferenceKind): PreferenceAnalysis {
+  const parseErrors =
+    kind === 'augment' ? games.filter((g) => g.player.augmentStatus === 'parse-error').length : 0;
+  const empty =
+    kind === 'augment'
+      ? games.filter(
+          (g) =>
+            Array.isArray(g.player.augments) &&
+            g.player.augments.length === 0 &&
+            g.player.augmentStatus !== 'parse-error',
+        ).length
+      : 0;
   const available =
-    kind === 'augment' ? games.filter((g) => Array.isArray(g.player.augments)) : games;
+    kind === 'augment'
+      ? games.filter(
+          (g) => Array.isArray(g.player.augments) && g.player.augmentStatus !== 'parse-error',
+        )
+      : games;
   const groups = new Map<string, { id: string; set: number; games: Game[] }>();
   for (const g of available) {
     const ids =
@@ -60,7 +77,9 @@ export function preferenceAnalysis(games: Game[], kind: PreferenceKind): Prefere
     kind,
     total: games.length,
     available: available.length,
-    missing: games.length - available.length,
+    missing: games.length - available.length - parseErrors,
+    parseErrors,
+    empty,
     rows,
     top: rows.slice(0, 5),
     baseline: statistics(available).average,

@@ -1,3 +1,4 @@
+import { parseAugments, debugAugments } from './augmentParser';
 import type { Participant, Trait, Unit } from '../../src/types/riot';
 
 /** A safe field path, never a raw response, token or player identifier. */
@@ -62,6 +63,7 @@ export function parseParticipant(participants: unknown, puuid: string): Particip
   if (!Array.isArray(participants)) throw new ParticipantParseError('info.participants');
   const value = participants.find((p) => object(p) && p.puuid === puuid);
   if (!value) return null;
+  debugAugments(value);
   if (!Array.isArray(value.units)) throw new ParticipantParseError('units');
   if (!Array.isArray(value.traits)) throw new ParticipantParseError('traits');
   const placement = number(value.placement, 'placement', true);
@@ -74,12 +76,6 @@ export function parseParticipant(participants: unknown, puuid: string): Particip
     time_eliminated: number(value.time_eliminated, 'time_eliminated'),
     units: value.units.map(parseUnit),
     traits: value.traits.map(parseTrait),
-    // augments is observed in published Match-V1 responses, but not guaranteed by the current DTO table.
-    // Missing or malformed optional augment data must not erase valid placement / board data.
-    augments:
-      Array.isArray(value.augments) &&
-      value.augments.every((a: unknown) => typeof a === 'string' && a.length > 0)
-        ? [...value.augments]
-        : undefined,
+    ...parseAugments(value),
   };
 }

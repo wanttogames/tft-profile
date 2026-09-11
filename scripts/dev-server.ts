@@ -3,6 +3,7 @@ import { createServer } from 'node:http';
 import { loadEnv } from 'vite';
 import handler from '../netlify/functions/tft-player';
 Object.assign(process.env, loadEnv('development', process.cwd(), ''));
+process.env.NODE_ENV ??= 'development';
 createServer(async (req, res) => {
   if (!req.url?.startsWith('/.netlify/functions/tft-player')) {
     res.writeHead(404).end();

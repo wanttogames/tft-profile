@@ -64,3 +64,11 @@ Source format and image routing:
 Catalog code is split between the pure `src/static-data/catalog.ts` index/lookup and `netlify/lib/staticData.ts` IO/cache. The bundled server snapshot is refreshed with `npm run update:static`. It is not imported into the front-end bundle. Unknown IDs receive exact-ID lookup against the latest played patch's official Data Dragon ko_KR files, then fall back to the original identifier. Older patch names may differ from current localized labels.
 
 Policy: https://developer.riotgames.com/docs/tft prohibits win rates for Legends and Legend-based Augments. The Runeterra Reforged mechanics are described at https://teamfighttactics.leagueoflegends.com/en-gb/news/game-updates/runeterra-reforged-mechanics-overview/ . Since the adapter cannot establish whether a historic set-9 selection was supplied by a Legend, it conservatively withholds all augment placement/TOP4 performance for set 9. Counts and usage rates remain available. No in-game queries or recommendations are added.
+
+## 2026-09-12 augment investigation
+
+Rechecked official https://developer.riotgames.com/api-details/tft-match-v1 and https://developer.riotgames.com/docs/tft. The current participant DTO page contains no augment field; do not treat that alone as proof of absence from every wire response. A recent Set 18 PBE participant excerpt from Riot's public issue tracker (#1171) has no augment-related key; provenance and limitations are in tests/fixtures/README.md. The full attached response was unavailable (404). No local Riot key exists, so the user's exact production response could not be fetched.
+
+Only the historically captured `augments: string[]` is decoded. Unknown augment-related keys are inspected for diagnostics and flagged as unsupported parsing, never repurposed as selections. Absent/null fields and empty arrays are distinct states. Missing/error records do not enter augment preference denominators; valid empty arrays do. The existing 50-match window, Korean static lookup, TOP 5, counts, average placement and TOP4 pipeline receives parsed records. Malformed augment data does not prevent ordinary placement statistics.
+
+The opt-in development logger excludes player/account identity. A separate local capture command saves anonymized real full-match fixtures for exact reproduction without logging or saving the API key.

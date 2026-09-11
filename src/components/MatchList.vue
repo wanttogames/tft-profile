@@ -103,9 +103,11 @@ const date = (n: number) =>
           /></template>
           <p v-else class="small muted">
             {{
-              game.player.augments === undefined
-                ? '이 경기에는 증강체 정보가 제공되지 않았습니다.'
-                : '기록된 증강체 선택이 없습니다.'
+              game.player.augmentStatus === 'parse-error'
+                ? '증강 데이터 파싱 오류'
+                : game.player.augments === undefined
+                  ? '이 경기에는 증강체 정보가 제공되지 않았습니다.'
+                  : '기록된 증강체 선택이 없습니다.'
             }}
           </p>
         </div>
