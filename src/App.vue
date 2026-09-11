@@ -11,6 +11,7 @@ import { deckDiversity } from './analytics/deckDiversity';
 import { patterns } from './analytics/patterns';
 import FormChart from './components/FormChart.vue';
 import BoardInsights from './components/BoardInsights.vue';
+import PlayerGameProfile from './components/PlayerGameProfile.vue';
 import PlayerCard from './components/PlayerCard.vue';
 import MatchList from './components/MatchList.vue';
 import PreferencePanel from './components/PreferencePanel.vue';
@@ -163,6 +164,7 @@ const deckName = (key: string) =>
           ><button @click="data = null">닫기 ×</button>
         </div>
         <div v-for="w in data.warnings" :key="w" class="notice">{{ w }}</div>
+        <PlayerGameProfile :data="data" />
         <section class="profile">
           <div class="profile-identity">
             <div class="rank-emblem">{{ data.rank?.tier?.slice(0, 1) || 'U' }}</div>

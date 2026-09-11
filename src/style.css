@@ -1130,3 +1130,174 @@ footer p {
 .player-card h2 {
   overflow-wrap: anywhere;
 }
+.game-experience {
+  display: grid;
+  gap: 24px;
+  margin: 28px 0 48px;
+}
+.game-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 230px;
+  gap: 20px;
+  border-top: 3px solid #91e9ce;
+  background: linear-gradient(120deg, #192c36, #141b2e);
+}
+.game-hero h2 {
+  font-size: clamp(24px, 4vw, 40px);
+  overflow-wrap: anywhere;
+}
+.game-class {
+  font-size: 24px;
+  color: #a0ead5;
+}
+.game-score {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.game-score > strong {
+  font-size: 76px;
+  line-height: 1.1;
+  color: #c4fff0;
+}
+.game-score > span {
+  letter-spacing: 0.16em;
+  font-size: 14px;
+}
+.game-streak {
+  grid-column: 1/-1;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 16px;
+  background: #0d1624;
+  border-radius: 12px;
+  color: #f3d695;
+}
+.game-hero .method {
+  grid-column: 1/-1;
+}
+.dna-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+.dna-stat > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.dna-stat strong {
+  font-size: 28px;
+  color: #a0ead5;
+}
+.dna-stat small {
+  font-size: 14px;
+}
+progress {
+  width: 100%;
+  height: 10px;
+  accent-color: #88dfc4;
+  display: block;
+  margin: 12px 0;
+}
+.game-change {
+  color: #a0ead5;
+}
+.game-boss {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 24px;
+  border-left: 4px solid #d9acff;
+  background: linear-gradient(115deg, #231e37, #151d2b);
+}
+.boss-meter {
+  align-self: center;
+}
+.boss-meter strong {
+  font-size: 40px;
+}
+.achievement-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+.achievement {
+  border: 1px solid #384354;
+  border-radius: 14px;
+  padding: 18px;
+  background: #111a28;
+  overflow-wrap: anywhere;
+}
+.achievement h3 {
+  font-size: 18px;
+}
+.achievement p {
+  font-size: 14px;
+}
+.achievement.is-earned {
+  border-color: #9cceb6;
+  background: #1c302e;
+}
+.achievement[data-rarity='LEGENDARY'].is-earned {
+  border-color: #e5c473;
+  background: #342d21;
+}
+.achievement[data-rarity='EPIC'].is-earned {
+  border-color: #bda1e7;
+}
+.achievement[data-rarity='HIDDEN'].is-earned {
+  border-color: #d991b9;
+}
+.match-feedback {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+}
+.match-feedback span {
+  font-size: 14px;
+  padding: 4px 9px;
+  border-radius: 6px;
+  background: #223447;
+  color: #b9dded;
+}
+.match-feedback .result-banner {
+  color: #a0ead5;
+  background: #18342e;
+}
+@media (max-width: 850px) {
+  .achievement-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dna-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 580px) {
+  .game-hero,
+  .game-boss {
+    grid-template-columns: 1fr;
+  }
+  .game-score > strong {
+    font-size: 64px;
+  }
+  .game-class {
+    font-size: 20px;
+  }
+  .game-streak {
+    font-size: 14px;
+  }
+  .achievement-grid {
+    grid-template-columns: 1fr;
+  }
+  .dna-grid {
+    gap: 16px;
+  }
+  .game-experience .section-head {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}

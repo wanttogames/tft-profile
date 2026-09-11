@@ -3,8 +3,12 @@ import { computed, ref, watch } from 'vue';
 import { displayName, lookupAsset } from '../static-data/catalog';
 import { MATCH_PAGE_SIZE } from '../config/analysis';
 import type { PlayerData, Unit } from '../types/riot';
+import { matchFeedback } from '../analytics/game/matchFeedback';
 import AssetBadge from './AssetBadge.vue';
 const props = defineProps<{ data: PlayerData }>();
+const feedback = computed(
+  () => new Map(props.data.games.map((g) => [g.id, matchFeedback(g, props.data.games)])),
+);
 const visibleCount = ref(MATCH_PAGE_SIZE);
 watch(
   () => props.data,
@@ -65,6 +69,18 @@ const date = (n: number) =>
         </div>
         <span class="expand" aria-hidden="true">＋</span>
       </summary>
+      <div class="match-feedback">
+        <span class="result-banner">{{
+          game.player.placement === 1
+            ? 'VICTORY'
+            : game.player.placement <= 4
+              ? 'TOP4'
+              : '다음 도전을 향해'
+        }}</span
+        ><span v-for="tag in feedback.get(game.id)" :key="tag.label" :title="tag.reason">{{
+          tag.label
+        }}</span>
+      </div>
       <div class="match-detail">
         <div class="small muted">
           {{ game.id }} · 마지막 라운드 {{ game.player.last_round }} (API 원본 번호) · 전체 경기
