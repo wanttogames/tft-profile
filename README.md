@@ -23,7 +23,7 @@ Vue 3 Composition API / `<script setup>` / TypeScript / Vite / Netlify Functions
 
 ## 로컬 실행
 
-Node.js 22 이상. Windows PowerShell:
+Node.js 20.19 이상 (Actions: Node 20). Windows PowerShell:
 
 ```powershell
 git clone https://github.com/wanttogames/tft-profile.git
@@ -210,3 +210,34 @@ git push origin main
 - 경기 피드백은 자신을 제외한 나머지 표본 최소 5개와 비교합니다. 보드 점수·3성 유닛 수·피해량·마지막 라운드에 특징적인 차이가 있을 때만 태그를 표시합니다.
 
 기존 챔피언·아이템·특성·스타일·프로필 분석은 유지합니다. 합성 fixture로 빈 표본, optional 미제공/0, 반복·다양한 조합, 모든 상위/하위 결과, 연속 기록, 숨겨진 업적 시간 순서, 25경기 비교 및 화면 순서를 검증합니다.
+
+## 상위 플레이어 메타 데이터베이스 설계
+
+Supabase SQL Editor에서 실행할 초기 스키마는 `supabase/migrations/001_tft_meta_schema.sql`입니다. 테이블 관계, 수집 트랜잭션 계약, 패치별 집계 예시, 접근 권한과 검증은 [supabase/README.md](supabase/README.md)를 참고하세요. 수집기 설정은 아래 절차를 따릅니다.
+
+### GitHub Actions 메타 Collector
+
+1. 기존 001 스키마가 적용된 Supabase에서 `supabase/migrations/002_tft_collector_rpc.sql` 전체를 SQL Editor로 한 번 실행합니다. 001을 다시 실행하지 않습니다.
+2. GitHub 저장소 **Settings → Secrets and variables → Actions → Repository secrets**에 `RIOT_API_KEY`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY`를 등록합니다. Supabase의 서버용 secret key를 사용합니다. 키는 코드나 VITE_ 환경변수에 넣지 않습니다.
+3. 변경 파일을 기본 브랜치에 push한 뒤 **Actions → Collect TFT meta → Run workflow**로 실행합니다. 이후 UTC 00:17/06:17/12:17/18:17에 예약 실행합니다. 예약은 기본 브랜치 기준이며 GitHub 사정으로 지연될 수 있습니다.
+4. Actions Variables에서 `PLAYERS_LIMIT`(기본 10), `MATCHES_PER_PLAYER`(5), `RIOT_REQUEST_DELAY_MS`(1400)를 조정할 수 있습니다. 작업 제한은 30분입니다. 규모를 크게 늘리기 전 실제 API 제한과 실행 시간을 확인하세요.
+
+`npm run collect:tft`는 process.env만 읽습니다. 로컬에서는 환경변수를 먼저 설정하거나 Node 20.19 이상에서 `node --env-file=.env --import tsx scripts/collector/run.ts`로 실행하세요. `.env`는 Git에 올리지 않습니다. Development Riot API Key는 만료되므로 지속 수집에는 적절한 키 관리가 필요합니다.
+
+Collector는 KR Challenger와 Grandmaster를 LP 내림차순으로 번갈아 최대 10명 선택합니다. 무작위 대표 표본은 아니며 래더 상단 편향이 있습니다. Riot 공식 `/tft/league/v1/challenger`, `/tft/league/v1/grandmaster`의 `entries[].puuid`를 사용하며 region은 KR, Match routing은 ASIA입니다. 모든 래더 관측으로 참가자의 수집 당시 티어를 확인하지만, 추적 대상으로 upsert하는 목록은 선택한 플레이어입니다.
+
+경기 ID는 플레이어당 최근 5개(모드 혼합 가능)를 가져옵니다. 중복 제거와 DB 존재 확인 후 신규 상세만 조회하고 **queue_id=1100 일반 랭크 TFT**만 저장합니다. 따라서 저장 경기 수는 50보다 작을 수 있습니다. 저장되지 않은 비랭크 경기는 다음 실행에서 다시 조회될 수 있습니다. 장착 itemNames와 trait 내부 ID를 원문으로 저장하고 한글 표시는 기존 정적 데이터 모듈에서 처리합니다.
+
+Riot 요청은 동시 1개, 매 시도 최소 1.4초 간격입니다. 429의 Retry-After를 반영하고 네트워크/5xx도 최대 4회 시도합니다. 동일 키를 쓰는 다른 서비스와 한도를 공유할 수 있습니다. 401/403은 실행을 중단합니다. 개별 경기 실패는 나머지 수집을 계속한 뒤 실패 건수를 로그에 남기고 Actions를 실패 상태로 종료합니다. 다음 실행에서 다시 최근 ID에 포함되는 실패 경기는 재시도할 수 있지만 별도 백로그는 없습니다.
+
+로그: Players / Candidate matches(고유 ID) / Existing matches / New matches / Saved matches / Failed matches / Skipped matches / Failed player scans. DB 저장 중 다른 실행이 먼저 저장한 경우 Existing 수가 증가합니다. 선수 개인정보·API 키·응답 본문은 로그에 출력하지 않습니다.
+
+저장 RPC는 경기 전체를 트랜잭션으로 커밋합니다. DB에 존재하는 incomplete 행도 재조회하지 않으므로 기존 부분 저장 데이터는 운영자가 별도로 확인해야 합니다. 기존 Vue/Netlify 개인 분석 경로와 Collector는 분리되어 있습니다.
+
+확인한 공식 문서:
+- https://developer.riotgames.com/apis#tft-league-v1
+- https://developer.riotgames.com/apis#tft-match-v1
+- https://supabase.com/docs/guides/getting-started/api-keys
+- https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
+
+테스트는 기존 익명화 Match 응답 fixture를 재사용합니다. Collector 테스트의 KR ID/queue=1100 변경은 합성 변형이며 현재 상위 랭커의 실 API 응답이라고 주장하지 않습니다. 테스트는 키 없이 실행 가능하며 라이브 수집은 위 설정 후 별도 실행합니다.

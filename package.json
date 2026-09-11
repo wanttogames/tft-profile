@@ -12,7 +12,8 @@
     "preview": "vite preview --host 0.0.0.0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "update:static": "node --import tsx scripts/update-static.ts"
+    "update:static": "node --import tsx scripts/update-static.ts",
+    "collect:tft": "node --import tsx scripts/collector/run.ts"
   },
   "dependencies": {
     "vue": "^3.5.0"
@@ -28,6 +29,6 @@
     "vue-tsc": "^3.0.0"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=20.19.0"
   }
 }
