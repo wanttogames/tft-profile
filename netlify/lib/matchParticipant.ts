@@ -74,5 +74,12 @@ export function parseParticipant(participants: unknown, puuid: string): Particip
     time_eliminated: number(value.time_eliminated, 'time_eliminated'),
     units: value.units.map(parseUnit),
     traits: value.traits.map(parseTrait),
+    // augments is observed in published Match-V1 responses, but not guaranteed by the current DTO table.
+    // Missing or malformed optional augment data must not erase valid placement / board data.
+    augments:
+      Array.isArray(value.augments) &&
+      value.augments.every((a: unknown) => typeof a === 'string' && a.length > 0)
+        ? [...value.augments]
+        : undefined,
   };
 }

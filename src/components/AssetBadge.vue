@@ -4,7 +4,7 @@ import type { Asset } from '../types/riot';
 const props = defineProps<{ id: string; asset?: Asset; stars?: number }>();
 const failed = ref(false);
 watch(
-  () => props.id,
+  () => [props.id, props.asset?.image],
   () => (failed.value = false),
 );
 </script>

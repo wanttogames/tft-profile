@@ -3,6 +3,14 @@ import { afterEach, describe, it, expect, vi } from 'vitest';
 import handler, { limitedMap, toGame } from '../netlify/functions/tft-player';
 import { demoPlayer } from '../src/data/demo';
 import type { Match } from '../src/types/riot';
+vi.mock('../netlify/lib/staticData', () => ({
+  loadGameAssets: vi.fn(async () => ({
+    assets: {},
+    warnings: [],
+    source: 'fixture',
+    fetchedAt: '2026-09-11',
+  })),
+}));
 const sample = (): Match => {
   const g = demoPlayer().games[0]!;
   return {
@@ -99,7 +107,7 @@ describe('Netlify function contract', () => {
               losses: 8,
             },
           ]);
-        if (input.endsWith('/ids?start=0&count=30')) return Response.json(['KR_test']);
+        if (input.endsWith('/ids?start=0&count=50')) return Response.json(['KR_test']);
         return Response.json(m);
       }),
     );
@@ -153,7 +161,7 @@ describe('Netlify function contract', () => {
         '/TAG',
     );
     expect(requested).toContain(
-      'https://asia.api.riotgames.com/tft/match/v1/matches/by-puuid/fixture-player-7/ids?start=0&count=30',
+      'https://asia.api.riotgames.com/tft/match/v1/matches/by-puuid/fixture-player-7/ids?start=0&count=50',
     );
     expect(JSON.stringify(body)).not.toContain('secret-fixture');
   });

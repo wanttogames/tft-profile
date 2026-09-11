@@ -1058,3 +1058,52 @@ footer p {
     animation: none;
   }
 }
+
+.preference-panel table {
+  min-width: 540px;
+}
+.preference-panel th {
+  white-space: nowrap;
+}
+.preference-panel td:first-child {
+  width: 38%;
+}
+.preference-panel td:not(:first-child) {
+  white-space: nowrap;
+}
+.sample-label {
+  display: block;
+  color: #bba88d;
+  margin-top: 4px;
+}
+.preference-insights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr));
+  gap: 10px 24px;
+  margin: 12px 0 22px;
+}
+.preference-insights h3 {
+  font-size: 0.82rem;
+  color: var(--mint);
+  margin: 12px 0 6px;
+}
+.preference-insights p {
+  font-size: 0.85rem;
+  color: #c7d2df;
+  margin: 0;
+}
+.match-augments {
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+.match-augments .asset {
+  margin: 0 20px 12px 0;
+}
+.load-more {
+  text-align: center;
+  border-top: 1px solid var(--border);
+  padding: 18px 0 0;
+}
+.load-more p {
+  margin-bottom: 12px;
+}

@@ -19,7 +19,7 @@ const names = {
       <span class="eyebrow">TFT PLAYER CARD</span><span class="pill">자체 분석</span>
     </div>
     <h2>나의 플레이 지문</h2>
-    <p class="muted small">최근 결과를 0–100으로 요약한 기록 지표</p>
+    <p class="muted small">최근 50경기 범위의 결과를 0–100으로 요약한 기록 지표</p>
     <div v-if="scores" class="score-list">
       <div v-for="(name, key) in names" :key="key" class="score-row" :title="scoreHelp[key]">
         <span>{{ name }}</span>
@@ -33,7 +33,7 @@ const names = {
       <p v-for="(help, key) in scoreHelp" :key="key">{{ help }}</p>
       <p>
         점수는 공식 실력 지표나 백분위가 아닙니다. 다양성·유연성은 특성 데이터가 부족하면, 최근 폼은
-        20경기 미만이면 표시하지 않습니다.
+        50경기 미만이면 표시하지 않습니다.
       </p>
     </details>
   </section>

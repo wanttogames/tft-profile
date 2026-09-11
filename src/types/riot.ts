@@ -34,14 +34,17 @@ export interface Participant {
   time_eliminated: number;
   units: Unit[];
   traits: Trait[];
+  /** Missing means unavailable; an empty array means no recorded selections. */
+  augments?: string[];
 }
 /** Wire DTOs differ from normalized application units: legacy items may be absent. */
 export interface RiotUnitDto extends Omit<Unit, 'items' | 'itemNames'> {
   items?: number[] | null;
   itemNames?: string[] | null;
 }
-export interface RiotParticipantDto extends Omit<Participant, 'units'> {
+export interface RiotParticipantDto extends Omit<Participant, 'units' | 'augments'> {
   units: RiotUnitDto[];
+  augments?: string[] | null;
 }
 export interface Match {
   metadata: { match_id: string };
@@ -76,4 +79,5 @@ export interface PlayerData {
   fetchedAt: number;
   scanned: number;
   demo?: boolean;
+  staticData?: { source: string; fetchedAt: string };
 }

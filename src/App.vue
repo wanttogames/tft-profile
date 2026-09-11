@@ -12,6 +12,8 @@ import { patterns } from './analytics/patterns';
 import FormChart from './components/FormChart.vue';
 import PlayerCard from './components/PlayerCard.vue';
 import MatchList from './components/MatchList.vue';
+import PreferencePanel from './components/PreferencePanel.vue';
+import { displayName } from './static-data/catalog';
 const name = ref(''),
   tag = ref('KR1'),
   busy = ref(false),
@@ -32,7 +34,7 @@ const decimal = (v: number | null | undefined) => (v == null ? '—' : v.toFixed
 const percent = (v: number | null) => (v === null ? '—' : Math.round(v * 100) + '%');
 const formLabel = computed(() =>
   form.value.delta === null
-    ? '20경기 필요'
+    ? '50경기 필요'
     : Math.abs(form.value.delta) < 0.005
       ? '변화 없음'
       : `${form.value.delta > 0 ? '▲' : '▼'} ${Math.abs(form.value.delta).toFixed(2)} ${form.value.delta > 0 ? '개선' : '하락'}`,
@@ -68,7 +70,8 @@ function demo() {
   error.value = '';
   data.value = demoPlayer();
 }
-const assetName = (id: string | null) => (id ? data.value?.assets[id]?.name || id : '—');
+const assetName = (id: string | null) =>
+  id && data.value ? displayName(data.value.assets, 'trait', id, data.value.games[0]?.set) : '—';
 const deckName = (key: string) =>
   key
     .substring(key.indexOf(':') + 1)
@@ -89,7 +92,7 @@ const deckName = (key: string) =>
         <div>
           <p class="eyebrow">YOUR GAME. YOUR PATTERN.</p>
           <h1>나의 플레이를 읽다<span>.</span></h1>
-          <p class="muted">최근 경기 속에 숨어 있는 당신의 TFT 플레이 습관.</p>
+          <p class="muted">최근 50경기 속에 숨어 있는 당신의 TFT 플레이 습관.</p>
         </div>
         <form class="search-form" @submit.prevent="search()">
           <div class="search-fields">
@@ -179,7 +182,7 @@ const deckName = (key: string) =>
             </div>
           </div>
           <div class="profile-period">
-            <span class="pill">최근 {{ stats.count }}경기</span>
+            <span class="pill">최근 50경기 기준 · {{ stats.count }}경기 분석</span>
             <p class="small muted">{{ new Date(data.fetchedAt).toLocaleString('ko-KR') }} 기준</p>
           </div>
         </section>
@@ -206,7 +209,7 @@ const deckName = (key: string) =>
               }"
               >{{ formLabel }}</strong
             >
-            <p>이전 10경기 → 최근 10경기</p>
+            <p>이전 25경기 → 최근 25경기</p>
           </section>
         </div>
         <div class="analysis-note">
@@ -230,14 +233,14 @@ const deckName = (key: string) =>
                 최근 5경기<strong>{{ decimal(form.five) }}<small>위</small></strong>
               </div>
               <div>
-                최근 10경기<strong>{{ decimal(form.recent) }}<small>위</small></strong>
+                최근 25경기<strong>{{ decimal(form.recent) }}<small>위</small></strong>
               </div>
               <div>
-                이전 10경기<strong>{{ decimal(form.previous) }}<small>위</small></strong>
+                이전 25경기<strong>{{ decimal(form.previous) }}<small>위</small></strong>
               </div>
             </div>
             <p class="small muted">
-              5·10경기 미만은 확보된 경기 평균입니다. 폼 변화는 20경기부터 표시합니다.
+              5·25경기 미만은 확보된 경기 평균입니다. 폼 변화는 50경기부터 표시합니다.
             </p>
           </section>
           <PlayerCard :data="data" />
@@ -373,10 +376,14 @@ const deckName = (key: string) =>
             </div>
           </div>
           <p class="small muted">
-            증강 선택과 캐리 의존도는 현재 확보한 데이터만으로 판정하지 않습니다.
+            증강 선택 기록은 아래 선호 증강체 섹션에서 확인할 수 있습니다. 캐리 의존도는 판정하지
+            않습니다.
           </p>
         </section>
-        <MatchList :data="data" />
+        <PreferencePanel :data="data" kind="augment" /><PreferencePanel
+          :data="data"
+          kind="trait"
+        /><MatchList :data="data" />
       </template>
       <footer>
         <span class="brand footer-brand">TFT PROFILE</span>

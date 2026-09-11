@@ -1,3 +1,4 @@
+import { ANALYSIS_MATCH_COUNT, FORM_WINDOW } from '../config/analysis';
 import type { Game } from '../types/riot';
 export const mean = (values: number[]): number | null =>
   values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
@@ -11,13 +12,16 @@ export function statistics(games: Game[]) {
     win: n ? p.filter((x) => x === 1).length / n : null,
   };
 }
-/** Input is newest first. Only compare two COMPLETE ten-game windows. Positive delta is improvement. */
+/** Input is newest first: all 50 games contribute to the 25 vs 25 trend. */
 export function formAnalysis(games: Game[]) {
-  const recent = mean(games.slice(0, 10).map((g) => g.player.placement));
+  const recent = mean(games.slice(0, FORM_WINDOW).map((g) => g.player.placement));
   const previous =
-    games.length >= 20 ? mean(games.slice(10, 20).map((g) => g.player.placement)) : null;
+    games.length >= ANALYSIS_MATCH_COUNT
+      ? mean(games.slice(FORM_WINDOW, ANALYSIS_MATCH_COUNT).map((g) => g.player.placement))
+      : null;
   return {
     five: mean(games.slice(0, 5).map((g) => g.player.placement)),
+    ten: mean(games.slice(0, 10).map((g) => g.player.placement)),
     recent,
     previous,
     delta: previous !== null && recent !== null ? previous - recent : null,

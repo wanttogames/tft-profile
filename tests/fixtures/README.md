@@ -16,3 +16,13 @@ The original response has `itemNames` and no `items` on its units. This reproduc
 The current official DTO reference was separately rechecked at https://developer.riotgames.com/api-details/tft-match-v1 on 2026-09-10. It documents info.participants / puuid and both items and itemNames, but its field table does not establish that both equipment representations are always present.
 
 **Limit:** this is a historical response published by its repository author, not a fresh response fetched by us with the user's API key. The failing user's exact current response was not supplied. New malformed/null/legacy variations in tests are explicitly constructed regression cases rather than captured responses.
+
+## Current ko_kr static-data excerpt (2026-09-11)
+
+`cdragon-ko-kr.excerpt.json` contains selected original records from https://raw.communitydragon.org/latest/cdragon/tft/ko_kr.json downloaded on 2026-09-11.
+
+- Original entire response SHA-256: `4627a0e4ded9f884c351e74d929d5da5b5aa403296b4d75dea488973a3c2ebdb`.
+- Retained real records: set 18 `DA_18_Sejuani` and `DA_18_Elderwood`, `TFT_Item_InfinityEdge`, `DA_18_BigGrabBag`, `TFT6_Augment_SecondWind1`.
+- Transformation: filter the original sets/items to those entries, replace setData with an empty array, JSON reformat. Names, IDs, and properties within selected entries are unchanged.
+- Production catalog generation uses the complete response, not this test excerpt. The server snapshot is a compact derived index with the retrieval timestamp and source attached.
+- New tests containing numeric alias 42, generic `shared` IDs, empty/malformed data, or a derived board are synthetic boundary cases. They are not claimed to be captured game responses.

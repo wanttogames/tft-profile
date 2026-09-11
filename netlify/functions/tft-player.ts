@@ -1,6 +1,8 @@
+import { ANALYSIS_MATCH_COUNT } from '../../src/config/analysis';
+import { loadGameAssets } from '../lib/staticData';
 import { parseParticipant, ParticipantParseError } from '../lib/matchParticipant';
 import { parseRiotId } from '../../src/utils/riotId';
-import type { Account, Asset, Game, League, Match, PlayerData } from '../../src/types/riot';
+import type { Account, Game, League, Match, PlayerData } from '../../src/types/riot';
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -50,13 +52,20 @@ async function reserve() {
     await pause(80 - (now - last));
   }
 }
-async function riot<T>(host: string, path: string, key: string): Promise<T> {
+async function riot<T>(
+  host: string,
+  path: string,
+  key: string,
+  deadline?: AbortSignal,
+): Promise<T> {
   await reserve();
   let r: Response;
   try {
     r = await fetch(`https://${host}.api.riotgames.com${path}`, {
       headers: { 'X-Riot-Token': key },
-      signal: AbortSignal.timeout(7000),
+      signal: deadline
+        ? AbortSignal.any([deadline, AbortSignal.timeout(7000)])
+        : AbortSignal.timeout(7000),
     });
   } catch {
     throw new ApiError(504, 'Riot API 응답이 지연되고 있습니다. 잠시 후 다시 시도해 주세요.');
@@ -143,49 +152,6 @@ export function toGame(m: Match, puuid: string): Game | null {
     player: participant,
   };
 }
-async function staticJson(url: string) {
-  const r = await fetch(url, { signal: AbortSignal.timeout(4500) });
-  if (!r.ok) throw new Error('static');
-  return r.json();
-}
-async function assetsFor(version: string): Promise<Record<string, Asset>> {
-  const patch = version.match(/(?:Version\s+)?(\d+)\.(\d+)\./);
-  if (!patch) return {};
-  return cached('assets:' + patch[1] + '.' + patch[2], 3600000, async () => {
-    const versions = await cached<string[]>('versions', 3600000, () =>
-      staticJson('https://ddragon.leagueoflegends.com/api/versions.json'),
-    );
-    const v = versions.find((v) => v.startsWith(`${patch[1]}.${patch[2]}.`));
-    if (!v) return {};
-    const result: Record<string, Asset> = {};
-    await Promise.all(
-      ['champion', 'trait', 'item'].map(async (type) => {
-        const json = await staticJson(
-          `https://ddragon.leagueoflegends.com/cdn/${v}/data/ko_KR/tft-${type}.json`,
-        );
-        for (const [id, raw] of Object.entries(json.data || {})) {
-          const x = raw as {
-            name: string;
-            id?: string;
-            tier?: number;
-            image?: { full: string; group: string };
-          };
-          if (typeof x.name !== 'string') continue;
-          const a: Asset = {
-            name: x.name,
-            cost: type === 'champion' ? x.tier : undefined,
-            image: x.image
-              ? `https://ddragon.leagueoflegends.com/cdn/${v}/img/${encodeURIComponent(x.image.group)}/${encodeURIComponent(x.image.full)}`
-              : undefined,
-          };
-          result[id] = a;
-          if (x.id) result[x.id] = a;
-        }
-      }),
-    );
-    return result;
-  });
-}
 export async function loadPlayer(
   gameName: string,
   tagLine: string,
@@ -193,7 +159,10 @@ export async function loadPlayer(
 ): Promise<PlayerData> {
   return cached(`player:${gameName.toLowerCase()}#${tagLine.toLowerCase()}`, 120000, async () => {
     const enc = encodeURIComponent;
-    const account = await riot<Account>(
+    const deadline = AbortSignal.timeout(35000);
+    const request = <T>(host: string, path: string, key: string) =>
+      riot<T>(host, path, key, deadline);
+    const account = await request<Account>(
       'asia',
       `/riot/account/v1/accounts/by-riot-id/${enc(gameName)}/${enc(tagLine)}`,
       key,
@@ -201,18 +170,18 @@ export async function loadPlayer(
     if (typeof account?.puuid !== 'string')
       throw new ApiError(502, 'Riot 계정 데이터 형식을 확인할 수 없습니다.');
     const [leagues, ids] = await Promise.all([
-      riot<League[]>('kr', `/tft/league/v1/by-puuid/${enc(account.puuid)}`, key),
-      riot<string[]>(
+      request<League[]>('kr', `/tft/league/v1/by-puuid/${enc(account.puuid)}`, key),
+      request<string[]>(
         'asia',
-        `/tft/match/v1/matches/by-puuid/${enc(account.puuid)}/ids?start=0&count=30`,
+        `/tft/match/v1/matches/by-puuid/${enc(account.puuid)}/ids?start=0&count=${ANALYSIS_MATCH_COUNT}`,
         key,
       ),
     ]);
     if (!Array.isArray(ids) || ids.some((id) => typeof id !== 'string') || !Array.isArray(leagues))
       throw new ApiError(502, 'Riot 전적 데이터 형식을 확인할 수 없습니다.');
-    const matches = await limitedMap([...new Set(ids)].slice(0, 30), 3, (id) =>
+    const matches = await limitedMap([...new Set(ids)].slice(0, ANALYSIS_MATCH_COUNT), 3, (id) =>
       cached<Match>('match:' + id, 3600000, () =>
-        riot('asia', `/tft/match/v1/matches/${enc(id)}`, key),
+        request('asia', `/tft/match/v1/matches/${enc(id)}`, key),
       ),
     );
     const eligible = matches
@@ -220,29 +189,19 @@ export async function loadPlayer(
       .filter((g): g is Game => !!g)
       .sort((a, b) => b.date - a.date);
     const set = eligible[0]?.set;
-    const games = eligible.filter((g) => g.set === set).slice(0, 20);
+    const games = eligible.filter((g) => g.set === set).slice(0, ANALYSIS_MATCH_COUNT);
     const warnings: string[] = [];
-    if (games.length < 20)
+    if (games.length < ANALYSIS_MATCH_COUNT)
       warnings.push(
         `최근 ${ids.length}경기를 조회해 최신 플레이 세트의 랭크 ${games.length}경기를 찾았습니다. 일반·더블 업·이전 세트는 제외합니다.`,
       );
-    let assets: Record<string, Asset> = {};
-    if (games[0])
-      try {
-        assets = await assetsFor(games[0].version);
-      } catch {
-        warnings.push('공식 정적 데이터를 불러오지 못해 일부 이름을 Riot 식별자로 표시합니다.');
-      }
-    const used = new Set(
-      games.flatMap((g) => [
-        ...g.player.units.flatMap((u) => [
-          u.character_id,
-          ...(u.itemNames?.length ? u.itemNames : u.items.map(String)),
-        ]),
-        ...g.player.traits.map((t) => t.name),
-      ]),
-    );
-    assets = Object.fromEntries(Object.entries(assets).filter(([id]) => used.has(id)));
+    const staticResult = games.length ? await loadGameAssets(games) : null;
+    if (staticResult) warnings.push(...staticResult.warnings);
+    const missingAugments = games.filter((g) => g.player.augments === undefined).length;
+    if (missingAugments)
+      warnings.push(
+        `증강체 정보가 없는 ${missingAugments}경기는 증강체 분석의 분모에서 제외합니다.`,
+      );
     return {
       account: {
         puuid: account.puuid,
@@ -251,7 +210,10 @@ export async function loadPlayer(
       },
       rank: leagues.find((l) => l.queueType === 'RANKED_TFT') || null,
       games,
-      assets,
+      assets: staticResult?.assets ?? {},
+      staticData: staticResult
+        ? { source: staticResult.source, fetchedAt: staticResult.fetchedAt }
+        : undefined,
       warnings,
       fetchedAt: Date.now(),
       scanned: ids.length,
