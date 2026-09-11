@@ -14,14 +14,6 @@ export function demoPlayer(): PlayerData {
   assets.DEMO_Item0 = { name: '구인수의 격노검' };
   assets.DEMO_Item1 = { name: '무한의 대검' };
   assets.DEMO_Item2 = { name: '워모그의 갑옷' };
-  [
-    '가상 전투 증강',
-    '가상 경제 증강',
-    '가상 아이템 증강',
-    '가상 경험치 증강',
-    '가상 리롤 증강',
-    '가상 지원 증강',
-  ].forEach((name, i) => (assets['DEMO_Augment' + i] = { name }));
   const games: Game[] = placements.map((placement, i) => ({
     id: `DEMO_${i}`,
     date: 1789020000000 - i * 3600000,
@@ -30,6 +22,8 @@ export function demoPlayer(): PlayerData {
     set: 0,
     player: {
       puuid: 'demo',
+      players_eliminated: placement <= 4 ? 2 : 0,
+      total_damage_to_players: 140 - placement * 12,
       placement,
       level: i % 4 === 0 ? 9 : i % 3 === 0 ? 7 : 8,
       last_round: placement <= 4 ? 35 : 28,
@@ -39,13 +33,8 @@ export function demoPlayer(): PlayerData {
         tier: i % 3 === 0 && j < 2 ? 3 : j % 3 === 0 ? 1 : 2,
         rarity: j % 5,
         items: [],
-        itemNames: j < 3 ? ['DEMO_Item' + j] : [],
+        itemNames: j < 3 ? ['DEMO_Item' + j, 'DEMO_Item' + ((j + 1) % 3)] : [],
       })),
-      augments: [
-        'DEMO_Augment' + (i % 6),
-        'DEMO_Augment' + ((i + 2) % 6),
-        'DEMO_Augment' + ((i + 4) % 6),
-      ],
       traits: [
         { name: 'DEMO_Trait' + (i % 5), num_units: 5, style: 3, tier_current: 2, tier_total: 4 },
         {

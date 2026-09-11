@@ -57,11 +57,11 @@ describe('deck diversity', () => {
   });
 });
 describe('player card', () => {
-  it('calculates high-end frequency and top4 stability', () => {
+  it('calculates high-end frequency and top4 survival', () => {
     const scores = playerScores(fixture([1, 2, 4, 5, 8]));
     expect(scores?.ceiling).toBe(40);
-    expect(scores?.stability).toBe(60);
-    expect(scores?.risk).toBe(60);
+    expect(scores?.survival).toBe(60);
+    expect(scores?.stability).toBe(51);
   });
   it('perfect placement is bounded and not random', () => {
     const g = fixture(Array(50).fill(1));

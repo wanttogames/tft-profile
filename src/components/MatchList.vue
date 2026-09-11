@@ -13,7 +13,7 @@ watch(
   },
 );
 const visibleGames = computed(() => props.data.games.slice(0, visibleCount.value));
-const name = (kind: 'unit' | 'item' | 'trait' | 'augment', id: string, set?: number) =>
+const name = (kind: 'unit' | 'item' | 'trait', id: string, set?: number) =>
   displayName(props.data.assets, kind, id, set);
 const items = (u: Unit) => (u.itemNames?.length ? u.itemNames : u.items.map(String));
 const date = (n: number) =>
@@ -92,25 +92,10 @@ const date = (n: number) =>
             {{ t.tier_current }}단계</span
           >
         </p>
-        <div class="match-augments">
-          <h3>선택한 증강체</h3>
-          <template v-if="game.player.augments?.length"
-            ><AssetBadge
-              v-for="(id, index) in game.player.augments"
-              :key="index"
-              :id="id"
-              :asset="lookupAsset(data.assets, 'augment', id)"
-          /></template>
-          <p v-else class="small muted">
-            {{
-              game.player.augmentStatus === 'parse-error'
-                ? '증강 데이터 파싱 오류'
-                : game.player.augments === undefined
-                  ? '이 경기에는 증강체 정보가 제공되지 않았습니다.'
-                  : '기록된 증강체 선택이 없습니다.'
-            }}
-          </p>
-        </div>
+        <p class="small muted">
+          플레이어 피해량 {{ game.player.total_damage_to_players ?? '—' }} · 플레이어 처치
+          {{ game.player.players_eliminated ?? '—' }}
+        </p>
       </div>
     </details>
     <div class="load-more">

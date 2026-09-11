@@ -36,3 +36,7 @@ Only PUUID, riotIdGameName and riotIdTagline were anonymized, plus JSON formatti
 New tests preserve the historical fixture's actual slot counts (one participant has two augments, the others three), explicitly test all three slots for player 7, and map its still-supported IDs through the current ko_KR snapshot. Its retired hero augment is absent from the current snapshot and keeps its ID fallback. Synthetic malformed cases and the fifty-game repetition are labelled as derived fixtures, never fresh API captures.
 
 **Remaining evidence needed:** the user's failing live response. No Riot API key was configured in this workspace. `npm run capture:match -- "gameName#tagLine"` captures a fresh, anonymized full response locally and records the searched participant alias. Supply the resulting JSON to reproduce the exact issue; never supply an API key.
+
+## 현재 보드 프로필 테스트
+
+증강 기능과 그 전용 테스트·캡처 명령은 제거했습니다. 위 설명 중 증강 테스트/캡처 명령은 이전 버전 이력입니다. 실제 fixture JSON 자체는 원본 증거 보존을 위해 변경하지 않았습니다. `tests/profile.test.ts`는 이 응답의 피해량·처치 필드 보존을 검증합니다. 50경기 점수·7개 성향·중립/부족 결과·반복 아이템·고점/저점 테스트에는 명시적인 합성 경기 표본을 사용합니다. 실제 API를 재호출하지 않습니다.

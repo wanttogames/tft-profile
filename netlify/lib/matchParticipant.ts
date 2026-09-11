@@ -1,4 +1,3 @@
-import { parseAugments, debugAugments } from './augmentParser';
 import type { Participant, Trait, Unit } from '../../src/types/riot';
 
 /** A safe field path, never a raw response, token or player identifier. */
@@ -63,7 +62,6 @@ export function parseParticipant(participants: unknown, puuid: string): Particip
   if (!Array.isArray(participants)) throw new ParticipantParseError('info.participants');
   const value = participants.find((p) => object(p) && p.puuid === puuid);
   if (!value) return null;
-  debugAugments(value);
   if (!Array.isArray(value.units)) throw new ParticipantParseError('units');
   if (!Array.isArray(value.traits)) throw new ParticipantParseError('traits');
   const placement = number(value.placement, 'placement', true);
@@ -76,6 +74,12 @@ export function parseParticipant(participants: unknown, puuid: string): Particip
     time_eliminated: number(value.time_eliminated, 'time_eliminated'),
     units: value.units.map(parseUnit),
     traits: value.traits.map(parseTrait),
-    ...parseAugments(value),
+    players_eliminated: optionalCount(value.players_eliminated),
+    total_damage_to_players: optionalCount(value.total_damage_to_players),
   };
+}
+
+// Optional combat counters: never turn missing/invalid data into a measured zero.
+function optionalCount(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0 ? value : undefined;
 }

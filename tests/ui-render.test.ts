@@ -15,11 +15,11 @@ describe('server-rendered 50-game UI', () => {
   });
   it('renders the preference table and sample rules using all fifty games', async () => {
     const html = await renderToString(
-      createSSRApp(PreferencePanel, { data: demoPlayer(), kind: 'augment' }),
+      createSSRApp(PreferencePanel, { data: demoPlayer(), kind: 'unit' }),
     );
-    expect(html).toContain('선호 증강체 TOP 5');
+    expect(html).toContain('선호 챔피언 TOP 10');
     expect(html).toContain('분석 50경기');
-    expect(html).toContain('가상 전투 증강');
-    expect(html).toContain('항목별 3회 미만');
+    expect(html).toContain('아리');
+    expect(html).toContain('3회 미만');
   });
 });

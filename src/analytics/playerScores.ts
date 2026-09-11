@@ -1,38 +1,29 @@
 import type { Game } from '../types/riot';
-import { statistics, formAnalysis } from './formAnalysis';
-import { deckDiversity, deckKey } from './deckDiversity';
+import { formAnalysis } from './formAnalysis';
+import { profileMetrics } from './profileAnalysis';
 const clamp = (n: number) => Math.round(Math.max(0, Math.min(100, n)));
-export function playerScores(games: Game[]) {
-  if (games.length < 5) return null;
-  const stats = statistics(games),
-    form = formAnalysis(games);
-  const pairs = games
-    .slice(1)
-    .map((g, i) => [deckKey(g), deckKey(games[i]!)])
-    .filter((p) => p[0] && p[1]);
+export function playerScores(input: Game[]) {
+  const m = profileMetrics(input);
+  if (m.games.length < 5) return null;
+  const form = formAnalysis(m.games);
   return {
-    // Descriptive within-sample indices, NOT skill percentile or substitute ranked ladder.
-    ceiling: clamp((games.filter((g) => g.player.placement <= 2).length / games.length) * 100),
-    stability: clamp(stats.top4! * 100),
-    flexibility:
-      pairs.length >= 4
-        ? clamp((pairs.filter((p) => p[0] !== p[1]).length / pairs.length) * 100)
-        : null,
-    diversity: deckDiversity(games).score,
+    ceiling: clamp(m.top2! * 100),
+    // Maximum population variance on bounded placements [1,8] is (8-1)^2 / 4 = 12.25.
+    stability: clamp((1 - m.variance! / 12.25) * 100),
+    flexibility: m.flexibility,
+    diversity: m.deck.score,
+    survival: clamp(m.stats.top4! * 100),
     form: form.delta === null ? null : clamp(50 + (form.delta / 7) * 50),
-    risk: clamp(
-      (games.filter((g) => g.player.placement <= 2 || g.player.placement >= 7).length /
-        games.length) *
-        100,
-    ),
   };
 }
 export const scoreHelp = {
-  ceiling: '고점력 = 1~2등 비율 × 100',
-  stability: '안정성 = TOP4 비율 × 100',
+  ceiling: '고점력 = 1~2위 비율 × 100',
+  stability:
+    '안정성 = (1 − 등수 분산 ÷ 12.25) × 100. 등수가 일정할수록 높으며, 계속 하위권이어도 높을 수 있습니다.',
   flexibility:
-    '유연성 = 인접 경기의 주요 특성 조합 변경 비율 × 100. 경기 내 전환 능력을 뜻하지 않습니다.',
-  diversity: '덱 다양성 = 주요 특성 조합의 정규화 Shannon 엔트로피 × 100',
-  form: '최근 폼 = 50 + (이전 25경기 평균 − 최근 25경기 평균) ÷ 7 × 50',
-  risk: '리스크 성향 = 1~2등 또는 7~8등 비율 × 100. 실제 위험 선택의 증거가 아닌 결과의 극단성입니다.',
+    '유연성 = 인접 경기 최종 챔피언·활성 특성 집합의 Jaccard 변화율 평균 × 100. 둘 다 있는 같은 세트 경기 쌍 4개 이상 필요. 경기 중 전환 능력은 아닙니다.',
+  diversity:
+    '덱 다양성 = 주요 활성 특성 상위 2개 조합의 Shannon 엔트로피 ÷ log(유효 경기 수) × 100',
+  survival: '순방력 = TOP4 비율 × 100',
+  form: '최근 폼 = 50 + (이전 25경기 평균 − 최근 25경기 평균) ÷ 7 × 50. 50경기 필요.',
 };

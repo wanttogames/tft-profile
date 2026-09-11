@@ -1092,13 +1092,6 @@ footer p {
   color: #c7d2df;
   margin: 0;
 }
-.match-augments {
-  padding-top: 4px;
-  border-top: 1px solid var(--border);
-}
-.match-augments .asset {
-  margin: 0 20px 12px 0;
-}
 .load-more {
   text-align: center;
   border-top: 1px solid var(--border);
@@ -1106,4 +1099,34 @@ footer p {
 }
 .load-more p {
   margin-bottom: 12px;
+}
+
+.card-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+.card-stats strong {
+  display: block;
+  font-size: 24px;
+  color: var(--text);
+  margin: 6px 0;
+  overflow-wrap: anywhere;
+}
+.profile-style {
+  font-size: 24px;
+  color: #8de6c8;
+  margin: 20px 0;
+}
+.profile-comment {
+  border-left: 3px solid #8de6c8;
+  padding-left: 14px;
+  line-height: 1.8;
+  margin-top: 24px;
+}
+.player-card h2 {
+  overflow-wrap: anywhere;
 }

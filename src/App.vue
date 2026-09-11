@@ -10,6 +10,7 @@ import { strengthWeakness } from './analytics/strengthWeakness';
 import { deckDiversity } from './analytics/deckDiversity';
 import { patterns } from './analytics/patterns';
 import FormChart from './components/FormChart.vue';
+import BoardInsights from './components/BoardInsights.vue';
 import PlayerCard from './components/PlayerCard.vue';
 import MatchList from './components/MatchList.vue';
 import PreferencePanel from './components/PreferencePanel.vue';
@@ -376,14 +377,14 @@ const deckName = (key: string) =>
             </div>
           </div>
           <p class="small muted">
-            증강 선택 기록은 아래 선호 증강체 섹션에서 확인할 수 있습니다. 캐리 의존도는 판정하지
-            않습니다.
+            최종 보드에서 관측한 기록이며 운영 과정이나 실패 원인을 단정하지 않습니다.
           </p>
         </section>
-        <PreferencePanel :data="data" kind="augment" /><PreferencePanel
-          :data="data"
-          kind="trait"
-        /><MatchList :data="data" />
+        <BoardInsights :data="data" />
+        <PreferencePanel :data="data" kind="unit" />
+        <PreferencePanel :data="data" kind="item" />
+        <PreferencePanel :data="data" kind="trait" />
+        <MatchList :data="data" />
       </template>
       <footer>
         <span class="brand footer-brand">TFT PROFILE</span>

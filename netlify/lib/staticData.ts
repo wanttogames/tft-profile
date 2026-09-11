@@ -63,7 +63,6 @@ export function requestedAssets(games: Game[]): AssetRequest[] {
       (u.itemNames?.length ? u.itemNames : u.items.map(String)).forEach((id) => add('item', id));
     });
     g.player.traits.forEach((t) => add('trait', t.name, g.set));
-    g.player.augments?.forEach((id) => add('augment', id));
   });
   return [...requests.values()];
 }
@@ -85,7 +84,6 @@ async function officialFallback(version: string, set: number): Promise<AssetMap>
       ['unit', 'champion'],
       ['item', 'item'],
       ['trait', 'trait'],
-      ['augment', 'augments'],
     ];
     const results = await Promise.allSettled(
       types.map(async ([kind, file]) =>

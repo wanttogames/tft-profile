@@ -20,7 +20,6 @@ const games = () => {
   g.player.traits = [
     { name: 'DA_18_Elderwood', num_units: 3, style: 1, tier_current: 1, tier_total: 5 },
   ];
-  g.player.augments = ['DA_18_BigGrabBag'];
   return [g];
 };
 afterEach(() => {
@@ -34,11 +33,10 @@ describe('server static data delivery', () => {
     const fetch = vi.fn();
     vi.stubGlobal('fetch', fetch);
     const result = await loadGameAssets(games());
-    expect(Object.keys(result.assets)).toHaveLength(4);
+    expect(Object.keys(result.assets)).toHaveLength(3);
     expect(fetch).not.toHaveBeenCalled();
     expect(result.warnings).toEqual([]);
     expect(displayName(result.assets, 'unit', 'DA_18_Sejuani', 18)).toBe('세주아니');
-    expect(displayName(result.assets, 'augment', 'DA_18_BigGrabBag')).toBe('큰 꾸러미');
   });
   it('retains Korean mappings on refresh network failure', async () => {
     vi.useFakeTimers();
