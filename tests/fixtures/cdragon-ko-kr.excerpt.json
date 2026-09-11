@@ -3,7 +3,10 @@
     {
       "apiName": "TFT_Item_InfinityEdge",
       "associatedTraits": [],
-      "composition": ["TFT_Item_BFSword", "TFT_Item_SparringGloves"],
+      "composition": [
+        "TFT_Item_BFSword",
+        "TFT_Item_SparringGloves"
+      ],
       "desc": "<TFTKeyword>정밀</TFTKeyword>을 얻습니다.<br><br>{{TFT_Keyword_Precision}}",
       "effects": {
         "AD": 0.3499999940395355,
@@ -16,42 +19,10 @@
       "incompatibleTraits": [],
       "isAugment": false,
       "name": "무한의 대검",
-      "tags": ["{7ea41d13}", "CritChance"],
-      "unique": false
-    },
-    {
-      "apiName": "TFT6_Augment_SecondWind1",
-      "associatedTraits": [],
-      "composition": [],
-      "desc": "전투 시작 @Delay@초 후 아군이 잃은 체력의 @HealPercent@%를 회복합니다.",
-      "effects": {
-        "Delay": 10.0,
-        "HealPercent": 40.0
-      },
-      "from": null,
-      "icon": "assets/maps/tft/icons/augments/hexcore/second--wind-i.tex",
-      "id": null,
-      "incompatibleTraits": [],
-      "isAugment": true,
-      "name": "재생의 바람",
-      "tags": ["{d11fd6d5}", "{b72bd3bf}", "{d02ae323}", "{807eed8a}"],
-      "unique": false
-    },
-    {
-      "apiName": "DA_18_BigGrabBag",
-      "associatedTraits": [],
-      "composition": [],
-      "desc": "무작위 조합 아이템 3개, @Gold@골드, 재조합기 1개를 획득합니다.",
-      "effects": {
-        "Gold": 2.0
-      },
-      "from": null,
-      "icon": "assets/maps/tft/icons/augments/hexcore/grab-bag-ii.tex",
-      "id": null,
-      "incompatibleTraits": [],
-      "isAugment": true,
-      "name": "큰 꾸러미",
-      "tags": ["{ce1fd21c}"],
+      "tags": [
+        "{7ea41d13}",
+        "CritChance"
+      ],
       "unique": false
     }
   ],
@@ -86,7 +57,10 @@
             "range": 1.0
           },
           "tileIcon": "assets/characters/tft18_sejuani/tft18_sejuani_square.tex",
-          "traits": ["햇빛", "전쟁기계"]
+          "traits": [
+            "햇빛",
+            "전쟁기계"
+          ]
         }
       ],
       "traits": [

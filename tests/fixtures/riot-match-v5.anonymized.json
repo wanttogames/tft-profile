@@ -19,11 +19,6 @@
     "game_version": "Version 13.11.513.8260 (Jun 06 2023/23:42:08) [PUBLIC] ",
     "participants": [
       {
-        "augments": [
-          "TFT8_Augment_BrawlerTrait",
-          "TFT8_Augment_RivenReverberation",
-          "TFT6_Augment_SunfireBoard"
-        ],
         "companion": {
           "content_ID": "9a78016d-8088-4a13-b8e9-d57e22838938",
           "item_ID": 27012,
@@ -113,7 +108,9 @@
           },
           {
             "character_id": "TFT8_Ashe",
-            "itemNames": ["TFT_Item_LastWhisper"],
+            "itemNames": [
+              "TFT_Item_LastWhisper"
+            ],
             "name": "",
             "rarity": 0,
             "tier": 2
@@ -141,7 +138,10 @@
           },
           {
             "character_id": "TFT8_Riven",
-            "itemNames": ["TFT_Item_WarmogsArmor", "TFT_Item_Redemption"],
+            "itemNames": [
+              "TFT_Item_WarmogsArmor",
+              "TFT_Item_Redemption"
+            ],
             "name": "",
             "rarity": 2,
             "tier": 2
@@ -160,11 +160,6 @@
         ]
       },
       {
-        "augments": [
-          "TFT7_Augment_Consistency",
-          "TFT8_Augment_RivenSupport",
-          "TFT6_Augment_PortableForge"
-        ],
         "companion": {
           "content_ID": "138b870c-cd50-41eb-9409-3c405a5c487a",
           "item_ID": 49001,
@@ -268,14 +263,19 @@
         "units": [
           {
             "character_id": "TFT8_Sylas",
-            "itemNames": ["TFT_Item_RedBuff"],
+            "itemNames": [
+              "TFT_Item_RedBuff"
+            ],
             "name": "",
             "rarity": 0,
             "tier": 2
           },
           {
             "character_id": "TFT8_Nasus",
-            "itemNames": ["TFT_Item_Morellonomicon", "TFT_Item_LocketOfTheIronSolari"],
+            "itemNames": [
+              "TFT_Item_Morellonomicon",
+              "TFT_Item_LocketOfTheIronSolari"
+            ],
             "name": "",
             "rarity": 0,
             "tier": 2
@@ -293,21 +293,28 @@
           },
           {
             "character_id": "TFT8_Vi",
-            "itemNames": ["TFT_Item_NeedlesslyLargeRod"],
+            "itemNames": [
+              "TFT_Item_NeedlesslyLargeRod"
+            ],
             "name": "",
             "rarity": 1,
             "tier": 2
           },
           {
             "character_id": "TFT8_Vayne",
-            "itemNames": ["TFT_Item_StatikkShiv", "TFT4_Item_OrnnTheCollector"],
+            "itemNames": [
+              "TFT_Item_StatikkShiv",
+              "TFT4_Item_OrnnTheCollector"
+            ],
             "name": "",
             "rarity": 2,
             "tier": 2
           },
           {
             "character_id": "TFT8_Riven",
-            "itemNames": ["TFT_Item_NegatronCloak"],
+            "itemNames": [
+              "TFT_Item_NegatronCloak"
+            ],
             "name": "",
             "rarity": 2,
             "tier": 2
@@ -333,11 +340,6 @@
         ]
       },
       {
-        "augments": [
-          "TFT6_Augment_CyberneticUplink1",
-          "TFT8_5_Augment_WarwickSupport",
-          "TFT8_Augment_ADMINEmblem"
-        ],
         "companion": {
           "content_ID": "37ba05db-c51c-49c1-9aa6-3d3e55194b4e",
           "item_ID": 14009,
@@ -455,14 +457,18 @@
           },
           {
             "character_id": "TFT8_LeeSin",
-            "itemNames": ["TFT8_Item_ADMINEmblemItem"],
+            "itemNames": [
+              "TFT8_Item_ADMINEmblemItem"
+            ],
             "name": "",
             "rarity": 1,
             "tier": 2
           },
           {
             "character_id": "TFT8_Jax",
-            "itemNames": ["TFT8_Item_ADMINEmblemItem"],
+            "itemNames": [
+              "TFT8_Item_ADMINEmblemItem"
+            ],
             "name": "",
             "rarity": 2,
             "tier": 2
@@ -499,7 +505,6 @@
         ]
       },
       {
-        "augments": ["TFT6_Augment_LudensEcho1", "TFT8_5_Augment_GarenSupport"],
         "companion": {
           "content_ID": "88d0f749-7f77-4c98-8253-5c684ab5647b",
           "item_ID": 39016,
@@ -597,11 +602,6 @@
         ]
       },
       {
-        "augments": [
-          "TFT6_Augment_ThrillOfTheHunt1",
-          "TFT8_5_Augment_WarwickSupport",
-          "TFT6_Augment_Ascension"
-        ],
         "companion": {
           "content_ID": "d847608a-1917-4efa-9269-e28317cd09fb",
           "item_ID": 27022,
@@ -738,7 +738,9 @@
           },
           {
             "character_id": "TFT8_Leona",
-            "itemNames": ["TFT_Item_Redemption"],
+            "itemNames": [
+              "TFT_Item_Redemption"
+            ],
             "name": "",
             "rarity": 6,
             "tier": 2
@@ -760,11 +762,6 @@
         ]
       },
       {
-        "augments": [
-          "TFT8_Augment_HeartTrait",
-          "TFT8_Augment_ViegoCarry",
-          "TFT6_Augment_JeweledLotus"
-        ],
         "companion": {
           "content_ID": "4c0a3c47-2ad5-41fd-9a15-801c4923620e",
           "item_ID": 60001,
@@ -861,7 +858,9 @@
         "units": [
           {
             "character_id": "TFT8_Lulu",
-            "itemNames": ["TFT_Item_GuinsoosRageblade"],
+            "itemNames": [
+              "TFT_Item_GuinsoosRageblade"
+            ],
             "name": "",
             "rarity": 0,
             "tier": 3
@@ -890,21 +889,28 @@
           },
           {
             "character_id": "TFT8_LeeSin",
-            "itemNames": ["TFT_Item_GargoyleStoneplate"],
+            "itemNames": [
+              "TFT_Item_GargoyleStoneplate"
+            ],
             "name": "",
             "rarity": 1,
             "tier": 2
           },
           {
             "character_id": "TFT8_Malphite",
-            "itemNames": ["TFT_Item_DragonsClaw", "TFT_Item_BrambleVest"],
+            "itemNames": [
+              "TFT_Item_DragonsClaw",
+              "TFT_Item_BrambleVest"
+            ],
             "name": "",
             "rarity": 1,
             "tier": 3
           },
           {
             "character_id": "TFT8_Sona",
-            "itemNames": ["TFT_Item_NeedlesslyLargeRod"],
+            "itemNames": [
+              "TFT_Item_NeedlesslyLargeRod"
+            ],
             "name": "",
             "rarity": 2,
             "tier": 2
@@ -923,11 +929,6 @@
         ]
       },
       {
-        "augments": [
-          "TFT6_Augment_CyberneticShell1",
-          "TFT8_5_Augment_AlistarCarry",
-          "TFT6_Augment_ThrillOfTheHunt2"
-        ],
         "companion": {
           "content_ID": "af36c3f4-6377-47ca-abe9-943f92335cf3",
           "item_ID": 1019,
@@ -1038,28 +1039,39 @@
           },
           {
             "character_id": "TFT8_Annie",
-            "itemNames": ["TFT_Item_WarmogsArmor", "TFT_Item_RedBuff", "TFT_Item_BrambleVest"],
+            "itemNames": [
+              "TFT_Item_WarmogsArmor",
+              "TFT_Item_RedBuff",
+              "TFT_Item_BrambleVest"
+            ],
             "name": "",
             "rarity": 1,
             "tier": 3
           },
           {
             "character_id": "TFT8_Alistar",
-            "itemNames": ["TFT_Item_IonicSpark", "TFT_Item_BrambleVest"],
+            "itemNames": [
+              "TFT_Item_IonicSpark",
+              "TFT_Item_BrambleVest"
+            ],
             "name": "",
             "rarity": 2,
             "tier": 3
           },
           {
             "character_id": "TFT8_Ekko",
-            "itemNames": ["TFT_Item_ZekesHerald"],
+            "itemNames": [
+              "TFT_Item_ZekesHerald"
+            ],
             "name": "",
             "rarity": 4,
             "tier": 2
           },
           {
             "character_id": "TFT8_Viego",
-            "itemNames": ["TFT_Item_HextechGunblade"],
+            "itemNames": [
+              "TFT_Item_HextechGunblade"
+            ],
             "name": "",
             "rarity": 4,
             "tier": 2
@@ -1077,7 +1089,10 @@
           },
           {
             "character_id": "TFT8_Neeko",
-            "itemNames": ["TFT_Item_SpearOfShojin", "TFT_Item_MadredsBloodrazor"],
+            "itemNames": [
+              "TFT_Item_SpearOfShojin",
+              "TFT_Item_MadredsBloodrazor"
+            ],
             "name": "",
             "rarity": 4,
             "tier": 2
@@ -1092,11 +1107,6 @@
         ]
       },
       {
-        "augments": [
-          "TFT6_Augment_ItemGrabBag1",
-          "TFT8_Augment_KaisaStarCrossed",
-          "TFT6_Augment_TomeOfTraits1"
-        ],
         "companion": {
           "content_ID": "ba6b06ee-7d6b-41fd-8757-b42a40dc1811",
           "item_ID": 26007,
@@ -1211,7 +1221,9 @@
           },
           {
             "character_id": "TFT8_Nilah",
-            "itemNames": ["TFT8_Item_DefenderEmblemItem"],
+            "itemNames": [
+              "TFT8_Item_DefenderEmblemItem"
+            ],
             "name": "",
             "rarity": 2,
             "tier": 2
@@ -1236,7 +1248,11 @@
           },
           {
             "character_id": "TFT8_Shen",
-            "itemNames": ["TFT_Item_RedBuff", "TFT_Item_DragonsClaw", "TFT_Item_WarmogsArmor"],
+            "itemNames": [
+              "TFT_Item_RedBuff",
+              "TFT_Item_DragonsClaw",
+              "TFT_Item_WarmogsArmor"
+            ],
             "name": "",
             "rarity": 2,
             "tier": 2
@@ -1250,7 +1266,10 @@
           },
           {
             "character_id": "TFT8_Neeko",
-            "itemNames": ["TFT_Item_JeweledGauntlet", "TFT_Item_HextechGunblade"],
+            "itemNames": [
+              "TFT_Item_JeweledGauntlet",
+              "TFT_Item_HextechGunblade"
+            ],
             "name": "",
             "rarity": 4,
             "tier": 2

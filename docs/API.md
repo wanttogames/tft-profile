@@ -1,6 +1,6 @@
 # 현재 분석 범위
 
-사용자가 현재 실제 응답에 증강 선택 기록이 없음을 확인하여 증강 분석·UI·진단 명령을 제거했습니다. 아래의 이전 날짜별 증강 조사 기록은 과거 구현 이력입니다. 현재 구현·점수 기준은 README의 보드 분석과 TFT PLAYER PROFILE 절을 따릅니다.
+사용자가 현재 실제 응답에 증강 선택 기록이 없음을 확인하여 증강 분석·UI·진단 명령을 제거했습니다. 현재 구현·점수 기준은 README의 보드 분석과 TFT PLAYER PROFILE 절을 따릅니다.
 
 Participant 파서는 PUUID로 참가자를 선택하고 `players_eliminated`, `total_damage_to_players`를 추가 보존합니다. 공개 실제 Match fixture에서 해당 키를 확인했으며, 누락 또는 비정상 값은 undefined로 유지합니다. 등수/보드 분석에 영향을 주지 않습니다. 정적 데이터 요청은 유닛·아이템·특성만 수행합니다.
 
@@ -33,7 +33,7 @@ LeagueEntryDTO: queueType, tier, rank, leaguePoints, wins, losses. `RANKED_TFT`�
 
 MatchDto: metadata.match_id, info.game_datetime, game_length, game_version, queue_id, tft_set_number, participants. queueId는 deprecated이므로 읽지 않습니다.
 
-ParticipantDto: puuid, placement, level, last_round, time_eliminated, units, traits. level은 플레이어 최종 레벨이며 활성 유닛 수가 아닙니다. time_eliminated는 참가자가 탈락할 때까지의 초입니다. 현재 문서의 ParticipantDto에는 augments가 없습니다.
+ParticipantDto: puuid, placement, level, last_round, time_eliminated, units, traits. level은 플레이어 최종 레벨이며 활성 유닛 수가 아닙니다. time_eliminated는 참가자가 탈락할 때까지의 초입니다.
 
 UnitDto: character_id, tier(별 등급), rarity(비용과 다름), items(숫자 ID), itemNames(문자열 식별자). UnitDto.name은 빈 값일 수 있으므로 표시 이름으로 의존하지 않습니다.
 
@@ -52,29 +52,3 @@ TraitDto: name, num_units, style, tier_current, tier_total. 활성 판단은 tie
 최신 공식 `/api-details/tft-match-v1`의 ParticipantDto, UnitDto 표를 다시 읽었습니다. 표에는 `items`와 `itemNames`가 모두 있지만 둘 다 항상 존재한다는 required 제약은 없습니다. 공개된 data_version 5 실응답은 itemNames만 포함합니다. 이 차이를 반영해 wire DTO의 두 장비 필드를 선택적으로 선언하고, 파서에서 한쪽 표현이 유효하면 다른 쪽 생략을 허용합니다. PUUID는 info.participants에서 직접 비교합니다. 단순 형변환으로 누락된 수치를 만들지 않습니다.
 
 실응답 fixture는 `tests/fixtures/riot-match-v5.anonymized.json`이며 2023년 과거 응답입니다. 원본 출처·해시·익명화·파생 테스트 범위는 동봉 README에 기록했습니다. 최신 실응답을 직접 조회했다는 의미는 아닙니다. 최신 실패 경기의 정확한 응답이 제공되면 이 테스트군에 추가할 수 있습니다.
-
-## 2026-09-11: 50-match scope, augment data and Korean catalog
-
-The match-ID query now uses `start=0&count=50`, with at most 3 detail requests in flight. All retained current-played-set ranked games (up to 50) feed every analysis. The primary form metric compares newest 25 with previous 25, requiring 50 eligible matches. Other modes and previous sets are still excluded without fetching extra pages.
-
-The historical captured ParticipantDto contains `augments: string[]`. The adapter now preserves this field when it is a valid array. Missing/null/malformed augment data is marked unavailable rather than treated as an empty selection. A missing field in the reference table did not mean that all live responses omit it. Current live account responses remain unverified without a Riot key.
-
-CommunityDragon's current actual ko_kr data was fetched and parsed. Its set 18 champion `apiName` is literally `DA_18_Sejuani`, localized name `세주아니`. Root `sets` and `setData` contain champion/trait entries. Root `items` contains both items and augments, distinguished by `isAugment`. `apiName`, `characterName`, and an explicitly supplied `id` are the only alias sources. No DA/TFT prefix conversion or hand-written ID-to-name table is used.
-
-Source format and image routing:
-
-- https://raw.communitydragon.org/latest/cdragon/tft/ko_kr.json
-- https://github.com/CommunityDragon/Docs/blob/master/assets.md
-- https://github.com/CommunityDragon/CDTB/blob/master/cdtb/tftdata.py
-
-Catalog code is split between the pure `src/static-data/catalog.ts` index/lookup and `netlify/lib/staticData.ts` IO/cache. The bundled server snapshot is refreshed with `npm run update:static`. It is not imported into the front-end bundle. Unknown IDs receive exact-ID lookup against the latest played patch's official Data Dragon ko_KR files, then fall back to the original identifier. Older patch names may differ from current localized labels.
-
-Policy: https://developer.riotgames.com/docs/tft prohibits win rates for Legends and Legend-based Augments. The Runeterra Reforged mechanics are described at https://teamfighttactics.leagueoflegends.com/en-gb/news/game-updates/runeterra-reforged-mechanics-overview/ . Since the adapter cannot establish whether a historic set-9 selection was supplied by a Legend, it conservatively withholds all augment placement/TOP4 performance for set 9. Counts and usage rates remain available. No in-game queries or recommendations are added.
-
-## 2026-09-12 augment investigation
-
-Rechecked official https://developer.riotgames.com/api-details/tft-match-v1 and https://developer.riotgames.com/docs/tft. The current participant DTO page contains no augment field; do not treat that alone as proof of absence from every wire response. A recent Set 18 PBE participant excerpt from Riot's public issue tracker (#1171) has no augment-related key; provenance and limitations are in tests/fixtures/README.md. The full attached response was unavailable (404). No local Riot key exists, so the user's exact production response could not be fetched.
-
-Only the historically captured `augments: string[]` is decoded. Unknown augment-related keys are inspected for diagnostics and flagged as unsupported parsing, never repurposed as selections. Absent/null fields and empty arrays are distinct states. Missing/error records do not enter augment preference denominators; valid empty arrays do. The existing 50-match window, Korean static lookup, TOP 5, counts, average placement and TOP4 pipeline receives parsed records. Malformed augment data does not prevent ordinary placement statistics.
-
-The opt-in development logger excludes player/account identity. A separate local capture command saves anonymized real full-match fixtures for exact reproduction without logging or saving the API key.

@@ -1,5 +1,5 @@
 import type { Asset } from '../types/riot';
-export type AssetKind = 'unit' | 'item' | 'augment' | 'trait';
+export type AssetKind = 'unit' | 'item' | 'trait';
 export type AssetMap = Record<string, Asset>;
 export interface StaticCatalog {
   source: string;
@@ -83,8 +83,8 @@ export function indexCommunityDragon(
     for (const value of raw.setData)
       if (record(value) && typeof value.number === 'number') addSet(value, value.number);
   for (const value of raw.items)
-    if (record(value) && typeof value.isAugment === 'boolean')
-      add(value.isAugment ? 'augment' : 'item', value);
+    // The source mixes several data categories; only actual item records enter the item index.
+    if (record(value) && value.isAugment === false) add('item', value);
   if (!Object.keys(assets).length) throw new Error('TFT 정적 데이터가 비어 있습니다.');
   return {
     source: `https://raw.communitydragon.org/${version}/cdragon/tft/ko_kr.json`,

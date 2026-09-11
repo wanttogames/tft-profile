@@ -15,8 +15,6 @@ describe('actual ko_KR static data excerpt', () => {
     expect(displayName(catalog.assets, 'unit', 'DA_18_Sejuani', 18)).toBe('세주아니'));
   it('resolves item API name to Korean', () =>
     expect(displayName(catalog.assets, 'item', 'TFT_Item_InfinityEdge')).toBe('무한의 대검'));
-  it('resolves augment API name to Korean', () =>
-    expect(displayName(catalog.assets, 'augment', 'DA_18_BigGrabBag')).toBe('큰 꾸러미'));
   it('resolves trait API name to Korean', () =>
     expect(displayName(catalog.assets, 'trait', 'DA_18_Elderwood', 18)).toBe('나무정령'));
   it('keeps categories separate and preserves unknown IDs', () => {
@@ -28,7 +26,6 @@ describe('actual ko_KR static data excerpt', () => {
     for (const [kind, id, set] of [
       ['unit', 'DA_18_Sejuani', 18],
       ['item', 'TFT_Item_InfinityEdge', undefined],
-      ['augment', 'DA_18_BigGrabBag', undefined],
       ['trait', 'DA_18_Elderwood', 18],
     ] as const)
       expect(displayName(snapshot.assets, kind, id, set)).toBe(

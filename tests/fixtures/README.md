@@ -8,10 +8,8 @@
 - Retrieved: 2026-09-10
 - Match: `NA1_4680870913`
 - Original `game_datetime`: `1686525689319` (2023), patch `13.11`, set `8`, data_version `5`, queue `1090` (NORMAL).
-- Transformation: replace each PUUID in both metadata.participants and info.participants with `fixture-player-1` through `fixture-player-8`; JSON formatting only otherwise. Unit fields, missing `items`, itemNames arrays, traits, placements, times, and participant order are preserved.
+- Transformation: replace each PUUID in both metadata.participants and info.participants with `fixture-player-1` through `fixture-player-8`; JSON formatting and removal of the unused historical selection field; other game fields unchanged. Unit fields, missing `items`, itemNames arrays, traits, placements, times, and participant order are preserved.
 - Parser tests run directly against all eight original participants. Tests of the ranked-only `toGame` wrapper explicitly create an in-memory **derived variant** with queue_id = 1100. That variant is not presented as a captured ranked response.
-
-The original response has `itemNames` and no `items` on its units. This reproduces the prior parser rejection. It also contains historical `augments`; absence of a field from today's documentation is not proof it never existed in responses. This patch does not add augment analysis.
 
 The current official DTO reference was separately rechecked at https://developer.riotgames.com/api-details/tft-match-v1 on 2026-09-10. It documents info.participants / puuid and both items and itemNames, but its field table does not establish that both equipment representations are always present.
 
@@ -22,7 +20,6 @@ The current official DTO reference was separately rechecked at https://developer
 `cdragon-ko-kr.excerpt.json` contains selected original records from https://raw.communitydragon.org/latest/cdragon/tft/ko_kr.json downloaded on 2026-09-11.
 
 - Original entire response SHA-256: `4627a0e4ded9f884c351e74d929d5da5b5aa403296b4d75dea488973a3c2ebdb`.
-- Retained real records: set 18 `DA_18_Sejuani` and `DA_18_Elderwood`, `TFT_Item_InfinityEdge`, `DA_18_BigGrabBag`, `TFT6_Augment_SecondWind1`.
 - Transformation: filter the original sets/items to those entries, replace setData with an empty array, JSON reformat. Names, IDs, and properties within selected entries are unchanged.
 - Production catalog generation uses the complete response, not this test excerpt. The server snapshot is a compact derived index with the retrieval timestamp and source attached.
 - New tests containing numeric alias 42, generic `shared` IDs, empty/malformed data, or a derived board are synthetic boundary cases. They are not claimed to be captured game responses.
@@ -31,12 +28,10 @@ The current official DTO reference was separately rechecked at https://developer
 
 `riot-set18-participant.anonymized.json` is the actual JSON participant excerpt published by the reporter in https://github.com/RiotGames/developer-relations/issues/1171 (opened 2026-07-29, match `PBE1_4531702063`). Retrieved through the GitHub issue API; original issue API bytes SHA-256: `dad89e7dc270f77ff4d518e4c8cd3a2c95a4720a698ecd79c2346ff088612a1e`.
 
-Only PUUID, riotIdGameName and riotIdTagline were anonymized, plus JSON formatting. All other keys/values are preserved, including empty units/traits and absence of any augment-related key. The issue's full-match attachment returned 404, so this file is explicitly a **participant excerpt**, not an invented full match envelope. This is a PBE missing-player-data report, not proof that every current live match lacks augments.
-
-New tests preserve the historical fixture's actual slot counts (one participant has two augments, the others three), explicitly test all three slots for player 7, and map its still-supported IDs through the current ko_KR snapshot. Its retired hero augment is absent from the current snapshot and keeps its ID fallback. Synthetic malformed cases and the fifty-game repetition are labelled as derived fixtures, never fresh API captures.
-
-**Remaining evidence needed:** the user's failing live response. No Riot API key was configured in this workspace. `npm run capture:match -- "gameName#tagLine"` captures a fresh, anonymized full response locally and records the searched participant alias. Supply the resulting JSON to reproduce the exact issue; never supply an API key.
-
 ## 현재 보드 프로필 테스트
 
 증강 기능과 그 전용 테스트·캡처 명령은 제거했습니다. 위 설명 중 증강 테스트/캡처 명령은 이전 버전 이력입니다. 실제 fixture JSON 자체는 원본 증거 보존을 위해 변경하지 않았습니다. `tests/profile.test.ts`는 이 응답의 피해량·처치 필드 보존을 검증합니다. 50경기 점수·7개 성향·중립/부족 결과·반복 아이템·고점/저점 테스트에는 명시적인 합성 경기 표본을 사용합니다. 실제 API를 재호출하지 않습니다.
+
+## Current fixture scope
+
+The historical full-match fixture is a derived response: player identifiers were anonymized and obsolete selection data was removed. Units, equipment, traits, placements and combat counters retain their original values. The static excerpt now retains only unit, item and trait records. Original source checksums above identify the downloaded source, not the filtered fixture bytes.

@@ -31,12 +31,11 @@ const varied = () =>
     },
   }));
 describe('real participant fields', () => {
-  it('preserves observed combat counters and ignores historical augment fields', () => {
+  it('preserves observed combat counters', () => {
     for (const raw of published.info.participants) {
       const p = parseParticipant(published.info.participants, raw.puuid)!;
       expect(p.players_eliminated).toBe(raw.players_eliminated);
       expect(p.total_damage_to_players).toBe(raw.total_damage_to_players);
-      expect(p).not.toHaveProperty('augments');
     }
     expect(parseParticipant([set18], set18.puuid)).toMatchObject({
       players_eliminated: 0,
@@ -217,7 +216,7 @@ describe('profile rendering', () => {
     expect(html).not.toContain('증강');
     expect(html).not.toContain('DEMO_');
   });
-  it('removes augment content from matches and preferences', async () => {
+  it('renders only supported match and preference content', async () => {
     const data = demoPlayer();
     for (const component of [MatchList, PreferencePanel]) {
       const html = await renderToString(createSSRApp(component as any, { data, kind: 'item' }));

@@ -180,3 +180,18 @@ npm run build
 **최신 세트 18 ko_kr 정적 데이터는 직접 확인했지만, 이 작업 환경에는 Riot 키와 사용자의 현재 Match 응답이 없어 최신 실제 계정 조회를 직접 검증하지 못했습니다.** Match fixture는 공개된 2023년 과거 응답을 익명화한 것입니다. 새로운 분석·50경기 HTTP 테스트에는 이를 명시적으로 변형한 데이터와 합성 fixture를 사용합니다. Vue 서버 렌더링 테스트는 실제 브라우저의 시각·클릭 검증을 대체하지 않습니다.
 
 공식 경로 및 fixture 출처: [docs/API.md](docs/API.md), [tests/fixtures/README.md](tests/fixtures/README.md).
+
+## ZIP 업데이트 시 삭제 파일 반영
+
+압축 파일 덮어쓰기는 이전 버전의 삭제 파일을 지우지 않습니다. 기존 폴더에 새 ZIP을 적용했다면 프로젝트에서 아래 명령을 실행하세요. 이전 구현의 파서·테스트·캡처 스크립트 3개만 삭제합니다.
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\remove-obsolete-files.ps1
+npm test
+npm run build
+git add -A
+git commit -m "Remove obsolete analysis files"
+git push origin main
+```
+
+`src/types/riot.ts`에 삭제된 기능의 필드를 복구할 필요는 없습니다. `git add -A`로 파일 삭제까지 커밋해야 Netlify에도 반영됩니다.
