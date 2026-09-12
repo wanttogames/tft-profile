@@ -1,48 +1,36 @@
 name: Collect TFT meta
-
 on:
   workflow_dispatch:
     inputs:
       players_limit:
-        description: 'Players to scan (optional override)'
-        required: false
-        default: ''
+        description: 'Players to scan'
+        default: '2'
       matches_per_player:
-        description: 'Recent IDs per player (optional override)'
-        required: false
-        default: ''
-
+        description: 'Recent IDs per player'
+        default: '2'
   schedule:
     - cron: '17 */6 * * *'
-
 permissions:
   contents: read
-
 concurrency:
   group: tft-meta-collector
   cancel-in-progress: false
-
 jobs:
   collect:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: npm
-
       - run: npm ci
-
       - run: npm run collect:tft
         env:
           RIOT_API_KEY: ${{ secrets.RIOT_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-
-          PLAYERS_LIMIT: ${{ inputs.players_limit || vars.PLAYERS_LIMIT }}
-          MATCHES_PER_PLAYER: ${{ inputs.matches_per_player || vars.MATCHES_PER_PLAYER }}
-          RIOT_REQUEST_DELAY_MS: ${{ vars.RIOT_REQUEST_DELAY_MS }}
+          PLAYERS_LIMIT: ${{ inputs.players_limit || vars.PLAYERS_LIMIT || '2' }}
+          MATCHES_PER_PLAYER: ${{ inputs.matches_per_player || vars.MATCHES_PER_PLAYER || '2' }}
+          RIOT_REQUEST_DELAY_MS: ${{ vars.RIOT_REQUEST_DELAY_MS || '1400' }}

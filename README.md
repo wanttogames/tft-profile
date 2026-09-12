@@ -269,3 +269,26 @@ Actions의 Run workflow 입력 기본값은 디버깅용 **2명 × 2경기**입�
 필수 필드 검증이 통과한 뒤 참가자 수 또는 서로 다른 PUUID 수가 8이 아니면 `[MATCH SKIPPED]`로 제외합니다. matchId / queueId / participantCount / distinctPuuidCount / reason을 기록하며 DB 저장 RPC는 호출하지 않습니다. 필수 필드 누락, HTTP/JSON 오류, Supabase 오류와 예상하지 못한 예외는 계속 Failed입니다. 중복 ID 및 기존 DB 경기 제외 로직은 유지합니다.
 
 Skipped만 있으면 성공 종료합니다. Failed matches 또는 Failed player scans가 있거나 수집 대상 플레이어가 없으면 실패 종료합니다. `[PATCH WARNING]`은 실행당 최대 한 번만 출력합니다. `Patch unresolved matches`는 **이번 실행에서 신규 저장에 성공한 경기 중 patch=NULL인 수**이며, 제외/실패/기존 경기는 포함하지 않습니다. 동일 placeholder 버전 경고를 반복하지 않습니다. 추가 SQL migration은 필요하지 않습니다(이전 004 적용 상태 기준).
+
+### 메타 통계 (005)
+
+1. Supabase에 기존 001~004 적용 후 `supabase/migrations/005_tft_meta_views.sql` 전체를 실행합니다. 새 View와 서버 전용 조회 권한을 생성하며 기존 테이블/데이터를 삭제하지 않습니다.
+2. **Netlify 환경변수에도** `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `MIN_SAMPLE_SIZE=10`을 등록하고 재배포하세요. GitHub Actions Secrets는 Netlify로 자동 전달되지 않습니다. 키는 브라우저로 전송하지 않습니다.
+3. 사이트 상단 **메타 → 아이템 / 챔피언 / 특성**에서 조회합니다. 로컬은 `.env` 설정 후 `npm run dev:api`와 `npm run dev`를 실행합니다.
+
+경로: Vue → `/.netlify/functions/tft-meta` → Supabase 집계 View. 원본 경기/참가자 배열을 브라우저에서 집계하지 않습니다. 서버에서 최소 표본과 정렬을 적용하고 50개씩 페이지 처리합니다. 평균 등수는 오름차순, 나머지 정렬은 내림차순입니다. 응답은 최대 약 60초 캐시되므로 수집 직후 반영에 잠시 걸릴 수 있습니다.
+
+대상은 **전체 수집 기간의 완료된 KR queue_id=1100 경기 전체 참가자**입니다. Challenger/Grandmaster는 수집을 시작한 래더이며, 상대 참가자의 티어를 동일하다고 가정하지 않습니다. patch=NULL도 정상 포함합니다. 여러 세트/패치가 합쳐진 과거 관측 통계이므로 현재 패치의 덱 강도나 아이템 효과로 해석하지 않습니다.
+
+- `v_tft_item_stats`: participant_id + item_name DISTINCT. DB의 UNIQUE(match_id,puuid) 때문에 요청한 (match_id,puuid,item_name) 기준과 같습니다. 중복 장착으로 가중하지 않습니다.
+- `v_tft_champion_stats`: 참가자별 같은 character_id를 한 표본으로 집계합니다. avg_star_level은 동일 보드 내 해당 챔피언들의 tier를 먼저 평균한 뒤 보드별 평균을 냅니다.
+- `common_champions` / `common_items`: 실제 장착한 챔피언-아이템 조합을 참가자별로 중복 제거한 사용 횟수 TOP 5입니다. 보드에 같이 있기만 한 조합을 장착으로 간주하지 않습니다.
+- `v_tft_trait_stats`: tier_current>0인 활성 특성만 집계합니다. tier_samples는 활성 단계별 표본 수입니다.
+- `v_tft_meta_summary`: 동일 범위의 match_count, participant_count, 고유 player_count, latest_collected_at. 최소 표본 필터와 무관한 전체 수집 규모입니다.
+- top4_rate/win_rate는 0~1이며 화면에서 %로 변환합니다. 소표본은 View에서 삭제하지 않고 API에서 sample_count>=MIN_SAMPLE_SIZE로 제외합니다. 연관 TOP 5는 참고용 횟수이며 성적 랭킹이 아닙니다.
+
+한글명은 기존 ko_KR 정적 데이터 모듈을 재사용하며, 찾지 못하면 원본 ID를 표시합니다. 수집 기간에 여러 세트가 포함되고 동일 내부 ID가 재사용되는 경우에는 구분이 제한됩니다. 향후 세트별 집계로 확장할 수 있습니다.
+
+모든 View는 security_invoker=true이고 anon/authenticated 조회 권한을 부여하지 않습니다. Netlify 서버만 service_role로 조회합니다. 테이블 RLS를 끄지 마세요. 참고: https://supabase.com/docs/guides/database/postgres/row-level-security
+
+일반 View는 조회할 때 집계합니다. 현재 수백 경기 규모를 위한 구조이며 데이터가 커져 느려지면 실행 계획을 확인한 뒤 materialized view/정기 집계 테이블로 전환하세요. `supabase/tests/005_meta_views.test.sql`은 중복 아이템·챔피언, 활성 특성, NULL patch, 불완전/다른 queue 제외, 최소 표본 및 권한을 검증합니다. 테스트 데이터는 롤백됩니다.

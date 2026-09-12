@@ -98,3 +98,7 @@ FROM usage GROUP BY item_name ORDER BY games_used DESC;
 ## 알 수 없는 패치 허용 (004)
 
 003 이후 `migrations/004_tft_nullable_patch.sql`을 실행합니다. game_version 원문은 그대로 보관하고 추출 불가 patch는 NULL입니다. 기존 RPC를 재생성할 필요는 없습니다. `tests/004_nullable_patch.test.sql`은 RPC를 통해 NULL patch 경기와 참가자 전체가 저장되는지 검증하고 롤백합니다. 앞선 001의 추출 실패 시 저장 중단 계약은 004로 대체됩니다.
+
+## 메타 집계 View (005)
+
+`migrations/005_tft_meta_views.sql`을 적용합니다. item/champion/trait stats와 meta_summary View, 공통 참가자·장착 관계 helper View를 생성합니다. 모든 View는 서버 전용입니다. patch 필터 없이 완료된 KR 랭크 경기(queue 1100) 전체를 집계합니다. 검증 SQL은 `tests/005_meta_views.test.sql`이며 실행 후 롤백됩니다. 설정과 각 통계 분모 정의는 루트 README의 메타 통계 절을 참조하세요.

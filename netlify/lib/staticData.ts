@@ -137,3 +137,18 @@ export async function loadGameAssets(
     warnings.push('정적 데이터 갱신에 실패해 저장된 한글 이름을 사용합니다.');
   return { assets, warnings, source: source.source, fetchedAt: source.fetchedAt };
 }
+
+// Aggregate IDs only, no raw match data or patch guess needed.
+export async function loadMetaAssets(requests: AssetRequest[]): Promise<AssetMap> {
+  const source = await catalog();
+  const assets: AssetMap = {};
+  for (const request of requests) {
+    const asset =
+      lookupAsset(source.assets, request.kind, request.id) ??
+      Object.entries(source.assets).find(
+        ([key]) => key.startsWith(request.kind + ':') && key.endsWith(':' + request.id),
+      )?.[1];
+    if (asset) assets[assetKey(request.kind, request.id)] = asset;
+  }
+  return assets;
+}
