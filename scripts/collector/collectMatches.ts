@@ -1,7 +1,8 @@
+import { logError, responseShape, protect } from './diagnostics';
 import { fatal, safeError, type RiotClient } from './riot';
 import type { Store } from './supabase';
 import type { Player } from './collectPlayers';
-import { saveMatch } from './saveMatch';
+import { normalizeMatch, saveNormalizedMatch } from './saveMatch';
 export async function collectMatches(
   riot: RiotClient,
   store: Store,
@@ -21,6 +22,7 @@ export async function collectMatches(
     'Failed player scans': 0,
   };
   for (const player of players) {
+    protect(player.puuid);
     try {
       const list = await riot.get(
         `/tft/match/v1/matches/by-puuid/${encodeURIComponent(player.puuid)}/ids?start=0&count=${count}`,
@@ -32,9 +34,9 @@ export async function collectMatches(
         last_scanned_at: new Date().toISOString(),
       });
     } catch (error) {
+      logError(error, { stage: 'Player ID scan / last_scanned_at update' });
       if (fatal(error)) throw error;
       result['Failed player scans']++;
-      console.warn(`Player scan failed: ${safeError(error)}`);
     }
   }
   result['Candidate matches'] = ids.size;
@@ -43,22 +45,42 @@ export async function collectMatches(
   result['Existing matches'] = existing.size;
   const fresh = [...ids].filter((id) => !existing.has(id));
   result['New matches'] = fresh.length;
+  let summarized = false;
+  const failures: Record<string, number> = {};
   for (const id of fresh) {
+    let raw: unknown;
+    let stage = 'Riot Match Detail request';
     try {
-      const status = await saveMatch(
-        store,
-        await riot.get(`/tft/match/v1/matches/${id}`),
-        id,
-        observed,
-      );
+      raw = await riot.get(`/tft/match/v1/matches/${id}`);
+      responseShape(raw); // Register private identity values before any DB/validation error logging.
+      stage = 'Match schema/field validation';
+      const payload = normalizeMatch(raw, id, observed);
+      stage = 'Supabase atomic save';
+      const status = await saveNormalizedMatch(store, payload);
       if (status === 'saved') result['Saved matches']++;
       else if (status === 'existing') result['Existing matches']++;
       else result['Skipped matches']++;
     } catch (error) {
-      if (fatal(error)) throw error;
       result['Failed matches']++;
-      console.warn(`Match ${id} failed: ${safeError(error)}`);
+      logError(error, { matchId: id, stage });
+      const name = error instanceof Error ? error.name + ': ' + error.message : String(error);
+      failures[name] = (failures[name] ?? 0) + 1;
+      if (!summarized) {
+        console.error(
+          '[FIRST FAILED MATCH STRUCTURE]',
+          JSON.stringify({
+            matchId: id,
+            response:
+              raw === undefined
+                ? 'Unavailable: request/status/JSON stage failed'
+                : responseShape(raw),
+          }),
+        );
+        summarized = true;
+      }
     }
   }
+  for (const [reason, count] of Object.entries(failures))
+    console.error('[FAILURE SUMMARY]', safeError(new Error(reason)), `count=${count}`);
   return result;
 }

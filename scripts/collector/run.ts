@@ -1,5 +1,6 @@
+import { logError } from './diagnostics';
 import { config } from './config';
-import { RiotClient, safeError } from './riot';
+import { RiotClient } from './riot';
 import { Store } from './supabase';
 import { collectPlayers } from './collectPlayers';
 import { collectMatches } from './collectMatches';
@@ -13,13 +14,6 @@ try {
   if (result['Failed matches'] || result['Failed player scans'] || !players.length)
     process.exitCode = 1;
 } catch (error) {
-  console.error(
-    error instanceof Error &&
-      /^(Missing environment variable:|Invalid (PLAYERS_LIMIT|MATCHES_PER_PLAYER|RIOT_REQUEST_DELAY_MS)|SUPABASE_URL must)/.test(
-        error.message,
-      )
-      ? error.message
-      : safeError(error),
-  );
+  logError(error, { stage: 'Collector setup / player collection / existing match lookup' });
   process.exitCode = 1;
 }

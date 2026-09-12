@@ -90,3 +90,7 @@ FROM usage GROUP BY item_name ORDER BY games_used DESC;
 001 → 002 적용 후 `tests/002_collector.test.sql` 전체를 SQL Editor에서 실행하면 저장/중복 스킵/오류 롤백/권한/삭제 전파를 확인합니다. 테스트는 트랜잭션을 ROLLBACK하므로 fixture 행을 남기지 않습니다. TypeScript 수집 테스트는 루트 `npm test`에 포함됩니다. SQL 회귀 검증은 PostgreSQL 호환 PGlite에서도 역할 유무 두 환경으로 실행했습니다.
 
 기본 Collector는 양쪽 래더 상단을 교대로 선택합니다. 처음에는 10명 × 최근 5경기로 시작하며 실제 조회·저장 수는 중복과 비랭크 경기 제외로 줄어듭니다. 설치/Secrets/예약 실행 방법은 루트 README의 GitHub Actions 메타 Collector 절을 참고하세요.
+
+## 단계별 오류 진단 업데이트
+
+`migrations/003_tft_collector_diagnostics.sql`을 추가 실행하면 RPC 실패 메시지에 `[table=tft_units]` 같은 테이블 표시가 포함됩니다. 원래 SQLSTATE/code, details, hint를 보존합니다. 개별 INSERT는 PostgreSQL에서 즉시 오류를 발생시키며 트랜잭션 전체가 롤백됩니다. 003 적용 전에는 클라이언트에 RPC 이름과 원래 오류만 표시될 수 있습니다.

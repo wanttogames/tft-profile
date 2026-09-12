@@ -1,10 +1,14 @@
+import { StageError, protect } from './diagnostics';
 import { HttpError, sleep } from './riot';
 export class Store {
   constructor(
     private url: string,
     private secret: string,
     private fetcher = fetch,
-  ) {}
+  ) {
+    protect(secret);
+    protect(url);
+  }
   async request(path: string, method = 'GET', body?: unknown): Promise<unknown> {
     for (let attempt = 0; attempt < 3; attempt++) {
       let response: Response;
@@ -22,14 +26,28 @@ export class Store {
           body: body === undefined ? undefined : JSON.stringify(body),
           signal: AbortSignal.timeout(30000),
         });
-      } catch {
-        if (attempt === 2) throw new Error('Supabase network request failed');
+      } catch (error) {
+        if (attempt === 2)
+          throw new StageError('SUPABASE ERROR', {
+            stage: 'Supabase request',
+            table: path.split('?')[0],
+            message: error instanceof Error ? error.message : String(error),
+          });
         await sleep(1000 * 2 ** attempt);
         continue;
       }
       if (response.ok) {
         const text = await response.text();
-        return text ? JSON.parse(text) : null;
+        try {
+          return text ? JSON.parse(text) : null;
+        } catch {
+          throw new StageError('SUPABASE ERROR', {
+            stage: 'Supabase JSON parsing',
+            status: response.status,
+            table: path.split('?')[0],
+            message: 'Response is not valid JSON',
+          });
+        }
       }
       if ((response.status >= 500 || response.status === 429) && attempt < 2) {
         await sleep(
@@ -37,7 +55,27 @@ export class Store {
         );
         continue;
       }
-      throw new HttpError(response.status, 'Supabase');
+      const bodyText = await response.text();
+      let data: Record<string, unknown>;
+      try {
+        const parsed: unknown = JSON.parse(bodyText);
+        data =
+          parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+            ? (parsed as Record<string, unknown>)
+            : { message: bodyText };
+      } catch {
+        data = { message: bodyText };
+      }
+      const table =
+        typeof data.message === 'string' ? /\[table=(\w+)\]/.exec(data.message)?.[1] : undefined;
+      throw new HttpError(response.status, 'Supabase', {
+        stage: 'Supabase save/response',
+        table: table ?? path.split('?')[0],
+        code: data.code ?? null,
+        message: data.message ?? bodyText,
+        details: data.details ?? null,
+        hint: data.hint ?? null,
+      });
     }
     throw new Error('Supabase retry exhausted');
   }

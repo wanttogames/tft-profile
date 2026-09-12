@@ -46,7 +46,7 @@ describe('collector normalization', () => {
     expect(() => normalizeMatch(raw, 'KR_1')).toThrow();
     expect(() => patchFromVersion('unknown')).toThrow();
     const bad = match();
-    Reflect.deleteProperty(bad.info.participants[0]!.units[0]!, 'itemNames');
+    Reflect.set(bad.info.participants[0]!.units[0]!, 'itemNames', 123);
     expect(() => normalizeMatch(bad, 'KR_1')).toThrow();
   });
   it.each([
@@ -66,7 +66,7 @@ describe('collector networking and orchestration', () => {
     expect(fetcher.mock.calls[0]![0]).not.toContain('private-key');
   });
   it('bounds retry attempts and rejects 403 without retry', async () => {
-    const fetcher = vi.fn().mockResolvedValue(new Response('', { status: 429 }));
+    const fetcher = vi.fn().mockImplementation(async () => new Response('', { status: 429 }));
     await expect(
       new RiotClient('key', 1400, fetcher, async () => {}).get('/test'),
     ).rejects.toBeInstanceOf(HttpError);
@@ -138,7 +138,7 @@ describe('collector networking and orchestration', () => {
       SUPABASE_URL: 'https://example.supabase.co',
       SUPABASE_SECRET_KEY: 'secret',
     };
-    expect(config(env)).toMatchObject({ playersLimit: 10, matchesPerPlayer: 5, delayMs: 1400 });
+    expect(config(env)).toMatchObject({ playersLimit: 2, matchesPerPlayer: 2, delayMs: 1400 });
     expect(() => config({ ...env, MATCHES_PER_PLAYER: '101' })).toThrow();
   });
 });

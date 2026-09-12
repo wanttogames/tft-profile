@@ -220,17 +220,17 @@ Supabase SQL Editor에서 실행할 초기 스키마는 `supabase/migrations/001
 1. 기존 001 스키마가 적용된 Supabase에서 `supabase/migrations/002_tft_collector_rpc.sql` 전체를 SQL Editor로 한 번 실행합니다. 001을 다시 실행하지 않습니다.
 2. GitHub 저장소 **Settings → Secrets and variables → Actions → Repository secrets**에 `RIOT_API_KEY`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY`를 등록합니다. Supabase의 서버용 secret key를 사용합니다. 키는 코드나 VITE_ 환경변수에 넣지 않습니다.
 3. 변경 파일을 기본 브랜치에 push한 뒤 **Actions → Collect TFT meta → Run workflow**로 실행합니다. 이후 UTC 00:17/06:17/12:17/18:17에 예약 실행합니다. 예약은 기본 브랜치 기준이며 GitHub 사정으로 지연될 수 있습니다.
-4. Actions Variables에서 `PLAYERS_LIMIT`(기본 10), `MATCHES_PER_PLAYER`(5), `RIOT_REQUEST_DELAY_MS`(1400)를 조정할 수 있습니다. 작업 제한은 30분입니다. 규모를 크게 늘리기 전 실제 API 제한과 실행 시간을 확인하세요.
+4. Actions Variables에서 `PLAYERS_LIMIT`(기본 2), `MATCHES_PER_PLAYER`(2), `RIOT_REQUEST_DELAY_MS`(1400)를 조정할 수 있습니다. 작업 제한은 30분입니다. 규모를 크게 늘리기 전 실제 API 제한과 실행 시간을 확인하세요.
 
 `npm run collect:tft`는 process.env만 읽습니다. 로컬에서는 환경변수를 먼저 설정하거나 Node 20.19 이상에서 `node --env-file=.env --import tsx scripts/collector/run.ts`로 실행하세요. `.env`는 Git에 올리지 않습니다. Development Riot API Key는 만료되므로 지속 수집에는 적절한 키 관리가 필요합니다.
 
-Collector는 KR Challenger와 Grandmaster를 LP 내림차순으로 번갈아 최대 10명 선택합니다. 무작위 대표 표본은 아니며 래더 상단 편향이 있습니다. Riot 공식 `/tft/league/v1/challenger`, `/tft/league/v1/grandmaster`의 `entries[].puuid`를 사용하며 region은 KR, Match routing은 ASIA입니다. 모든 래더 관측으로 참가자의 수집 당시 티어를 확인하지만, 추적 대상으로 upsert하는 목록은 선택한 플레이어입니다.
+Collector는 KR Challenger와 Grandmaster를 LP 내림차순으로 번갈아 기본 2명 선택합니다. 무작위 대표 표본은 아니며 래더 상단 편향이 있습니다. Riot 공식 `/tft/league/v1/challenger`, `/tft/league/v1/grandmaster`의 `entries[].puuid`를 사용하며 region은 KR, Match routing은 ASIA입니다. 모든 래더 관측으로 참가자의 수집 당시 티어를 확인하지만, 추적 대상으로 upsert하는 목록은 선택한 플레이어입니다.
 
-경기 ID는 플레이어당 최근 5개(모드 혼합 가능)를 가져옵니다. 중복 제거와 DB 존재 확인 후 신규 상세만 조회하고 **queue_id=1100 일반 랭크 TFT**만 저장합니다. 따라서 저장 경기 수는 50보다 작을 수 있습니다. 저장되지 않은 비랭크 경기는 다음 실행에서 다시 조회될 수 있습니다. 장착 itemNames와 trait 내부 ID를 원문으로 저장하고 한글 표시는 기존 정적 데이터 모듈에서 처리합니다.
+경기 ID는 플레이어당 최근 2개(모드 혼합 가능)를 가져옵니다. 중복 제거와 DB 존재 확인 후 신규 상세만 조회하고 **queue_id=1100 일반 랭크 TFT**만 저장합니다. 따라서 저장 경기 수는 4보다 작을 수 있습니다. 저장되지 않은 비랭크 경기는 다음 실행에서 다시 조회될 수 있습니다. 장착 itemNames와 trait 내부 ID를 원문으로 저장하고 한글 표시는 기존 정적 데이터 모듈에서 처리합니다.
 
-Riot 요청은 동시 1개, 매 시도 최소 1.4초 간격입니다. 429의 Retry-After를 반영하고 네트워크/5xx도 최대 4회 시도합니다. 동일 키를 쓰는 다른 서비스와 한도를 공유할 수 있습니다. 401/403은 실행을 중단합니다. 개별 경기 실패는 나머지 수집을 계속한 뒤 실패 건수를 로그에 남기고 Actions를 실패 상태로 종료합니다. 다음 실행에서 다시 최근 ID에 포함되는 실패 경기는 재시도할 수 있지만 별도 백로그는 없습니다.
+Riot 요청은 동시 1개, 매 시도 최소 1.4초 간격입니다. 429의 Retry-After를 반영하고 네트워크/5xx도 최대 4회 시도합니다. 동일 키를 쓰는 다른 서비스와 한도를 공유할 수 있습니다. 플레이어 수집 단계의 401/403은 실행을 중단하고, 경기 처리 단계에서는 오류를 기록한 뒤 다음 경기를 처리합니다. 개별 경기 실패는 나머지 수집을 계속한 뒤 실패 건수를 로그에 남기고 Actions를 실패 상태로 종료합니다. 다음 실행에서 다시 최근 ID에 포함되는 실패 경기는 재시도할 수 있지만 별도 백로그는 없습니다.
 
-로그: Players / Candidate matches(고유 ID) / Existing matches / New matches / Saved matches / Failed matches / Skipped matches / Failed player scans. DB 저장 중 다른 실행이 먼저 저장한 경우 Existing 수가 증가합니다. 선수 개인정보·API 키·응답 본문은 로그에 출력하지 않습니다.
+로그: Players / Candidate matches(고유 ID) / Existing matches / New matches / Saved matches / Failed matches / Skipped matches / Failed player scans. DB 저장 중 다른 실행이 먼저 저장한 경우 Existing 수가 증가합니다. 오류 응답 본문은 민감 값을 마스킹하여 출력하고 성공한 경기의 원문은 출력하지 않습니다.
 
 저장 RPC는 경기 전체를 트랜잭션으로 커밋합니다. DB에 존재하는 incomplete 행도 재조회하지 않으므로 기존 부분 저장 데이터는 운영자가 별도로 확인해야 합니다. 기존 Vue/Netlify 개인 분석 경로와 Collector는 분리되어 있습니다.
 
@@ -241,3 +241,15 @@ Riot 요청은 동시 1개, 매 시도 최소 1.4초 간격입니다. 429의 Ret
 - https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
 
 테스트는 기존 익명화 Match 응답 fixture를 재사용합니다. Collector 테스트의 KR ID/queue=1100 변경은 합성 변형이며 현재 상위 랭커의 실 API 응답이라고 주장하지 않습니다. 테스트는 키 없이 실행 가능하며 라이브 수집은 위 설정 후 별도 실행합니다.
+
+### Collector 실패 진단 (003 업데이트)
+
+기존 DB에서 `supabase/migrations/003_tft_collector_diagnostics.sql`만 추가 실행하세요. 기존 001/002를 재실행할 필요가 없습니다. 003은 저장 RPC를 교체하여 실패 테이블과 원래 PostgreSQL code/message/details/hint를 전달합니다. 저장은 계속 한 트랜잭션이며 어떤 INSERT 오류라도 전체 롤백합니다. 테이블별 REST 저장으로 분할하지 않습니다.
+
+Actions의 Run workflow 입력 기본값은 디버깅용 **2명 × 2경기**입니다. 수동 입력이 Actions Variables보다 우선합니다. 예약 실행은 Variables 또는 기본 2×2를 사용합니다. 로컬 config 기본값도 2×2로 변경했습니다.
+
+실패 로그는 `[RIOT MATCH ERROR]`(요청/HTTP 상태), `[RIOT JSON ERROR]`, `[VALIDATION ERROR]`(정확한 field/reason), `[SUPABASE ERROR]`(table/code/message/details/hint)로 구분됩니다. 첫 실패에는 `[FIRST FAILED MATCH STRUCTURE]`로 필드 타입과 배열 길이를 출력하며 마지막 `[FAILURE SUMMARY]`로 원인별 건수를 출력합니다. 실제 비밀키와 PUUID 등 민감 값은 마스킹합니다. 개별 경기 실패는 다음 경기 처리를 계속합니다.
+
+2026-09-11 Riot 공식 Match-V1 DTO를 다시 확인했습니다. 공식 UnitDto의 필드는 `itemNames`이며 `item_names`는 사용자 요청에 따른 호환 입력으로만 지원합니다. 현재 실패한 KR 경기의 라이브 응답은 이 개발 환경에 없어 원인을 확정하지 않았습니다. 기존 익명화 응답 fixture와 누락/오류를 주입한 테스트로 검증했습니다. 새 로그를 통해 실제 런타임 구조를 확인할 수 있습니다.
+
+선택 필드인 combat counters는 없으면 NULL, units/traits/itemNames 배열은 없으면 []로 처리합니다. 필수 match ID, 참가자 ID, 등수, 레벨, 라운드와 실제 배열 내 잘못된 원소는 경로를 명시하여 실패 처리합니다. 누락 배열을 []로 저장한 경기는 해당 항목의 관측 정보가 없는 것이므로 향후 집계에서 완전한 보드 관측으로 해석하지 마세요.

@@ -15,8 +15,8 @@ export function config(env = process.env) {
     riotKey: required('RIOT_API_KEY'),
     url,
     secret: required('SUPABASE_SECRET_KEY'),
-    playersLimit: number('PLAYERS_LIMIT', 10, 1, 1000),
-    matchesPerPlayer: number('MATCHES_PER_PLAYER', 5, 1, 100),
+    playersLimit: number('PLAYERS_LIMIT', 2, 1, 1000),
+    matchesPerPlayer: number('MATCHES_PER_PLAYER', 2, 1, 100),
     delayMs: number('RIOT_REQUEST_DELAY_MS', 1400, 1200, 60000),
   };
 }

@@ -1,6 +1,13 @@
 name: Collect TFT meta
 on:
   workflow_dispatch:
+    inputs:
+      players_limit:
+        description: 'Players to scan'
+        default: '2'
+      matches_per_player:
+        description: 'Recent IDs per player'
+        default: '2'
   schedule:
     - cron: '17 */6 * * *'
 permissions:
@@ -24,6 +31,6 @@ jobs:
           RIOT_API_KEY: ${{ secrets.RIOT_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-          PLAYERS_LIMIT: ${{ vars.PLAYERS_LIMIT || '10' }}
-          MATCHES_PER_PLAYER: ${{ vars.MATCHES_PER_PLAYER || '5' }}
+          PLAYERS_LIMIT: ${{ inputs.players_limit || vars.PLAYERS_LIMIT || '2' }}
+          MATCHES_PER_PLAYER: ${{ inputs.matches_per_player || vars.MATCHES_PER_PLAYER || '2' }}
           RIOT_REQUEST_DELAY_MS: ${{ vars.RIOT_REQUEST_DELAY_MS || '1400' }}

@@ -1,3 +1,4 @@
+import { protect } from './diagnostics';
 import type { RiotClient } from './riot';
 import type { Store } from './supabase';
 export interface Player {
@@ -25,6 +26,7 @@ export async function collectPlayers(riot: RiotClient, store: Store, limit: numb
             entry.leaguePoints < 0
           )
             throw new Error('Invalid League entry');
+          protect(entry.puuid);
           return {
             puuid: entry.puuid,
             current_tier: tier,
