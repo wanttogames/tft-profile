@@ -1,5 +1,5 @@
 import { afterEach, describe, it, expect, vi } from 'vitest';
-import { loadGameAssets } from '../netlify/lib/staticData';
+import { loadGameAssets } from '../server/lib/staticData';
 import snapshot from '../netlify/data/tft-ko-snapshot.json';
 import { displayName } from '../src/static-data/catalog';
 import { demoPlayer } from '../src/data/demo';

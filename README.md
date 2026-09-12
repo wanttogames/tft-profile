@@ -1,3 +1,5 @@
+> 현재 배포 대상은 **Cloudflare Pages + Pages Functions**입니다. 최신 설정/경로/로컬 실행은 [Cloudflare 전환 안내](docs/cloudflare-migration.md)를 따르세요. 아래 Netlify 배포 설명은 이전 구성의 기록입니다.
+
 # TFT PROFILE
 
 **“무엇이 강한가”보다 “나는 어떻게 플레이하고 있는가”.** 최근 **50경기 조회 범위**에서 완료된 TFT 랭크 경기를 분석하는 Vue 3 개인 대시보드입니다.

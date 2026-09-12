@@ -1,7 +1,7 @@
 import { afterEach, describe, it, expect, vi } from 'vitest';
 import handler from '../netlify/functions/tft-player';
 import published from './fixtures/riot-match-v5.anonymized.json';
-vi.mock('../netlify/lib/staticData', () => ({
+vi.mock('../server/lib/staticData', () => ({
   loadGameAssets: vi.fn(async () => ({
     assets: {},
     warnings: [],

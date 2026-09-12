@@ -7,3 +7,9 @@ dist/
 .sites-runtime/
 coverage/
 diagnostics/
+
+# Cloudflare local credentials and generated runtime files
+.dev.vars
+.dev.vars.*
+.wrangler/
+!.dev.vars.example

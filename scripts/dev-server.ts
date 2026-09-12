@@ -1,29 +1,29 @@
-// Lightweight local runner for the same Netlify handler. Use `netlify dev` for platform parity.
+// LOCAL DEVELOPMENT ONLY. Production uses Pages Functions with context.env.
 import { createServer } from 'node:http';
 import { loadEnv } from 'vite';
-import handler from '../netlify/functions/tft-player';
-import metaHandler from '../netlify/functions/tft-meta';
-Object.assign(process.env, loadEnv('development', process.cwd(), ''));
-process.env.NODE_ENV ??= 'development';
+import { onRequest as profile } from '../functions/api/tft/profile';
+import { onRequest as items } from '../functions/api/meta/items';
+import { onRequest as champions } from '../functions/api/meta/champions';
+import { onRequest as traits } from '../functions/api/meta/traits';
+import { onRequest as summary } from '../functions/api/meta/summary';
+const env = { ...process.env, ...loadEnv('development', process.cwd(), '') };
+const routes: Record<string, typeof profile> = {
+  '/api/tft/profile': profile,
+  '/api/meta/items': items,
+  '/api/meta/champions': champions,
+  '/api/meta/traits': traits,
+  '/api/meta/summary': summary,
+};
 createServer(async (req, res) => {
-  const path = new URL(req.url ?? '/', 'http://localhost').pathname;
-  const selected =
-    path === '/.netlify/functions/tft-meta'
-      ? metaHandler
-      : path === '/.netlify/functions/tft-player'
-        ? handler
-        : null;
-  if (!selected) {
-    res.writeHead(404).end();
-    return;
-  }
   try {
-    const r = await selected(
-      new Request('http://localhost:8889' + req.url, { method: req.method }),
-    );
-    res.writeHead(r.status, Object.fromEntries(r.headers));
-    res.end(await r.text());
+    const request = new Request('http://localhost:8889' + req.url, { method: req.method });
+    const route = routes[new URL(request.url).pathname];
+    const response = route
+      ? await route({ request, env })
+      : Response.json({ message: 'API route not found' }, { status: 404 });
+    res.writeHead(response.status, Object.fromEntries(response.headers));
+    res.end(await response.text());
   } catch {
-    res.writeHead(500).end('{"message":"Local server error"}');
+    res.writeHead(500, { 'Content-Type': 'application/json' }).end('{"message":"Local API error"}');
   }
-}).listen(8889, '0.0.0.0', () => console.log('Function runner: http://localhost:8889'));
+}).listen(8889, '127.0.0.1', () => console.log('Local API: http://127.0.0.1:8889/api'));

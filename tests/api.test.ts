@@ -3,7 +3,7 @@ import { afterEach, describe, it, expect, vi } from 'vitest';
 import handler, { limitedMap, toGame } from '../netlify/functions/tft-player';
 import { demoPlayer } from '../src/data/demo';
 import type { Match } from '../src/types/riot';
-vi.mock('../netlify/lib/staticData', () => ({
+vi.mock('../server/lib/staticData', () => ({
   loadGameAssets: vi.fn(async () => ({
     assets: {},
     warnings: [],

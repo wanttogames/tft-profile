@@ -1,5 +1,5 @@
 import { beforeEach, afterEach, expect, it, vi } from 'vitest';
-vi.mock('../netlify/lib/staticData', () => ({ loadMetaAssets: vi.fn(async () => ({})) }));
+vi.mock('../server/lib/staticData', () => ({ loadMetaAssets: vi.fn(async () => ({})) }));
 import handler from '../netlify/functions/tft-meta';
 import { createSSRApp } from 'vue';
 import { renderToString } from '@vue/server-renderer';
