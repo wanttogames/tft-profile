@@ -44,7 +44,7 @@ describe('collector normalization', () => {
     const raw = match();
     raw.info.participants.pop();
     expect(() => normalizeMatch(raw, 'KR_1')).toThrow();
-    expect(() => patchFromVersion('unknown')).toThrow();
+    expect(patchFromVersion('unknown')).toBeNull();
     const bad = match();
     Reflect.set(bad.info.participants[0]!.units[0]!, 'itemNames', 123);
     expect(() => normalizeMatch(bad, 'KR_1')).toThrow();

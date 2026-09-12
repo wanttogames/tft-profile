@@ -253,3 +253,13 @@ Actions의 Run workflow 입력 기본값은 디버깅용 **2명 × 2경기**입�
 2026-09-11 Riot 공식 Match-V1 DTO를 다시 확인했습니다. 공식 UnitDto의 필드는 `itemNames`이며 `item_names`는 사용자 요청에 따른 호환 입력으로만 지원합니다. 현재 실패한 KR 경기의 라이브 응답은 이 개발 환경에 없어 원인을 확정하지 않았습니다. 기존 익명화 응답 fixture와 누락/오류를 주입한 테스트로 검증했습니다. 새 로그를 통해 실제 런타임 구조를 확인할 수 있습니다.
 
 선택 필드인 combat counters는 없으면 NULL, units/traits/itemNames 배열은 없으면 []로 처리합니다. 필수 match ID, 참가자 ID, 등수, 레벨, 라운드와 실제 배열 내 잘못된 원소는 경로를 명시하여 실패 처리합니다. 누락 배열을 []로 저장한 경기는 해당 항목의 관측 정보가 없는 것이므로 향후 집계에서 완전한 보드 관측으로 해석하지 마세요.
+
+### game_version 원문 보존 / 패치 추출 완화 (004)
+
+기존 001~003이 적용된 DB에서 `supabase/migrations/004_tft_nullable_patch.sql`을 실행하세요. patch의 NOT NULL만 해제하고 원본 game_version 및 나머지 데이터/제약은 유지합니다. SQL 적용 전에는 null patch 저장이 DB 제약으로 실패할 수 있습니다.
+
+첫 신규 Match Detail 응답에서 `[GAME VERSION]`으로 game_version 문자열을 한 번 출력합니다(민감 값 마스킹). Version 라벨 뒤의 MAJOR.MINOR를 우선 추출하고, 라벨이 없으면 단일 명확한 후보를 사용합니다. prefix/suffix 및 전체 BUILD 형식은 검증하지 않습니다. 추출 불가/모호한 버전은 patch=null로 저장하며 `[PATCH WARNING]`만 남깁니다. game_version은 trim하거나 재구성하지 않고 원문 그대로 저장합니다. 공백뿐이거나 문자열이 아닌 필수값은 여전히 VALIDATION ERROR입니다.
+
+실제 실패 로그의 raw 문자열은 아직 전달되지 않았습니다. 기존 공개 응답 fixture와 합성 버전 변형을 사용한 테스트이며 라이브 Actions 수집 성공을 의미하지 않습니다. 004 적용 및 push 후 Run workflow에서 2명 × 2경기로 확인하세요. itemNames가 우선이며 item_names는 누락 시 fallback입니다. 기존 상세 오류 로깅과 DB 트랜잭션은 유지됩니다.
+
+패치별 집계는 `patch IS NOT NULL`로 제한하거나 NULL을 미분류로 분리하세요. 세트 번호나 추측한 최신 패치로 대체하지 않습니다. DB 회귀 테스트는 `supabase/tests/004_nullable_patch.test.sql`입니다.

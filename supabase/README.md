@@ -94,3 +94,7 @@ FROM usage GROUP BY item_name ORDER BY games_used DESC;
 ## 단계별 오류 진단 업데이트
 
 `migrations/003_tft_collector_diagnostics.sql`을 추가 실행하면 RPC 실패 메시지에 `[table=tft_units]` 같은 테이블 표시가 포함됩니다. 원래 SQLSTATE/code, details, hint를 보존합니다. 개별 INSERT는 PostgreSQL에서 즉시 오류를 발생시키며 트랜잭션 전체가 롤백됩니다. 003 적용 전에는 클라이언트에 RPC 이름과 원래 오류만 표시될 수 있습니다.
+
+## 알 수 없는 패치 허용 (004)
+
+003 이후 `migrations/004_tft_nullable_patch.sql`을 실행합니다. game_version 원문은 그대로 보관하고 추출 불가 patch는 NULL입니다. 기존 RPC를 재생성할 필요는 없습니다. `tests/004_nullable_patch.test.sql`은 RPC를 통해 NULL patch 경기와 참가자 전체가 저장되는지 검증하고 롤백합니다. 앞선 001의 추출 실패 시 저장 중단 계약은 004로 대체됩니다.

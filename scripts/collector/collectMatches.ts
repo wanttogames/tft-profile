@@ -1,4 +1,4 @@
-import { logError, responseShape, protect } from './diagnostics';
+import { logError, responseShape, protect, redact } from './diagnostics';
 import { fatal, safeError, type RiotClient } from './riot';
 import type { Store } from './supabase';
 import type { Player } from './collectPlayers';
@@ -46,6 +46,7 @@ export async function collectMatches(
   const fresh = [...ids].filter((id) => !existing.has(id));
   result['New matches'] = fresh.length;
   let summarized = false;
+  let versionLogged = false;
   const failures: Record<string, number> = {};
   for (const id of fresh) {
     let raw: unknown;
@@ -53,6 +54,14 @@ export async function collectMatches(
     try {
       raw = await riot.get(`/tft/match/v1/matches/${id}`);
       responseShape(raw); // Register private identity values before any DB/validation error logging.
+      if (!versionLogged) {
+        const version = (raw as { info?: { game_version?: unknown } } | null)?.info?.game_version;
+        console.log(
+          '[GAME VERSION]',
+          redact({ matchId: id, raw: typeof version === 'string' ? version : null }),
+        );
+        versionLogged = true;
+      }
       stage = 'Match schema/field validation';
       const payload = normalizeMatch(raw, id, observed);
       stage = 'Supabase atomic save';

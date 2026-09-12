@@ -1,4 +1,4 @@
-import { ValidationError, StageError } from './diagnostics';
+import { ValidationError, StageError, redact } from './diagnostics';
 import type { Player } from './collectPlayers';
 import type { Store } from './supabase';
 type Row = Record<string, unknown>;
@@ -28,14 +28,16 @@ function array(value: unknown, field: string, optional = false): unknown[] {
   if (!Array.isArray(value)) throw new ValidationError(field, 'Expected array');
   return value;
 }
-export function patchFromVersion(value: string) {
-  const match = /^(?:Version\s+)?(\d+)\.(\d+)\./i.exec(value.trim());
-  if (!match)
-    throw new ValidationError(
-      'info.game_version',
-      'Expected MAJOR.MINOR.BUILD or Version MAJOR.MINOR.BUILD',
-    );
-  return `${match[1]}.${match[2]}`;
+// Version is opaque API text. Extract a patch candidate, never reject its format.
+// Prefer an explicit Version label over unrelated dotted numbers (e.g. OS version).
+// Unlabelled, ambiguous candidates return null rather than guessing a patch.
+export function patchFromVersion(value: string): string | null {
+  const labelled = [...value.matchAll(/\bVersion\s+(\d{1,2})\.(\d{1,2})(?!\d)/gi)];
+  const matches = labelled.length
+    ? labelled
+    : [...value.matchAll(/(?<![\w.])(\d{1,2})\.(\d{1,2})(?!\d)/g)];
+  const candidates = new Set(matches.map((match) => `${Number(match[1])}.${Number(match[2])}`));
+  return candidates.size === 1 ? [...candidates][0]! : null;
 }
 export function normalizeMatch(raw: unknown, id: string, observed = new Map<string, Player>()) {
   const root = object(raw, 'root'),
@@ -114,6 +116,15 @@ export async function saveNormalizedMatch(
   payload: ReturnType<typeof normalizeMatch>,
 ) {
   if (payload.queue_id !== 1100) return 'skipped' as const;
+  if (payload.patch === null)
+    console.warn(
+      '[PATCH WARNING]',
+      redact({
+        matchId: payload.match_id,
+        gameVersion: payload.game_version,
+        reason: 'Unable to extract patch',
+      }),
+    );
   const saved = await store.request('rpc/tft_save_match', 'POST', { payload });
   if (typeof saved !== 'boolean')
     throw new StageError('SUPABASE ERROR', {
