@@ -2,7 +2,7 @@ import { logError, responseShape, protect, redact } from './diagnostics';
 import { fatal, safeError, type RiotClient } from './riot';
 import type { Store } from './supabase';
 import type { Player } from './collectPlayers';
-import { normalizeMatch, saveNormalizedMatch } from './saveMatch';
+import { normalizeMatch, saveNormalizedMatch, MatchSkipped } from './saveMatch';
 export async function collectMatches(
   riot: RiotClient,
   store: Store,
@@ -20,6 +20,7 @@ export async function collectMatches(
     'Failed matches': 0,
     'Skipped matches': 0,
     'Failed player scans': 0,
+    'Patch unresolved matches': 0,
   };
   for (const player of players) {
     protect(player.puuid);
@@ -47,6 +48,7 @@ export async function collectMatches(
   result['New matches'] = fresh.length;
   let summarized = false;
   let versionLogged = false;
+  let patchWarningLogged = false;
   const failures: Record<string, number> = {};
   for (const id of fresh) {
     let raw: unknown;
@@ -64,12 +66,30 @@ export async function collectMatches(
       }
       stage = 'Match schema/field validation';
       const payload = normalizeMatch(raw, id, observed);
+      if (payload.queue_id === 1100 && payload.patch === null && !patchWarningLogged) {
+        console.warn(
+          '[PATCH WARNING]',
+          redact({
+            matchId: id,
+            gameVersion: payload.game_version,
+            reason: 'Unable to extract patch; subsequent warnings suppressed for this run',
+          }),
+        );
+        patchWarningLogged = true;
+      }
       stage = 'Supabase atomic save';
       const status = await saveNormalizedMatch(store, payload);
-      if (status === 'saved') result['Saved matches']++;
-      else if (status === 'existing') result['Existing matches']++;
+      if (status === 'saved') {
+        result['Saved matches']++;
+        if (payload.patch === null) result['Patch unresolved matches']++;
+      } else if (status === 'existing') result['Existing matches']++;
       else result['Skipped matches']++;
     } catch (error) {
+      if (error instanceof MatchSkipped) {
+        result['Skipped matches']++;
+        console.log('[MATCH SKIPPED]', redact(error.context));
+        continue;
+      }
       result['Failed matches']++;
       logError(error, { matchId: id, stage });
       const name = error instanceof Error ? error.name + ': ' + error.message : String(error);
@@ -92,4 +112,15 @@ export async function collectMatches(
   for (const [reason, count] of Object.entries(failures))
     console.error('[FAILURE SUMMARY]', safeError(new Error(reason)), `count=${count}`);
   return result;
+}
+
+// Expected exclusions are successful processing; infrastructure/scan failures remain failures.
+export function collectorExitCode(result: {
+  'Failed matches': number;
+  'Failed player scans': number;
+  Players: number;
+}): 0 | 1 {
+  return result['Failed matches'] > 0 || result['Failed player scans'] > 0 || result.Players === 0
+    ? 1
+    : 0;
 }

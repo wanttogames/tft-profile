@@ -263,3 +263,9 @@ Actions의 Run workflow 입력 기본값은 디버깅용 **2명 × 2경기**입�
 실제 실패 로그의 raw 문자열은 아직 전달되지 않았습니다. 기존 공개 응답 fixture와 합성 버전 변형을 사용한 테스트이며 라이브 Actions 수집 성공을 의미하지 않습니다. 004 적용 및 push 후 Run workflow에서 2명 × 2경기로 확인하세요. itemNames가 우선이며 item_names는 누락 시 fallback입니다. 기존 상세 오류 로깅과 DB 트랜잭션은 유지됩니다.
 
 패치별 집계는 `patch IS NOT NULL`로 제한하거나 NULL을 미분류로 분리하세요. 세트 번호나 추측한 최신 패치로 대체하지 않습니다. DB 회귀 테스트는 `supabase/tests/004_nullable_patch.test.sql`입니다.
+
+### 참가자 수 제외와 패치 경고 집계
+
+필수 필드 검증이 통과한 뒤 참가자 수 또는 서로 다른 PUUID 수가 8이 아니면 `[MATCH SKIPPED]`로 제외합니다. matchId / queueId / participantCount / distinctPuuidCount / reason을 기록하며 DB 저장 RPC는 호출하지 않습니다. 필수 필드 누락, HTTP/JSON 오류, Supabase 오류와 예상하지 못한 예외는 계속 Failed입니다. 중복 ID 및 기존 DB 경기 제외 로직은 유지합니다.
+
+Skipped만 있으면 성공 종료합니다. Failed matches 또는 Failed player scans가 있거나 수집 대상 플레이어가 없으면 실패 종료합니다. `[PATCH WARNING]`은 실행당 최대 한 번만 출력합니다. `Patch unresolved matches`는 **이번 실행에서 신규 저장에 성공한 경기 중 patch=NULL인 수**이며, 제외/실패/기존 경기는 포함하지 않습니다. 동일 placeholder 버전 경고를 반복하지 않습니다. 추가 SQL migration은 필요하지 않습니다(이전 004 적용 상태 기준).

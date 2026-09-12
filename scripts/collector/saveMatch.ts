@@ -1,4 +1,4 @@
-import { ValidationError, StageError, redact } from './diagnostics';
+import { ValidationError, StageError } from './diagnostics';
 import type { Player } from './collectPlayers';
 import type { Store } from './supabase';
 type Row = Record<string, unknown>;
@@ -38,6 +38,11 @@ export function patchFromVersion(value: string): string | null {
     : [...value.matchAll(/(?<![\w.])(\d{1,2})\.(\d{1,2})(?!\d)/g)];
   const candidates = new Set(matches.map((match) => `${Number(match[1])}.${Number(match[2])}`));
   return candidates.size === 1 ? [...candidates][0]! : null;
+}
+export class MatchSkipped extends StageError {
+  constructor(context: Record<string, unknown>) {
+    super('MATCH SKIPPED', context);
+  }
 }
 export function normalizeMatch(raw: unknown, id: string, observed = new Map<string, Player>()) {
   const root = object(raw, 'root'),
@@ -87,12 +92,7 @@ export function normalizeMatch(raw: unknown, id: string, observed = new Map<stri
       }),
     };
   });
-  if (participants.length !== 8 || new Set(participants.map((p) => p.puuid)).size !== 8)
-    throw new ValidationError(
-      'info.participants',
-      'Expected eight distinct participants in ranked TFT',
-    );
-  return {
+  const payload = {
     match_id: id,
     game_datetime: integer(info.game_datetime, 'info.game_datetime'),
     game_version: version,
@@ -102,6 +102,17 @@ export function normalizeMatch(raw: unknown, id: string, observed = new Map<stri
       info.tft_set_number == null ? null : integer(info.tft_set_number, 'info.tft_set_number', 1),
     participants,
   };
+  const distinctPuuidCount = new Set(participants.map((p) => p.puuid)).size;
+  if (participants.length !== 8 || distinctPuuidCount !== 8) {
+    throw new MatchSkipped({
+      matchId: id,
+      queueId: payload.queue_id,
+      participantCount: participants.length,
+      distinctPuuidCount,
+      reason: 'Expected eight distinct participants',
+    });
+  }
+  return payload;
 }
 export async function saveMatch(
   store: Store,
@@ -116,15 +127,6 @@ export async function saveNormalizedMatch(
   payload: ReturnType<typeof normalizeMatch>,
 ) {
   if (payload.queue_id !== 1100) return 'skipped' as const;
-  if (payload.patch === null)
-    console.warn(
-      '[PATCH WARNING]',
-      redact({
-        matchId: payload.match_id,
-        gameVersion: payload.game_version,
-        reason: 'Unable to extract patch',
-      }),
-    );
   const saved = await store.request('rpc/tft_save_match', 'POST', { payload });
   if (typeof saved !== 'boolean')
     throw new StageError('SUPABASE ERROR', {
