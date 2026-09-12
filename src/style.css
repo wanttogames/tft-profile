@@ -1349,3 +1349,38 @@ progress {
     flex: 1;
   }
 }
+
+.legal-document {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 36px 0 16px;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+}
+.legal-document h1 {
+  font-size: clamp(26px, 5vw, 36px);
+  margin: 24px 0 12px;
+}
+.legal-document h2 {
+  font-size: 19px;
+  margin-bottom: 12px;
+}
+.legal-document section {
+  margin-top: 32px;
+}
+.legal-document p,
+.legal-document li {
+  line-height: 1.9;
+  color: #bac5d4;
+}
+.legal-document ul {
+  padding-left: 24px;
+}
+.legal-document a {
+  color: var(--mint);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.legal-back {
+  font-size: 13px;
+}
