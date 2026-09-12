@@ -275,7 +275,7 @@ Skipped만 있으면 성공 종료합니다. Failed matches 또는 Failed player
 ### 메타 통계 (005)
 
 1. Supabase에 기존 001~004 적용 후 `supabase/migrations/005_tft_meta_views.sql` 전체를 실행합니다. 새 View와 서버 전용 조회 권한을 생성하며 기존 테이블/데이터를 삭제하지 않습니다.
-2. **Netlify 환경변수에도** `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `MIN_SAMPLE_SIZE=10`을 등록하고 재배포하세요. GitHub Actions Secrets는 Netlify로 자동 전달되지 않습니다. 키는 브라우저로 전송하지 않습니다.
+2. **Netlify 환경변수에도** `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `MIN_SAMPLE_SIZE=50`을 등록하고 재배포하세요. GitHub Actions Secrets는 Netlify로 자동 전달되지 않습니다. 키는 브라우저로 전송하지 않습니다.
 3. 사이트 상단 **메타 → 아이템 / 챔피언 / 특성**에서 조회합니다. 로컬은 `.env` 설정 후 `npm run dev:api`와 `npm run dev`를 실행합니다.
 
 경로: Vue → `/.netlify/functions/tft-meta` → Supabase 집계 View. 원본 경기/참가자 배열을 브라우저에서 집계하지 않습니다. 서버에서 최소 표본과 정렬을 적용하고 50개씩 페이지 처리합니다. 평균 등수는 오름차순, 나머지 정렬은 내림차순입니다. 응답은 최대 약 60초 캐시되므로 수집 직후 반영에 잠시 걸릴 수 있습니다.

@@ -32,7 +32,7 @@ export default async function handler(
     page > 100
   )
     return reply({ message: '메타 조회 조건이 올바르지 않습니다.' }, 400);
-  const min = Number(env.MIN_SAMPLE_SIZE ?? '10');
+  const min = Number(env.MIN_SAMPLE_SIZE ?? '50');
   if (!Number.isInteger(min) || min < 1 || min > 1000000)
     return reply({ message: 'MIN_SAMPLE_SIZE 설정을 확인해 주세요.' }, 503);
   const url = env.SUPABASE_URL,
@@ -90,7 +90,19 @@ export default async function handler(
         ),
       ]);
       if (!summary[0]) throw Error('메타 요약 View를 확인해 주세요.');
-      const rows = raw.slice(0, 50) as MetaRow[];
+      // SQL pairs and item totals both count distinct participant boards.
+      // Compute here so existing 005 views also provide the ratio without a DB migration.
+      const rows = (raw.slice(0, 50) as MetaRow[]).map((row) => ({
+        ...row,
+        ...(row.common_champions
+          ? {
+              common_champions: row.common_champions.map((champion) => ({
+                ...champion,
+                rate: row.sample_count > 0 ? champion.sample_count / row.sample_count : 0,
+              })),
+            }
+          : {}),
+      }));
       const requests = rows.flatMap((row) => [
         {
           kind: kind === 'champion' ? ('unit' as const) : kind,

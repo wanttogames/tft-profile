@@ -92,3 +92,76 @@ it('renders meta controls, all-period scope, cohort caveat and low-is-good guida
   ])
     expect(html).toContain(text);
 });
+
+it('defaults ranking minimum to 50 and derives common champion rate from distinct participant counts', async () => {
+  const { default: cloudHandler } = await import('../server/handlers/tft-meta');
+  const mock = vi.fn(async (input: string) =>
+    Response.json(
+      input.includes('summary')
+        ? [
+            {
+              match_count: 200,
+              participant_count: 1600,
+              player_count: 800,
+              latest_collected_at: null,
+            },
+          ]
+        : [
+            {
+              item_name: 'test-item',
+              sample_count: 1600,
+              avg_placement: 4,
+              top4_rate: 0.6,
+              win_rate: 0.15,
+              common_champions: [{ id: 'test-champion', sample_count: 339 }],
+            },
+          ],
+    ),
+  );
+  vi.stubGlobal('fetch', mock);
+  const response = await cloudHandler(new Request('https://test/api?kind=item'), {
+    SUPABASE_URL: 'https://default-min-test.supabase.co',
+    SUPABASE_SECRET_KEY: 'sb_secret_test',
+  });
+  const body = await response.json();
+  expect(body.minSampleSize).toBe(50);
+  expect(body.rows[0].common_champions[0]).toEqual({
+    id: 'test-champion',
+    sample_count: 339,
+    rate: 339 / 1600,
+  });
+  expect(
+    mock.mock.calls.some(([url]) => new URL(url).searchParams.get('sample_count') === 'gte.50'),
+  ).toBe(true);
+});
+
+it('renders four compact portraits, overflow and localized count/rate tooltips', async () => {
+  const { default: MetaCompanions } = await import('../src/components/MetaCompanions.vue');
+  const entries = Array.from({ length: 5 }, (_, i) => ({
+    id: `c${i}`,
+    sample_count: 339 - i,
+    rate: (339 - i) / 1600,
+  }));
+  const assets = Object.fromEntries(
+    entries.map((e, i) => [
+      `unit:${e.id}`,
+      { name: i === 0 ? '말파이트' : `챔피언${i}`, image: `https://example.com/${i}.png` },
+    ]),
+  );
+  // Use the catalog's canonical wildcard keys.
+  const canonicalAssets = Object.fromEntries(
+    Object.entries(assets).map(([k, v]) => [k.replace('unit:', 'unit:*:'), v]),
+  );
+  const html = await renderToString(
+    createSSRApp(MetaCompanions, { entries, assets: canonicalAssets, kind: 'unit' }),
+  );
+  expect(html.match(/<img /g) ?? []).toHaveLength(4);
+  expect(html).toContain('+1');
+  expect(html).toContain('말파이트\n339회\n21.2%');
+  expect(html).not.toContain('>말파이트<');
+  const fallback = await renderToString(
+    createSSRApp(MetaCompanions, { entries: entries.slice(0, 1), assets: {}, kind: 'unit' }),
+  );
+  expect(fallback).toContain('c0');
+  expect(fallback).not.toContain('<img');
+});

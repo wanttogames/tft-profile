@@ -11,7 +11,7 @@ export interface MetaRow {
   win_rate: number;
   avg_star_level?: number;
   avg_tier_current?: number;
-  common_champions?: { id: string; sample_count: number }[];
+  common_champions?: { id: string; sample_count: number; rate: number }[];
   common_items?: { id: string; sample_count: number }[];
   tier_samples?: { tier_current: number; sample_count: number }[];
 }

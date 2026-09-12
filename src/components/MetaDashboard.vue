@@ -4,6 +4,7 @@ import { fetchMeta } from '../api/meta';
 import type { MetaData, MetaKind, MetaSort, MetaRow } from '../types/meta';
 import { lookupAsset } from '../static-data/catalog';
 import AssetBadge from './AssetBadge.vue';
+import MetaCompanions from './MetaCompanions.vue';
 const kind = ref<MetaKind>('item'),
   sort = ref<MetaSort>('sample_count'),
   page = ref(0);
@@ -151,16 +152,12 @@ const percent = (v: number) => (v * 100).toFixed(1) + '%';
               {{ (r.avg_star_level ?? r.avg_tier_current)?.toFixed(2) ?? '—' }}
             </td>
             <td>
-              <div
-                class="meta-common"
-                v-for="c in r.common_champions ?? r.common_items ?? []"
-                :key="c.id"
-              >
-                <AssetBadge
-                  :id="c.id"
-                  :asset="asset(c.id, kind === 'item' ? 'unit' : 'item')"
-                /><small>{{ c.sample_count }}회</small>
-              </div>
+              <MetaCompanions
+                v-if="kind !== 'trait'"
+                :entries="r.common_champions ?? r.common_items ?? []"
+                :assets="data.assets"
+                :kind="kind === 'item' ? 'unit' : 'item'"
+              />
               <span v-for="t in r.tier_samples ?? []" :key="t.tier_current" class="pill"
                 >{{ t.tier_current }}단계 · {{ t.sample_count }}회</span
               >
@@ -231,13 +228,13 @@ const percent = (v: number) => (v * 100).toFixed(1) + '%';
 }
 .meta-table {
   width: 100%;
-  min-width: 800px;
+  min-width: 780px;
   border-collapse: collapse;
   text-align: left;
 }
 .meta-table th,
 .meta-table td {
-  padding: 16px;
+  padding: 10px 12px;
   border-bottom: 1px solid #27383d;
 }
 .meta-table thead {
@@ -249,15 +246,39 @@ const percent = (v: number) => (v * 100).toFixed(1) + '%';
   font-weight: 500;
   min-width: 160px;
 }
-.meta-common {
+.meta-table tbody tr {
+  height: 60px;
+}
+.meta-table tbody tr:hover {
+  background: #1b3035;
+}
+.meta-table th:not(:first-child):not(:last-child),
+.meta-table td:not(:last-child) {
+  width: 92px;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.meta-table th,
+.meta-table td {
+  vertical-align: middle;
+}
+.meta-table tbody th :deep(.asset) {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin: 5px 0;
+  gap: 10px;
+  line-height: 1.3;
 }
-.meta-common small {
-  white-space: nowrap;
-  color: #9caeb2;
+.meta-table tbody th :deep(.asset img),
+.meta-table tbody th :deep(.asset-letter) {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  object-fit: cover;
+}
+.meta-table th:last-child,
+.meta-table td:last-child {
+  width: 202px;
 }
 .meta-pagination {
   justify-content: center;

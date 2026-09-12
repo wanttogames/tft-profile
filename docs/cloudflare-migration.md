@@ -23,7 +23,7 @@ Cloudflare Pages 프로젝트의 Git 저장소 루트에 functions/와 wrangler.
 Pages → Settings → Variables and Secrets에서 Production에 다음을 설정하고 재배포합니다. Preview 배포를 사용한다면 Preview에도 별도로 설정합니다.
 
 - Secret: RIOT_API_KEY, SUPABASE_SECRET_KEY
-- Text: SUPABASE_URL, MIN_SAMPLE_SIZE=10, TFT_STATIC_VERSION=latest(선택)
+- Text: SUPABASE_URL, MIN_SAMPLE_SIZE=50, TFT_STATIC_VERSION=latest(선택)
 
 Functions는 context.env로만 읽습니다. process.env에 bindings를 복사하거나 Vue의 VITE_ 변수로 키를 넣지 않습니다. GitHub Actions Secrets/Netlify 변수는 Cloudflare로 자동 이전되지 않습니다. 기존 Supabase SQL 001~005는 그대로 사용하며 새로운 DB migration은 필요하지 않습니다.
 
