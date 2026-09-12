@@ -86,21 +86,21 @@ const deckName = (key: string) =>
 <template>
   <div class="app-shell">
     <header class="topbar">
-      <a class="brand" href="#" aria-label="TFT Profile 홈"
-        ><span class="brand-mark">P</span>TFT<span>PROFILE</span></a
-      ><span class="top-note">POST-GAME INTELLIGENCE</span
-      ><span class="region">KR <span class="muted">한국 서버</span></span>
+      <a class="brand" href="#" aria-label="TFT Profile 홈" @click.prevent="section = 'profile'">
+        <span class="brand-mark">P</span>TFT<span>PROFILE</span>
+      </a>
+      <nav class="primary-nav" aria-label="주 메뉴">
+        <button type="button" :aria-pressed="section === 'profile'" @click="section = 'profile'">
+          개인 분석
+        </button>
+        <button type="button" :aria-pressed="section === 'meta'" @click="section = 'meta'">
+          메타
+        </button>
+      </nav>
+      <span class="region">KR <span class="muted">한국 서버</span></span>
     </header>
-    <nav aria-label="주 메뉴" style="display: flex; gap: 12px; padding: 16px 0">
-      <button class="secondary" :aria-pressed="section === 'profile'" @click="section = 'profile'">
-        개인 분석
-      </button>
-      <button class="secondary" :aria-pressed="section === 'meta'" @click="section = 'meta'">
-        메타
-      </button>
-    </nav>
     <main>
-      <MetaDashboard v-if="section === 'meta'" />
+      <KeepAlive><MetaDashboard v-if="section === 'meta'" /></KeepAlive>
       <div v-show="section === 'profile'">
         <section class="search-area">
           <div>

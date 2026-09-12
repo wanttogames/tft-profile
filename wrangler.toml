@@ -1,3 +1,8 @@
 name = "tft-profile"
 pages_build_output_dir = "./dist"
 compatibility_date = "2026-09-12"
+
+[vars]
+SUPABASE_URL = "https://bjegjnxeklyjzgkfboty.supabase.co"
+MIN_SAMPLE_SIZE = "50"
+# SUPABASE_SECRET_KEY and RIOT_API_KEY are managed as Cloudflare Secrets.

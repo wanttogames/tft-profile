@@ -84,11 +84,14 @@ const percent = (v: number) => (v * 100).toFixed(1) + '%';
         <p>Challenger · Grandmaster</p>
       </section>
     </div>
-    <p class="small muted">
+    <p class="small muted meta-context">
       해당 래더에서 수집한 경기의 전체 참가자를 집계합니다. 모든 참가자가 Challenger·Grandmaster라는
       뜻은 아닙니다. 여러 패치·세트가 섞일 수 있으며 공식 티어 순위가 아닙니다.
     </p>
     <div class="meta-toolbar">
+      <button class="secondary" :disabled="busy" @click="load" aria-label="메타 통계 새로고침">
+        {{ busy ? '불러오는 중…' : '↻ 새로고침' }}
+      </button>
       <label
         >정렬
         <select v-model="sort">
@@ -185,7 +188,7 @@ const percent = (v: number) => (v * 100).toFixed(1) + '%';
 </template>
 <style scoped>
 .meta-area {
-  padding: 32px 0;
+  padding: 24px 0;
 }
 .meta-tabs,
 .meta-toolbar,
@@ -194,7 +197,7 @@ const percent = (v: number) => (v * 100).toFixed(1) + '%';
   gap: 12px;
   align-items: center;
   flex-wrap: wrap;
-  margin: 24px 0;
+  margin: 16px 0;
 }
 .meta-tabs button {
   padding: 12px 24px;

@@ -88,7 +88,11 @@ small {
   color: var(--muted);
 }
 .topbar {
-  height: 86px;
+  min-height: 72px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #0c111bf5;
   display: flex;
   align-items: center;
   gap: 32px;
@@ -1299,5 +1303,49 @@ progress {
   .game-experience .section-head {
     flex-wrap: wrap;
     gap: 10px;
+  }
+}
+
+/* Global navigation stays available while reading long analysis pages. */
+.primary-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.primary-nav button {
+  min-height: 44px;
+  padding: 10px 20px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  white-space: nowrap;
+  font-weight: 600;
+}
+.primary-nav button:hover {
+  background: #1b2936;
+  color: #e8edf5;
+}
+.primary-nav button[aria-pressed='true'] {
+  background: #1b3934;
+  border-color: #3e7664;
+  color: var(--mint);
+}
+.topbar .region {
+  margin-left: auto;
+}
+@media (max-width: 600px) {
+  .topbar {
+    height: auto;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 12px 18px;
+  }
+  .primary-nav {
+    order: 3;
+    width: 100%;
+  }
+  .primary-nav button {
+    flex: 1;
   }
 }
