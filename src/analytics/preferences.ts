@@ -14,7 +14,7 @@ export function preferenceAnalysis(input: Game[], kind: PreferenceKind) {
   const games = recentSample(input);
   // Empty boards are unavailable for unit/item observations. Empty active traits aren't invented.
   const available = games.filter((g) =>
-    kind === 'trait' ? g.player.traits.length > 0 : g.player.units.length > 0,
+    kind === 'trait' ? boardIds(g, kind).length > 0 : g.player.units.length > 0,
   );
   const groups = new Map<string, { id: string; set: number; games: Game[]; copies: number }>();
   for (const g of available) {

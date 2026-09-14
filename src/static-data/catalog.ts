@@ -60,6 +60,12 @@ export function indexCommunityDragon(
       name: value.name,
       image: communityImage(value.squareIcon ?? value.icon, version),
       cost: kind === 'unit' && typeof value.cost === 'number' ? value.cost : undefined,
+      itemType:
+        kind === 'item'
+          ? Array.isArray(value.tags) && value.tags.includes('component')
+            ? 'component'
+            : 'completed'
+          : undefined,
     };
     const aliases = [id];
     if (kind === 'unit' && typeof value.characterName === 'string')
@@ -111,7 +117,18 @@ export function indexDataDragon(
       im && typeof im.group === 'string' && typeof im.full === 'string'
         ? `https://ddragon.leagueoflegends.com/cdn/${version}/img/${encodeURIComponent(im.group)}/${encodeURIComponent(im.full)}`
         : undefined;
-    const asset = { name: value.name, image };
+    const asset: Asset = {
+      name: value.name,
+      image,
+      itemType:
+        kind === 'item'
+          ? Array.isArray(value.from) && value.from.length >= 2
+            ? 'completed'
+            : Array.isArray(value.into) && value.into.length
+              ? 'component'
+              : undefined
+          : undefined,
+    };
     assets[assetKey(kind, id, set)] = asset;
     if (typeof value.id === 'string' || typeof value.id === 'number')
       assets[assetKey(kind, String(value.id), set)] = asset;

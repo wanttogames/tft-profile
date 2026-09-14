@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { createSSRApp } from 'vue';
 import { renderToString } from '@vue/server-renderer';
 import { demoPlayer } from '../src/data/demo';
-import { playDna, completion } from '../src/analytics/game/playDna';
+import { boardCompletion, playerScores } from '../src/analytics/playerScores';
 import { playerScore } from '../src/analytics/game/playerScore';
 import { playerClass } from '../src/analytics/game/playerClass';
 import { playerComparison } from '../src/analytics/game/playerComparison';
@@ -22,46 +22,28 @@ const fixture = (places: number[]) =>
 describe('game profile calculations', () => {
   it('handles empty and short samples without fictional scores', () => {
     expect(playerScore([])).toBeNull();
-    expect(playDna([]).stability.value).toBeNull();
+    expect(playerScores([])).toBeNull();
     expect(playerComparison(fixture(Array(49).fill(1)))).toBeNull();
-    expect(playerClass(fixture([1])).name).toBe('아직 쓰여지는 캐릭터');
+    expect(playerClass(fixture([1])).name).toBe('분석 표본 부족');
   });
-  it('does not penalize absent combat fields as zero', () => {
-    const g = fixture(Array(50).fill(4));
-    g.forEach((x) => {
-      delete x.player.players_eliminated;
-      delete x.player.total_damage_to_players;
-    });
-    expect(playDna(g).aggression.value).toBeNull();
-    g.forEach((x) => (x.player.total_damage_to_players = 100));
-    expect(playDna(g).aggression.value).toBe(50);
-  });
-  it('handles measured zero combat separately from absence', () => {
-    const g = fixture(Array(50).fill(4));
-    g.forEach((x) => {
-      x.player.players_eliminated = 0;
-      x.player.total_damage_to_players = 0;
-    });
-    expect(playDna(g).aggression.value).toBe(0);
-  });
-  it('keeps score independent of repeated versus diverse boards', () => {
+  it('rewards diverse boards without changing the separate outcome score', () => {
     const a = fixture(Array(50).fill(3)),
       b = structuredClone(a);
     a.forEach((x) => (x.player.traits = a[0]!.player.traits));
     b.forEach((x, i) => (x.player.traits = [{ ...x.player.traits[0]!, name: 'unique' + i }]));
     expect(playerScore(a)).toBe(playerScore(b));
-    expect(playDna(b).flexibility.value!).toBeGreaterThan(playDna(a).flexibility.value!);
+    expect(playerScores(b)!.flexibility!).toBeGreaterThan(playerScores(a)!.flexibility!);
   });
   it('bounds scores and treats uniformly good outcomes better than bad ones', () => {
     const good = fixture(Array(50).fill(1)),
       bad = fixture(Array(50).fill(8));
     expect(playerScore(good)).toBe(1000);
     expect(playerScore(bad)).toBe(0);
-    expect(playDna(good).stability.value!).toBeGreaterThan(playDna(bad).stability.value!);
-    for (const m of Object.values(playDna(good)))
-      if (m.value !== null) {
-        expect(m.value).toBeGreaterThanOrEqual(0);
-        expect(m.value).toBeLessThanOrEqual(100);
+    expect(playerScores(good)!.stability).toBeGreaterThan(playerScores(bad)!.stability);
+    for (const value of Object.values(playerScores(good)!))
+      if (value !== null) {
+        expect(value).toBeGreaterThanOrEqual(0);
+        expect(value).toBeLessThanOrEqual(100);
       }
   });
   it('computes current and maximum streaks newest first', () => {
@@ -99,20 +81,38 @@ describe('game profile calculations', () => {
   it('completion is unavailable for empty boards and reweights missing item records', () => {
     const g = fixture([1])[0]!;
     g.player.units = [];
-    expect(completion(g)).toBeNull();
+    expect(boardCompletion(g)).toBeNull();
     g.player.units = [{ character_id: 'a', tier: 3, rarity: 1, items: [] }];
-    expect(completion(g)).toBe(100);
+    g.player.traits = [];
+    expect(boardCompletion(g)).toBe(100);
+  });
+  it('counts completed items but excludes components from completion', () => {
+    const component = fixture([4])[0]!,
+      completed = structuredClone(component);
+    component.player.traits = [];
+    completed.player.traits = [];
+    component.player.units = [
+      { character_id: 'a', tier: 1, rarity: 1, items: [], itemNames: ['part'] },
+    ];
+    completed.player.units = [
+      { character_id: 'a', tier: 1, rarity: 1, items: [], itemNames: ['full'] },
+    ];
+    const assets = {
+      part: { name: '재료', itemType: 'component' as const },
+      full: { name: '완성', itemType: 'completed' as const },
+    };
+    expect(boardCompletion(component, assets)).toBe(0);
+    expect(boardCompletion(completed, assets)).toBeGreaterThan(0);
   });
   it('adds tags only for meaningful differences against other games', () => {
     const g = fixture(Array(20).fill(3));
     g.forEach((x) => {
-      x.player.total_damage_to_players = 50;
       x.player.last_round = 30;
       x.player.units.forEach((u) => (u.tier = 2));
     });
     expect(matchFeedback(g[0]!, g)).toEqual([]);
-    g[0]!.player.total_damage_to_players = 100;
-    expect(matchFeedback(g[0]!, g).some((x) => x.label === 'HIGH DAMAGE')).toBe(true);
+    g[0]!.player.last_round = 20;
+    expect(matchFeedback(g[0]!, g).some((x) => x.label === '짧았던 여정')).toBe(true);
   });
   it('deduplicates match IDs and caps at 50', () => {
     const g = fixture(Array(51).fill(1));

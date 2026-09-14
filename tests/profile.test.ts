@@ -107,20 +107,20 @@ describe('50-game board preferences', () => {
   });
 });
 describe('profile formulas and multi-signal names', () => {
-  it('separates consistency from successful top4 results', () => {
+  it('does not award stability merely for consistently finishing eighth', () => {
     const games = sample();
     games.forEach((g) => (g.player.placement = 8));
     expect(playerScores(games)).toMatchObject({
       ceiling: 0,
-      stability: 100,
+      stability: 25,
       survival: 0,
-      form: 50,
+      form: 25,
     });
   });
-  it('normalizes maximum variance to zero and bounds every score', () => {
+  it('penalizes maximum variance and bounds every score', () => {
     const games = sample();
     games.forEach((g, i) => (g.player.placement = i < 25 ? 1 : 8));
-    expect(playerScores(games)!.stability).toBe(0);
+    expect(playerScores(games)!.stability).toBe(38);
     for (const value of Object.values(playerScores(games)!))
       if (value !== null) {
         expect(value).toBeGreaterThanOrEqual(0);
@@ -132,7 +132,7 @@ describe('profile formulas and multi-signal names', () => {
     const games = sample();
     games.forEach((g) => (g.player.traits = []));
     expect(playerProfile(games).name).toBe('분석 표본 부족');
-    expect(playerScores(games)!.flexibility).toBeNull();
+    expect(playerScores(games)!.flexibility).toBe(0);
   });
   it('identifies concentration only across champion, trait and deck evidence', () => {
     const games = sample();
@@ -141,8 +141,11 @@ describe('profile formulas and multi-signal names', () => {
     games.forEach((g, i) => (g.player.traits = [{ ...g.player.traits[0]!, name: 'unique' + i }]));
     expect(playerProfile(games).name).not.toBe('한 우물 장인');
   });
-  it('uses variance, win and top2 together for high ceiling', () =>
-    expect(playerProfile(varied()).name).toBe('고점 폭발형'));
+  it('uses peak, stability and top-two rate together for high ceiling', () => {
+    const games = varied();
+    games.forEach((g, i) => (g.player.placement = i < 35 ? 1 : 8));
+    expect(playerProfile(games).name).toBe('고점 폭발형');
+  });
   it('identifies stable top4 using average and variance too', () => {
     const games = varied();
     games.forEach((g, i) => (g.player.placement = i % 2 ? 3 : 4));
@@ -154,36 +157,22 @@ describe('profile formulas and multi-signal names', () => {
     expect(boardFlexibility(games)).toBe(100);
     expect(playerProfile(games).name).toBe('유연한 운영가');
   });
-  it('requires real damage AND elimination coverage for aggression', () => {
-    const games = sample();
-    games.forEach((g, i) => {
-      g.player.placement = i % 2 ? 2 : 6;
-      g.player.total_damage_to_players = 120;
-      g.player.players_eliminated = 2;
-      g.player.level = 8;
-    });
-    expect(playerProfile(games).name).toBe('공격적 운영가');
-    games.forEach((g) => delete g.player.total_damage_to_players);
-    expect(playerProfile(games).name).toBe('균형 탐색형');
-    expect(playerProfile(games).damage).toBeNull();
-  });
   it('requires late levels and decent outcomes for late-game preference', () => {
     const games = sample();
     games.forEach((g, i) => {
       g.player.placement = i % 2 ? 2 : 6;
       g.player.level = 9;
-      delete g.player.total_damage_to_players;
+      g.player.last_round = 35;
     });
-    expect(playerProfile(games).name).toBe('후반 지향형');
+    expect(playerProfile(games).name).toBe('후반 운영형');
   });
-  it('uses few bottom-two results, average and variance for low-end defense', () => {
+  it('uses multiple outcome signals for stable top-four play', () => {
     const games = sample();
     games.forEach((g, i) => {
-      g.player.placement = i % 2 ? 4 : 5;
+      g.player.placement = i % 2 ? 3 : 4;
       g.player.level = 8;
-      delete g.player.total_damage_to_players;
     });
-    expect(playerProfile(games).name).toBe('저점 방어형');
+    expect(playerProfile(games).name).toBe('안정적 순방형');
   });
   it('compares extreme groups without causal claims; needs three per group', () => {
     const games = varied();
@@ -198,7 +187,7 @@ describe('profile formulas and multi-signal names', () => {
     expect(playerProfile(varied()).core).toHaveLength(3));
 });
 describe('profile rendering', () => {
-  it('renders identity, all six scores and Korean favorite names', async () => {
+  it('renders identity, all eight scores and Korean favorite names', async () => {
     const data = demoPlayer();
     const html = await renderToString(createSSRApp(PlayerCard, { data }));
     for (const text of [
@@ -207,9 +196,12 @@ describe('profile rendering', () => {
       'DIAMOND',
       '67 LP',
       '순방력',
+      '후반 운영력',
       '유연성',
-      '선호 특성 TOP 3',
-      '핵심 유닛 TOP 3',
+      '보드 완성도',
+      '최근 폼',
+      '선호 활성 특성 TOP 3',
+      '선호 챔피언 TOP 3',
       '아리',
     ])
       expect(html).toContain(text);

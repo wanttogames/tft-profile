@@ -1,12 +1,17 @@
 import type { Game } from '../../types/riot';
 import { statistics } from '../formAnalysis';
 import { sample } from './sample';
-import { playDna } from './playDna';
 import { playerScore } from './playerScore';
-export function playerComparison(input: Game[]) {
+import { playerScores } from '../playerScores';
+import type { AssetMap } from '../../static-data/catalog';
+export function playerComparison(input: Game[], assets: AssetMap = {}) {
   const g = sample(input);
   if (g.length < 50) return null;
-  const group = (g: Game[]) => ({ stats: statistics(g), dna: playDna(g), score: playerScore(g)! });
+  const group = (g: Game[]) => ({
+    stats: statistics(g),
+    scores: playerScores(g, assets)!,
+    score: playerScore(g)!,
+  });
   const recent = group(g.slice(0, 25)),
     past = group(g.slice(25, 50));
   const improvement = past.stats.average! - recent.stats.average!,

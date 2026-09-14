@@ -14,7 +14,7 @@ const name = (kind: 'unit' | 'trait', id: string, set: number) =>
   <div class="two-grid">
     <section class="panel">
       <div class="section-head">
-        <h2>반복 사용과 전투 기록</h2>
+        <h2>반복 사용과 후반 기록</h2>
         <span class="pill">최근 50경기 · 자체 분석</span>
       </div>
       <div v-for="kind in ['unit', 'trait'] as const" :key="kind">
@@ -41,20 +41,18 @@ const name = (kind: 'unit' | 'trait', id: string, set: number) =>
       </p>
       <div class="card-stats">
         <div>
-          평균 피해량<strong>{{ number(p.damage) }}</strong
-          ><small>{{ p.damageCount }}경기</small>
-        </div>
-        <div>
-          평균 플레이어 처치<strong>{{ number(p.eliminated) }}</strong
-          ><small>{{ p.eliminatedCount }}경기</small>
+          평균 최종 레벨<strong>{{ number(p.level) }}</strong>
         </div>
         <div>
           평균 마지막 라운드<strong>{{ number(p.round) }}</strong>
         </div>
+        <div>
+          고레벨 종료 비율<strong>{{ Math.round(p.late * 100) }}%</strong
+          ><small>최종 레벨 9 이상</small>
+        </div>
       </div>
       <p class="small muted">
-        피해량·처치는 제공된 경기만 집계합니다. 오래 생존할수록 누적 수치가 커질 수 있어 공격성을
-        직접 증명하지 않습니다. 라운드는 API 번호 평균입니다.
+        최종 레벨과 마지막 라운드는 Riot Match 응답의 관측값이며, 라운드는 API 원본 번호 평균입니다.
       </p>
     </section>
     <section class="panel">

@@ -7,7 +7,10 @@ import { matchFeedback } from '../analytics/game/matchFeedback';
 import AssetBadge from './AssetBadge.vue';
 const props = defineProps<{ data: PlayerData }>();
 const feedback = computed(
-  () => new Map(props.data.games.map((g) => [g.id, matchFeedback(g, props.data.games)])),
+  () =>
+    new Map(
+      props.data.games.map((g) => [g.id, matchFeedback(g, props.data.games, props.data.assets)]),
+    ),
 );
 const visibleCount = ref(MATCH_PAGE_SIZE);
 watch(
@@ -107,10 +110,6 @@ const date = (n: number) =>
             >{{ name('trait', t.name, game.set) }} {{ t.num_units }} ·
             {{ t.tier_current }}단계</span
           >
-        </p>
-        <p class="small muted">
-          플레이어 피해량 {{ game.player.total_damage_to_players ?? '—' }} · 플레이어 처치
-          {{ game.player.players_eliminated ?? '—' }}
         </p>
       </div>
     </details>

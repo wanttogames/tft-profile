@@ -11,9 +11,9 @@ export function demoPlayer(): PlayerData {
   const assets: PlayerData['assets'] = {};
   names.forEach((name, i) => (assets['DEMO_Unit' + i] = { name }));
   traits.forEach((name, i) => (assets['DEMO_Trait' + i] = { name }));
-  assets.DEMO_Item0 = { name: '구인수의 격노검' };
-  assets.DEMO_Item1 = { name: '무한의 대검' };
-  assets.DEMO_Item2 = { name: '워모그의 갑옷' };
+  assets.DEMO_Item0 = { name: '구인수의 격노검', itemType: 'completed' };
+  assets.DEMO_Item1 = { name: '무한의 대검', itemType: 'completed' };
+  assets.DEMO_Item2 = { name: '워모그의 갑옷', itemType: 'completed' };
   const games: Game[] = placements.map((placement, i) => ({
     id: `DEMO_${i}`,
     date: 1789020000000 - i * 3600000,
@@ -22,8 +22,6 @@ export function demoPlayer(): PlayerData {
     set: 0,
     player: {
       puuid: 'demo',
-      players_eliminated: placement <= 4 ? 2 : 0,
-      total_damage_to_players: 140 - placement * 12,
       placement,
       level: i % 4 === 0 ? 9 : i % 3 === 0 ? 7 : 8,
       last_round: placement <= 4 ? 35 : 28,

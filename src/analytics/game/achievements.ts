@@ -1,9 +1,10 @@
 import type { Game } from '../../types/riot';
+import type { AssetMap } from '../../static-data/catalog';
 import { sample, avg } from './sample';
 import { deckKey } from '../deckDiversity';
-import { completion } from './playDna';
+import { boardCompletion } from '../playerScores';
 import { streaks } from './streaks';
-export function achievements(input: Game[]) {
+export function achievements(input: Game[], assets: AssetMap = {}) {
   const g = sample(input),
     s = streaks(g);
   const unique = new Set(
@@ -51,7 +52,7 @@ export function achievements(input: Game[]) {
       'EPIC',
       '완성된 보드',
       '보드 완성도 대리 지표 70 이상으로 1위',
-      g.filter((x) => x.player.placement === 1 && (completion(x) ?? -1) >= 70).length,
+      g.filter((x) => x.player.placement === 1 && (boardCompletion(x, assets) ?? -1) >= 70).length,
       1,
     ),
     record(

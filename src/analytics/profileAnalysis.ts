@@ -2,6 +2,8 @@ import type { Game } from '../types/riot';
 import { mean, statistics } from './formAnalysis';
 import { boardIds, preferenceAnalysis, recentSample } from './preferences';
 import { deckDiversity } from './deckDiversity';
+import type { AssetMap } from '../static-data/catalog';
+import { playerStyle } from './playerScores';
 const clamp = (n: number) => Math.round(Math.max(0, Math.min(100, n)));
 export function signatureDiversity(games: Game[], kind: 'unit' | 'trait'): number | null {
   const signatures = games
@@ -42,8 +44,6 @@ export function profileMetrics(input: Game[]) {
   const units = preferenceAnalysis(games, 'unit'),
     traits = preferenceAnalysis(games, 'trait'),
     deck = deckDiversity(games);
-  const damage = games.filter((g) => g.player.total_damage_to_players !== undefined);
-  const eliminated = games.filter((g) => g.player.players_eliminated !== undefined);
   return {
     games,
     stats,
@@ -61,10 +61,6 @@ export function profileMetrics(input: Game[]) {
     level: mean(games.map((g) => g.player.level)),
     round: mean(games.map((g) => g.player.last_round)),
     late: games.length ? games.filter((g) => g.player.level >= 9).length / games.length : 0,
-    damage: mean(damage.map((g) => g.player.total_damage_to_players!)),
-    damageCount: damage.length,
-    eliminated: mean(eliminated.map((g) => g.player.players_eliminated!)),
-    eliminatedCount: eliminated.length,
     unitDiversity: signatureDiversity(games, 'unit'),
     traitDiversity: signatureDiversity(games, 'trait'),
     flexibility: boardFlexibility(games),
@@ -74,60 +70,10 @@ export function profileMetrics(input: Game[]) {
   };
 }
 /** Ordered, multi-metric descriptive rules. Thresholds are product heuristics, not population percentiles. */
-export function playerProfile(input: Game[]) {
+export function playerProfile(input: Game[], assets: AssetMap = {}) {
   const m = profileMetrics(input),
     n = m.games.length;
-  let name = '균형 탐색형',
-    reason = '여러 지표를 함께 보았을 때 뚜렷한 한 가지 성향이 확인되지 않습니다.';
-  if (n < 20 || m.units.available < n * 0.8 || m.traits.available < n * 0.8) {
-    name = '분석 표본 부족';
-    reason = '20경기 이상과 80% 이상의 보드·특성 기록이 있어야 성향을 분류합니다.';
-  } else if (
-    m.deckConcentration! >= 0.6 &&
-    m.unitConcentration! >= 0.8 &&
-    m.traitConcentration! >= 0.8
-  ) {
-    name = '한 우물 장인';
-    reason = '주요 특성 조합 60% 이상, 최다 챔피언·특성 80% 이상으로 사용이 집중됐습니다.';
-  } else if (m.top2! >= 0.4 && m.stats.win! >= 0.2 && m.variance! >= 3) {
-    name = '고점 폭발형';
-    reason = '1~2위 40% 이상·1등 20% 이상이면서 등수 분산도 3 이상입니다.';
-  } else if (m.stats.top4! >= 0.65 && m.stats.average! <= 4 && m.variance! <= 2.5) {
-    name = '안정적 순방형';
-    reason = 'TOP4 65% 이상·평균 4위 이내이며 등수 분산이 2.5 이하입니다.';
-  } else if (
-    m.flexibility! >= 35 &&
-    m.deck.score! >= 45 &&
-    m.unitDiversity! >= 40 &&
-    m.traitDiversity! >= 40 &&
-    m.stats.top4! >= 0.5
-  ) {
-    name = '유연한 운영가';
-    reason =
-      '챔피언·특성·주요 조합이 다양하고 TOP4 50% 이상입니다. 경기 중 전환 능력을 뜻하지 않습니다.';
-  } else if (
-    m.damageCount >= Math.max(10, n * 0.8) &&
-    m.eliminatedCount >= Math.max(10, n * 0.8) &&
-    m.damage! >= 100 &&
-    m.eliminated! >= 1 &&
-    m.stats.top4! >= 0.5 &&
-    m.stats.average! <= 4.5
-  ) {
-    name = '공격적 운영가';
-    reason =
-      '평균 플레이어 피해량 100 이상·처치 1명 이상과 TOP4 50% 이상이 함께 관측됐습니다. 공격적 선택을 직접 관찰한 것은 아닙니다.';
-  } else if (m.level! >= 8.5 && m.late >= 0.6 && m.stats.average! <= 4.5 && m.stats.top4! >= 0.5) {
-    name = '후반 지향형';
-    reason = '평균 최종 레벨 8.5 이상·9레벨 이상 60% 이상이며 TOP4 50% 이상입니다.';
-  } else if (
-    m.bottom2! <= 0.1 &&
-    m.variance! <= 2.5 &&
-    m.stats.average! <= 4.5 &&
-    m.stats.top4! >= 0.5
-  ) {
-    name = '저점 방어형';
-    reason = '7~8위 10% 이하·등수 분산 2.5 이하이며 평균 4.5위 이내입니다.';
-  }
+  const { name, reason } = playerStyle(m.games, assets);
   const comment =
     n < 20
       ? reason

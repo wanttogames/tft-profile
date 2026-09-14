@@ -59,15 +59,15 @@ describe('deck diversity', () => {
 describe('player card', () => {
   it('calculates high-end frequency and top4 survival', () => {
     const scores = playerScores(fixture([1, 2, 4, 5, 8]));
-    expect(scores?.ceiling).toBe(40);
-    expect(scores?.survival).toBe(60);
-    expect(scores?.stability).toBe(51);
+    expect(scores?.ceiling).toBe(35);
+    expect(scores?.survival).toBe(63);
+    expect(scores?.stability).toBe(58);
   });
   it('perfect placement is bounded and not random', () => {
     const g = fixture(Array(50).fill(1));
     expect(playerScores(g)?.ceiling).toBe(100);
     expect(playerScores(g)?.stability).toBe(100);
-    expect(playerScores(g)?.form).toBe(50);
+    expect(playerScores(g)?.form).toBe(75);
     expect(playerScores(g)).toEqual(playerScores(g));
   });
   it('suppresses card under five matches and form under fifty', () => {

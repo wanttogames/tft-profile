@@ -8,6 +8,7 @@ import {
   lookupAsset,
   assetKey,
   communityImage,
+  type AssetMap,
 } from '../src/static-data/catalog';
 const catalog = indexCommunityDragon(source);
 describe('actual ko_KR static data excerpt', () => {
@@ -15,6 +16,22 @@ describe('actual ko_KR static data excerpt', () => {
     expect(displayName(catalog.assets, 'unit', 'DA_18_Sejuani', 18)).toBe('세주아니'));
   it('resolves item API name to Korean', () =>
     expect(displayName(catalog.assets, 'item', 'TFT_Item_InfinityEdge')).toBe('무한의 대검'));
+  it('classifies components separately from completed items using source tags', () => {
+    const assets = indexCommunityDragon({
+      items: [
+        { apiName: 'part', name: '재료', isAugment: false, tags: ['component'] },
+        { apiName: 'full', name: '완성', isAugment: false, tags: [] },
+      ],
+      sets: {},
+    }).assets;
+    expect(lookupAsset(assets, 'item', 'part')?.itemType).toBe('component');
+    expect(lookupAsset(assets, 'item', 'full')?.itemType).toBe('completed');
+  });
+  it('ships current ko_KR component classification in the server snapshot', () => {
+    const assets = snapshot.assets as unknown as AssetMap;
+    expect(lookupAsset(assets, 'item', 'TFT_Item_BFSword')?.itemType).toBe('component');
+    expect(lookupAsset(assets, 'item', 'TFT_Item_InfinityEdge')?.itemType).toBe('completed');
+  });
   it('resolves trait API name to Korean', () =>
     expect(displayName(catalog.assets, 'trait', 'DA_18_Elderwood', 18)).toBe('나무정령'));
   it('keeps categories separate and preserves unknown IDs', () => {
@@ -28,7 +45,7 @@ describe('actual ko_KR static data excerpt', () => {
       ['item', 'TFT_Item_InfinityEdge', undefined],
       ['trait', 'DA_18_Elderwood', 18],
     ] as const)
-      expect(displayName(snapshot.assets, kind, id, set)).toBe(
+      expect(displayName(snapshot.assets as unknown as AssetMap, kind, id, set)).toBe(
         displayName(catalog.assets, kind, id, set),
       );
   });

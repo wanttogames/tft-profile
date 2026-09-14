@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import type { PlayerData } from '../types/riot';
 import { playerScore } from '../analytics/game/playerScore';
-import { playDna, dnaHelp } from '../analytics/game/playDna';
+import { playerScores, scoreHelp } from '../analytics/playerScores';
 import { playerClass } from '../analytics/game/playerClass';
 import { streaks } from '../analytics/game/streaks';
 import { playerComparison } from '../analytics/game/playerComparison';
@@ -10,19 +10,21 @@ import { achievements } from '../analytics/game/achievements';
 import { challenge } from '../analytics/game/challenges';
 const props = defineProps<{ data: PlayerData }>();
 const score = computed(() => playerScore(props.data.games)),
-  dna = computed(() => playDna(props.data.games)),
-  role = computed(() => playerClass(props.data.games)),
+  scores = computed(() => playerScores(props.data.games, props.data.assets)),
+  role = computed(() => playerClass(props.data.games, props.data.assets)),
   streak = computed(() => streaks(props.data.games)),
-  comparison = computed(() => playerComparison(props.data.games)),
-  badges = computed(() => achievements(props.data.games)),
+  comparison = computed(() => playerComparison(props.data.games, props.data.assets)),
+  badges = computed(() => achievements(props.data.games, props.data.assets)),
   boss = computed(() => challenge(props.data.games));
 const labels = {
+  ceiling: '고점력',
   stability: '안정성',
-  peak: '폭발력',
+  survival: '순방력',
+  lateGame: '후반 운영력',
+  diversity: '덱 다양성',
   flexibility: '유연성',
-  completion: '완성도',
-  survival: '생존력',
-  aggression: '공격성',
+  completion: '보드 완성도',
+  form: '최근 폼',
 };
 const format = (n: number | null | undefined) => (n == null ? '—' : n.toFixed(2));
 const pct = (n: number | null) => (n == null ? '—' : Math.round(n * 100) + '%');
@@ -76,28 +78,21 @@ const pct = (n: number | null) => (n == null ? '—' : Math.round(n * 100) + '%'
     <section class="panel">
       <div class="section-head">
         <h2>PLAY DNA</h2>
-        <span class="pill">6개의 플레이 능력치 · 자체 분석</span>
+        <span class="pill">8개의 플레이 능력치 · 자체 분석</span>
       </div>
       <div class="dna-grid">
         <div v-for="(label, key) in labels" :key="key" class="dna-stat">
           <div>
             <span>{{ label }}</span
-            ><strong>{{ dna[key].value ?? '—' }}</strong>
+            ><strong>{{ scores?.[key] ?? '—' }}</strong>
           </div>
-          <progress :value="dna[key].value ?? 0" max="100" :aria-label="label"></progress
-          ><small class="muted"
-            >{{ dna[key].value === null ? '표본 부족 · ' : '' }}유효 표본
-            {{ dna[key].count }}경기</small
-          >
+          <progress :value="scores?.[key] ?? 0" max="100" :aria-label="label"></progress>
         </div>
       </div>
       <details class="method">
         <summary>능력치 계산 방법</summary>
-        <p v-for="help in dnaHelp" :key="help">{{ help }}</p>
-        <p>
-          각 지표는 최소 5경기 필요. 미제공 값은 0으로 대체하지 않습니다. 공격성은 피해량·처치 각각
-          유효한 표본으로 계산합니다.
-        </p>
+        <p v-for="help in scoreHelp" :key="help">{{ help }}</p>
+        <p>최근 최대 50경기의 실제 최종 보드와 경기 결과를 0~100으로 정규화한 자체 지표입니다.</p>
       </details>
     </section>
     <section class="panel">
@@ -133,8 +128,8 @@ const pct = (n: number | null) => (n == null ? '—' : Math.round(n * 100) + '%'
               </tr>
               <tr v-for="key in ['survival', 'completion'] as const" :key="key">
                 <td>{{ labels[key] }}</td>
-                <td>{{ comparison.recent.dna[key].value ?? '—' }}</td>
-                <td>{{ comparison.past.dna[key].value ?? '—' }}</td>
+                <td>{{ comparison.recent.scores[key] ?? '—' }}</td>
+                <td>{{ comparison.past.scores[key] ?? '—' }}</td>
               </tr>
             </tbody>
           </table>

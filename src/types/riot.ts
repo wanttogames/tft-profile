@@ -69,6 +69,7 @@ export interface Asset {
   name: string;
   image?: string;
   cost?: number;
+  itemType?: 'component' | 'completed';
 }
 export interface PlayerData {
   account: Account;
