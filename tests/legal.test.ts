@@ -13,10 +13,7 @@ it.each(['/', '/privacy', '/terms'])(
     expect(html).toContain('href="/privacy"');
     expect(html).toContain('href="/terms"');
     expect(html).toContain('id="riot-disclaimer"');
-<<<<<<< HEAD
-=======
     expect(html).toContain('href="/#riot-disclaimer"');
->>>>>>> 2e64e5d (privercy)
     for (const paragraph of RIOT_DISCLAIMER)
       expect(html.replaceAll('&#39;', "'")).toContain(paragraph);
     if (pathname === '/') expect(html).toContain('나의 플레이를 읽다');
