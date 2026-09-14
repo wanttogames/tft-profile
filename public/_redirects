@@ -1,4 +1,3 @@
-/privacy /index.html 200
-/privacy/ /index.html 200
-/terms /index.html 200
-/terms/ /index.html 200
+# Use Cloudflare Pages default SPA fallback.
+# Do not rewrite /privacy or /terms to /index.html: HTML canonicalization can lose the requested path.
+# Keep this file to replace obsolete rules when extracting an update ZIP.

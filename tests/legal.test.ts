@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { createSSRApp } from 'vue';
 import { renderToString } from '@vue/server-renderer';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { CONTACT_EMAIL, legalPage, RIOT_DISCLAIMER } from '../src/config/legal';
 import App from '../src/App.vue';
 afterEach(() => vi.unstubAllGlobals());
@@ -27,13 +27,14 @@ it.each(['/', '/privacy', '/terms'])(
     }
   },
 );
-it('rewrites legal URLs only and leaves API function routing unchanged', () => {
+it('uses default Pages SPA fallback without redirects and preserves API routing', () => {
   expect(legalPage('/privacy/')).toBe('privacy');
   expect(legalPage('/terms/')).toBe('terms');
   expect(legalPage('/api/meta/items')).toBeNull();
   const redirects = readFileSync('public/_redirects', 'utf8');
-  expect(redirects).toContain('/privacy /index.html 200');
-  expect(redirects).toContain('/terms /index.html 200');
-  expect(redirects).not.toContain('/api');
+  expect(
+    redirects.split('\n').filter((line) => line.trim() && !line.trim().startsWith('#')),
+  ).toEqual([]);
+  expect(existsSync('public/404.html')).toBe(false);
   expect(JSON.parse(readFileSync('public/_routes.json', 'utf8')).include).toEqual(['/api/*']);
 });
