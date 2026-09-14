@@ -8,10 +8,22 @@ import { SERVICE_NAME, RIOT_DISCLAIMER } from '../config/legal';
       <nav aria-label="서비스 정책">
         <a href="/privacy">개인정보처리방침</a>
         <a href="/terms">이용약관</a>
+<<<<<<< HEAD
         <a href="#riot-disclaimer">Riot Games 비제휴 고지</a>
       </nav>
     </div>
     <div id="riot-disclaimer" class="disclaimer" tabindex="-1" aria-label="Riot Games 비제휴 고지">
+=======
+        <a href="/#riot-disclaimer">Riot Games 비제휴 고지</a>
+      </nav>
+    </div>
+    <div id="riot-disclaimer" class="disclaimer" tabindex="-1" aria-label="Riot Games 비제휴 고지">
+      <p>
+        TFT Profile Analyzer는 Riot Games와 제휴하거나 후원·승인받은 공식 서비스가 아닙니다. Riot
+        API를 이용해 데이터를 제공하며, Riot 관련 상표와 게임 자산은 Riot Games 또는 각 권리자에게
+        귀속됩니다.
+      </p>
+>>>>>>> 2e64e5d (privercy)
       <p v-for="paragraph in RIOT_DISCLAIMER" :key="paragraph">{{ paragraph }}</p>
     </div>
   </footer>
