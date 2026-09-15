@@ -214,7 +214,11 @@ const deckName = (key: string) =>
               ><button @click="data = null">닫기 ×</button>
             </div>
             <div v-for="w in data.warnings" :key="w" class="notice">{{ w }}</div>
-            <PlayerGameProfile :data="data" />
+            <PlayerCard :data="data" />
+            <details class="panel">
+              <summary>성장 기록 · 연속 기록 · 업적 더 보기</summary>
+              <PlayerGameProfile :data="data" />
+            </details>
             <section class="profile">
               <div class="profile-identity">
                 <div class="rank-emblem">{{ data.rank?.tier?.slice(0, 1) || 'U' }}</div>
@@ -273,7 +277,7 @@ const deckName = (key: string) =>
               <p>{{ insights.comment }}</p>
               <span class="small muted">자체 분석</span>
             </div>
-            <div class="main-grid">
+            <div>
               <section class="panel form-panel">
                 <div class="section-head">
                   <div>
@@ -299,7 +303,6 @@ const deckName = (key: string) =>
                   5·15경기 미만은 확보된 경기 평균입니다. 폼 변화는 30경기부터 표시합니다.
                 </p>
               </section>
-              <PlayerCard :data="data" />
             </div>
             <div class="two-grid">
               <section class="panel">
