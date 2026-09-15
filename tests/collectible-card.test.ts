@@ -57,13 +57,23 @@ it('renders a self-contained portrait export with Korean labels and missing scor
     restore: vi.fn(),
     translate: vi.fn(),
     rotate: vi.fn(),
+    scale: vi.fn(),
+    fill: vi.fn(),
+    stroke: vi.fn(),
     measureText: (text: string) => ({ width: text.length * 20 }),
   };
   const canvas = { width: 0, height: 0, getContext: () => context };
+  vi.stubGlobal(
+    'Path2D',
+    class {
+      constructor(public path: string) {}
+    },
+  );
   renderShareCard(canvas as unknown as HTMLCanvasElement, profileCardModel(data));
-  expect([canvas.width, canvas.height]).toEqual([900, 1260]);
+  expect([canvas.width, canvas.height]).toEqual([900, 1500]);
   for (const label of Object.values(scoreLabels)) expect(drawn).toContain(label);
   expect(drawn.filter((t) => t === '—')).toHaveLength(11);
   expect(drawn.join(' ')).toContain('가상 데이터');
   expect(drawn).toContain('기록 부족');
+  vi.unstubAllGlobals();
 });

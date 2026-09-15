@@ -59,7 +59,7 @@ async function save() {
       <span class="eyebrow">KEEP YOUR PLAY IDENTITY</span>
       <h3>지금의 나를<br />한 장으로.</h3>
       <p>
-        티어와 플레이 DNA를 담은 900 × 1260 세로형 카드입니다. 저장한 이미지를 SNS나 카카오톡에
+        티어와 플레이 DNA를 담은 900 × 1500 세로형 카드입니다. 저장한 이미지를 SNS나 카카오톡에
         공유하세요.
       </p>
       <button class="primary" :disabled="saving" @click="save">

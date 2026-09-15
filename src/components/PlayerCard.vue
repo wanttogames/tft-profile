@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import type { PlayerData } from '../types/riot';
 import { scoreHelp } from '../analytics/playerScores';
 import { profileCardModel, scoreLabels } from '../profile-card/model';
+import PlayStyleArt from './PlayStyleArt.vue';
 import AssetBadge from './AssetBadge.vue';
 import ShareProfileCard from './ShareProfileCard.vue';
 const props = defineProps<{ data: PlayerData }>();
@@ -12,7 +13,13 @@ const sharing = ref(false);
 <template>
   <section
     class="profile-collection"
-    :style="{ '--card-accent': card.theme.accent, '--card-secondary': card.theme.secondary }"
+    :style="{
+      '--card-accent': card.theme.accent,
+      '--card-secondary': card.theme.secondary,
+      '--style-color': card.art.color,
+      '--style-secondary': card.art.secondary,
+      '--style-backdrop': card.art.backdrop,
+    }"
     aria-label="TFT 플레이어 프로필 카드"
   >
     <article class="collectible-card" :data-tier="card.theme.tier">
@@ -28,18 +35,18 @@ const sharing = ref(false);
           <h2>
             {{ card.name }}<small>{{ card.tag }}</small>
           </h2>
-          <div class="card-art" aria-hidden="true">
-            <div class="orbit orbit-outer"></div>
-            <div class="orbit orbit-inner"></div>
-            <svg viewBox="0 0 200 180" class="card-crest">
-              <path d="M100 6 167 43 157 116 100 171 43 116 33 43Z" />
-              <path d="M100 23 151 52 142 109 100 150 58 109 49 52Z" />
-              <path d="m100 37 0 32m0 46v21M60 63l23 13m34 0 23-13M64 110l20-12m32 0 20 12" />
-            </svg>
-            <b class="crest-letter">{{ card.theme.tier.slice(0, 1) }}</b>
-            <span class="art-caption">{{ card.theme.tier }} <i>·</i> {{ card.lp }} LP</span>
-          </div>
           <p class="card-title">「{{ card.profile.name }}」</p>
+          <div class="style-tags" aria-label="보조 성향">
+            <span v-for="tag in card.profile.tags" :key="tag">{{ tag }}</span
+            ><span v-if="!card.profile.tags.length">성향 태그는 표본 확보 후 표시</span>
+          </div>
+          <div class="style-art-frame" :data-style="card.profile.key">
+            <PlayStyleArt :art="card.art" /><span class="style-art-caption">{{
+              card.art.illustrationTheme
+            }}</span>
+          </div>
+          <p class="style-flavor">{{ card.art.shortFlavorText }}</p>
+          <p class="style-rank">{{ card.rank }} · {{ card.lp }} LP</p>
           <p class="card-sample">{{ card.sample }}</p>
           <div class="collectible-stats">
             <div v-for="s in card.stats" :key="s.label">
@@ -232,63 +239,6 @@ const sharing = ref(false);
   color: #a0b1c8;
   margin-top: 6px;
   letter-spacing: 0;
-}
-.card-art {
-  height: 190px;
-  position: relative;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  margin: 12px 0;
-  background: radial-gradient(
-    ellipse at center,
-    color-mix(in srgb, var(--card-accent) 13%, transparent),
-    transparent 66%
-  );
-}
-.card-crest {
-  position: absolute;
-  width: 144px;
-  height: 148px;
-  top: 6px;
-  fill: #121c2b;
-  stroke: var(--card-accent);
-  stroke-width: 1.1;
-  filter: drop-shadow(0 0 16px color-mix(in srgb, var(--card-secondary) 30%, transparent));
-}
-.crest-letter {
-  font-size: 36px;
-  font-family: Georgia, serif;
-  color: var(--card-accent);
-  z-index: 1;
-  margin-top: -35px;
-}
-.orbit {
-  position: absolute;
-  top: 16px;
-  width: 134px;
-  height: 134px;
-  border: 1px solid color-mix(in srgb, var(--card-accent) 22%, transparent);
-  transform: rotate(45deg);
-}
-.orbit-outer {
-  width: 200px;
-  height: 130px;
-  top: 20px;
-  transform: rotate(-16deg);
-}
-.orbit-inner {
-  transform: rotate(24deg);
-}
-.art-caption {
-  position: absolute;
-  bottom: 5px;
-  font-size: 11px;
-  letter-spacing: 0.15em;
-  color: var(--card-accent);
-}
-.art-caption i {
-  margin: 0 8px;
 }
 .card-title {
   text-align: center;
@@ -494,12 +444,6 @@ const sharing = ref(false);
     border-top: 1px solid #ffffff17;
     padding: 24px 0 0;
   }
-  .card-art {
-    height: 170px;
-  }
-  .card-crest {
-    height: 132px;
-  }
   .collectible-card {
     max-width: 560px;
     margin: auto;
@@ -549,6 +493,88 @@ const sharing = ref(false);
   }
   .card-title {
     font-size: 18px;
+  }
+}
+
+.style-art-frame {
+  position: relative;
+  height: 205px;
+  margin-top: 18px;
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--style-color) 35%, transparent);
+  background: var(--style-backdrop);
+}
+.style-art-caption {
+  position: absolute;
+  bottom: 9px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--style-color);
+  text-shadow: 0 1px 8px #000;
+  background: #101722a8;
+  padding: 4px;
+}
+.style-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+.style-tags span {
+  font-size: 10px;
+  border: 1px solid color-mix(in srgb, var(--style-color) 25%, transparent);
+  background: #ffffff05;
+  border-radius: 20px;
+  padding: 4px 9px;
+  color: var(--style-color);
+}
+.card-title {
+  font-size: clamp(22px, 2.5vw, 29px);
+  margin: 24px 0 12px;
+  color: var(--style-color);
+}
+.style-flavor {
+  text-align: center;
+  font-size: 11px;
+  color: #b9c8db;
+  margin: 11px 0;
+}
+.style-rank {
+  text-align: center;
+  font-size: 12px;
+  color: var(--card-accent);
+  margin: 13px 0 6px;
+  letter-spacing: 0.06em;
+}
+.card-abilities .dna-heading h3,
+.ability strong {
+  color: var(--style-color);
+}
+.ability progress::-webkit-progress-value {
+  background: linear-gradient(90deg, var(--style-secondary), var(--style-color));
+}
+.ability progress::-moz-progress-bar {
+  background: var(--style-color);
+}
+.collectible-card {
+  background:
+    radial-gradient(
+      ellipse at 12% 5%,
+      color-mix(in srgb, var(--style-color) 14%, transparent),
+      transparent 65%
+    ),
+    linear-gradient(135deg, var(--style-backdrop), #101722 65%, #1d2635);
+}
+@media (max-width: 380px) {
+  .style-art-frame {
+    height: 160px;
+  }
+  .card-title {
+    font-size: 21px;
   }
 }
 </style>

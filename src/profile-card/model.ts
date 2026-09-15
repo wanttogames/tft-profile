@@ -1,3 +1,4 @@
+import { playStyleIllustration } from '../analytics/playStyleIllustration';
 import type { PlayerData } from '../types/riot';
 import { playerScores } from '../analytics/playerScores';
 import { playerProfile } from '../analytics/profileAnalysis';
@@ -42,6 +43,7 @@ export function profileCardModel(data: PlayerData) {
     }));
   return {
     theme: cardTheme(data.rank?.tier),
+    art: playStyleIllustration(profile.key),
     name: data.account.gameName || '플레이어',
     tag: '#' + (data.account.tagLine || '—'),
     rank: data.rank ? `${data.rank.tier ?? 'UNRANKED'} ${data.rank.rank ?? ''}`.trim() : 'UNRANKED',

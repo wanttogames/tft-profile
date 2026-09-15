@@ -73,7 +73,7 @@ export function profileMetrics(input: Game[]) {
 export function playerProfile(input: Game[], assets: AssetMap = {}) {
   const m = profileMetrics(input),
     n = m.games.length;
-  const { name, reason } = playerStyle(m.games, assets);
+  const { name, reason, key, tags } = playerStyle(m.games, assets);
   const comment =
     n < 20
       ? reason
@@ -90,6 +90,8 @@ export function playerProfile(input: Game[], assets: AssetMap = {}) {
     ...m,
     name,
     reason,
+    key,
+    tags,
     comment,
     core: preferenceAnalysis(coreGames, 'unit').top.slice(0, 3),
   };

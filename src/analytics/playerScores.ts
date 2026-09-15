@@ -1,3 +1,6 @@
+import { ANALYSIS_MATCH_COUNT } from '../config/analysis';
+import { classifyPlayStyle } from './playStyleClassifier';
+import { playStyleTags } from './playStyleTags';
 import type { Game } from '../types/riot';
 import type { AssetMap } from '../static-data/catalog';
 import { lookupAsset } from '../static-data/catalog';
@@ -64,8 +67,12 @@ export function boardCompletion(game: Game, assets: AssetMap = {}): number | nul
   );
 }
 
-export function playerScoreContext(input: Game[], assets: AssetMap = {}) {
-  const games = recentSample(input);
+export function playerScoreContext(
+  input: Game[],
+  assets: AssetMap = {},
+  limit = ANALYSIS_MATCH_COUNT,
+) {
+  const games = recentSample(input, Math.min(50, Math.max(1, limit)));
   if (games.length < 5) return null;
   const stats = statistics(games);
   const placements = games.map((game) => game.player.placement);
@@ -86,8 +93,8 @@ export function playerScoreContext(input: Game[], assets: AssetMap = {}) {
       },
     };
   });
-  const units = preferenceAnalysis(coreGames, 'unit');
-  const traits = preferenceAnalysis(games, 'trait');
+  const units = preferenceAnalysis(coreGames, 'unit', games.length);
+  const traits = preferenceAnalysis(games, 'trait', games.length);
   const deck = deckDiversity(games);
   const unitDiversity = signatureDiversity(games, 'unit');
   const traitDiversity = signatureDiversity(games, 'trait');
@@ -165,6 +172,11 @@ export function playerScoreContext(input: Game[], assets: AssetMap = {}) {
     avgRound,
     highLevel,
     lowLevel,
+    unitDiversity,
+    traitDiversity,
+    equippedCoverage:
+      games.filter((g) => g.player.units.some((u) => unitItems(u).length >= 2)).length /
+      games.length,
     unitConcentration,
     traitConcentration,
     deckConcentration,
@@ -188,50 +200,14 @@ export function playerScores(input: Game[], assets: AssetMap = {}) {
   return playerScoreContext(input, assets)?.scores ?? null;
 }
 
+/** Classifier accepts up to 50 supplied games; production API sample remains configured at 30. */
 export function playerStyle(input: Game[], assets: AssetMap = {}) {
-  const context = playerScoreContext(input, assets);
-  const result = (name: string, reason: string) => ({ name, reason });
-  if (
-    !context ||
-    context.games.length < 20 ||
-    context.units.available < context.games.length * 0.8 ||
-    context.traits.available < context.games.length * 0.8
-  )
-    return result('분석 표본 부족', '20경기와 80% 이상의 최종 보드·활성 특성 기록이 필요합니다.');
-  const s = context.scores;
-  if (context.unitConcentration! >= 0.65 && context.traitConcentration! >= 0.65 && s.survival >= 60)
-    return result(
-      '한 우물 장인',
-      '특정 챔피언과 활성 특성 사용이 65% 이상 집중되면서 순방력도 60 이상입니다.',
-    );
-  if (s.ceiling >= 65 && s.stability < 60 && context.top2 >= 0.35)
-    return result('고점 폭발형', '고점력 65 이상·1~2위 비율 35% 이상이며 안정성은 60 미만입니다.');
-  if (s.stability >= 70 && s.survival >= 70 && context.bottom2 <= 0.15)
-    return result(
-      '안정적 순방형',
-      '안정성과 순방력이 모두 70 이상이며 7~8위 비율은 15% 이하입니다.',
-    );
-  if ((s.diversity ?? 0) >= 65 && (s.flexibility ?? 0) >= 60 && s.survival >= 45)
-    return result('유연한 운영가', '덱 다양성 65 이상·유연성 60 이상이며 순방력도 45 이상입니다.');
-  if (s.lateGame >= 70 && context.avgLevel >= 8.5 && context.avgRound >= 30)
-    return result(
-      '후반 운영형',
-      '후반 운영력 70 이상이며 평균 최종 레벨 8.5 이상·평균 마지막 라운드 30 이상입니다.',
-    );
-  if ((s.completion ?? 0) >= 70 && s.survival >= 55 && context.avgLevel >= 8)
-    return result(
-      '완성도 중시형',
-      '보드 완성도 70 이상·순방력 55 이상이며 평균 최종 레벨도 8 이상입니다.',
-    );
-  if (s.ceiling >= 40 && s.stability < 45 && context.deviation >= 2)
-    return result(
-      '변동성 높은 도전자',
-      '고점력은 40 이상이지만 안정성이 45 미만이고 등수 표준편차가 2 이상입니다.',
-    );
-  return result(
-    '균형 운영형',
-    '8개 지표를 함께 보았을 때 한 가지 성향이 과도하게 두드러지지 않습니다.',
-  );
+  const context = playerScoreContext(input, assets, 50);
+  return {
+    ...classifyPlayStyle(context),
+    tags: playStyleTags(context),
+    sampleCount: context?.games.length ?? Math.min(input.length, 50),
+  };
 }
 
 export const scoreHelp = {

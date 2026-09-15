@@ -1,9 +1,10 @@
+import { styleArtPaths } from './styleArt';
 import { scoreLabels, type ProfileCardModel } from './model';
 /** Self-contained canvas: no remote images/secrets, no CORS-tainted PNG exports.
  * This exact canvas is both the visible share preview and downloadable image. */
 export function renderShareCard(canvas: HTMLCanvasElement, model: ProfileCardModel) {
   canvas.width = 900;
-  canvas.height = 1260;
+  canvas.height = 1500;
   const c = canvas.getContext('2d');
   if (!c) throw new Error('이 브라우저에서는 카드 이미지를 만들 수 없습니다.');
   const { accent, secondary } = model.theme;
@@ -16,47 +17,58 @@ export function renderShareCard(canvas: HTMLCanvasElement, model: ProfileCardMod
     c.fillStyle = accent + '44';
     c.fillRect(65, y, 770, 1);
   };
-  const gradient = c.createLinearGradient(0, 0, 900, 1260);
-  gradient.addColorStop(0, '#19263d');
+  const gradient = c.createLinearGradient(0, 0, 900, 1500);
+  gradient.addColorStop(0, model.art.backdrop);
   gradient.addColorStop(0.6, '#101726');
   gradient.addColorStop(1, '#222035');
   c.fillStyle = gradient;
-  c.fillRect(0, 0, 900, 1260);
-  const frame = c.createLinearGradient(0, 0, 900, 1260);
+  c.fillRect(0, 0, 900, 1500);
+  const frame = c.createLinearGradient(0, 0, 900, 1500);
   frame.addColorStop(0, accent);
   frame.addColorStop(0.5, secondary);
   frame.addColorStop(1, accent);
   c.strokeStyle = frame;
   c.lineWidth = 8;
-  c.strokeRect(18, 18, 864, 1224);
+  c.strokeRect(18, 18, 864, 1464);
   c.lineWidth = 1;
-  c.strokeRect(32, 32, 836, 1196);
+  c.strokeRect(32, 32, 836, 1436);
   text('TFT / PLAYER ARCHIVE', 65, 82, 19, accent);
   text(model.edition, 590, 82, 17, accent, 240);
   text(model.name, 65, 150, 43, '#ffffff', 750);
   text(model.tag, 65, 186, 22, '#abbcd2');
-  // Original compass/diamond motif; not an official rank icon.
+  // Shared vector scene used by the main SVG card: no network/CORS dependencies.
   c.save();
-  c.translate(450, 310);
-  for (const [radius, rotation] of [
-    [94, Math.PI / 4],
-    [73, Math.PI / 4],
-    [48, 0],
-  ]) {
-    c.save();
-    c.rotate(rotation);
-    c.strokeStyle = accent;
-    c.globalAlpha = 0.65;
-    c.strokeRect(-radius / 1.4, -radius / 1.4, radius * 1.428, radius * 1.428);
-    c.restore();
+  c.translate(65, 220);
+  c.scale(770 / 600, 770 / 600);
+  for (const layer of styleArtPaths(model.art)) {
+    const path = new Path2D(layer.d);
+    c.globalAlpha = layer.opacity;
+    if (layer.fill !== 'none') {
+      c.fillStyle = layer.fill;
+      c.fill(path);
+    }
+    if (layer.stroke) {
+      c.strokeStyle = layer.stroke;
+      c.lineWidth = 1.6;
+      c.stroke(path);
+    }
   }
   c.restore();
   c.textAlign = 'center';
-  text(model.theme.tier.slice(0, 1), 450, 326, 46, accent);
-  text(`${model.rank}  /  ${model.lp} LP`, 450, 424, 25, accent);
-  text('「' + model.profile.name + '」', 450, 475, 31, '#ffffff', 740);
-  text(model.sample, 450, 513, 18, '#a8b7cd');
+  text(model.art.illustrationTheme, 450, 556, 19, model.art.color);
+  text(`${model.rank}  /  ${model.lp} LP`, 450, 596, 25, accent);
+  text('「' + model.profile.name + '」', 450, 646, 34, model.art.color, 740);
+  text(
+    model.profile.tags.join('  ·  ') || '성향 태그는 표본 확보 후 표시',
+    450,
+    686,
+    19,
+    '#c5d1e1',
+  );
+  text(model.sample, 450, 728, 18, '#a8b7cd');
   c.textAlign = 'left';
+  c.save();
+  c.translate(0, 220);
   line(540);
   model.stats.forEach((s, i) => {
     const x = 80 + i * 260;
@@ -93,17 +105,28 @@ export function renderShareCard(canvas: HTMLCanvasElement, model: ProfileCardMod
     1071,
     23,
   );
-  c.font = '500 20px "Noto Sans KR", sans-serif';
-  let row = '',
-    y = 1110;
-  for (const character of model.profile.comment) {
-    if (c.measureText(row + character).width > 750) {
-      text(row, 65, y, 20, '#c6d1e1');
-      row = '';
-      y += 29;
+  const comment = model.profile.comment;
+  const wrap = (size: number) => {
+    c.font = `600 ${size}px "Noto Sans KR", sans-serif`;
+    const rows: string[] = [];
+    let row = '';
+    for (const character of comment) {
+      if (c.measureText(row + character).width > 750) {
+        rows.push(row);
+        row = '';
+      }
+      row += character;
     }
-    row += character;
+    if (row) rows.push(row);
+    return rows;
+  };
+  let size = 20,
+    rows = wrap(size);
+  while (rows.length * (size + 5) > 90 && size > 12) {
+    size--;
+    rows = wrap(size);
   }
-  text(row, 65, y, 20, '#c6d1e1');
-  text('TFT PROFILE ANALYZER  ·  자체 지표 / * 표본 부족', 65, 1200, 16, '#a8b7cd');
+  rows.forEach((row, i) => text(row, 65, 1110 + i * (size + 5), size, '#c6d1e1'));
+  text('TFT PROFILE ANALYZER  ·  자체 지표 / * 표본 부족', 65, 1230, 16, '#a8b7cd');
+  c.restore();
 }
