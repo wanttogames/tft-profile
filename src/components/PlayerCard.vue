@@ -36,7 +36,7 @@ const name = (kind: 'trait' | 'unit', id: string, set: number) =>
           : 'UNRANKED'
       }}
     </p>
-    <p class="small muted">최근 50경기 기준 · 실제 {{ profile.stats.count }}경기</p>
+    <p class="small muted">최근 30경기 기준 · 실제 {{ profile.stats.count }}경기</p>
     <div class="card-stats">
       <div>
         평균 등수<strong>{{ profile.stats.average?.toFixed(2) ?? '—' }}</strong>

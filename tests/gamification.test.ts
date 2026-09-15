@@ -13,7 +13,7 @@ import { matchFeedback } from '../src/analytics/game/matchFeedback';
 import PlayerGameProfile from '../src/components/PlayerGameProfile.vue';
 const fixture = (places: number[]) =>
   places.map((p, i) => {
-    const g = structuredClone(demoPlayer().games[i % 50]!);
+    const g = structuredClone(demoPlayer().games[i % 30]!);
     g.id = 'fixture' + i;
     g.date = 100000 - i;
     g.player.placement = p;
@@ -23,11 +23,11 @@ describe('game profile calculations', () => {
   it('handles empty and short samples without fictional scores', () => {
     expect(playerScore([])).toBeNull();
     expect(playerScores([])).toBeNull();
-    expect(playerComparison(fixture(Array(49).fill(1)))).toBeNull();
+    expect(playerComparison(fixture(Array(29).fill(1)))).toBeNull();
     expect(playerClass(fixture([1])).name).toBe('분석 표본 부족');
   });
   it('rewards diverse boards without changing the separate outcome score', () => {
-    const a = fixture(Array(50).fill(3)),
+    const a = fixture(Array(30).fill(3)),
       b = structuredClone(a);
     a.forEach((x) => (x.player.traits = a[0]!.player.traits));
     b.forEach((x, i) => (x.player.traits = [{ ...x.player.traits[0]!, name: 'unique' + i }]));
@@ -35,8 +35,8 @@ describe('game profile calculations', () => {
     expect(playerScores(b)!.flexibility!).toBeGreaterThan(playerScores(a)!.flexibility!);
   });
   it('bounds scores and treats uniformly good outcomes better than bad ones', () => {
-    const good = fixture(Array(50).fill(1)),
-      bad = fixture(Array(50).fill(8));
+    const good = fixture(Array(30).fill(1)),
+      bad = fixture(Array(30).fill(8));
     expect(playerScore(good)).toBe(1000);
     expect(playerScore(bad)).toBe(0);
     expect(playerScores(good)!.stability).toBeGreaterThan(playerScores(bad)!.stability);
@@ -52,10 +52,10 @@ describe('game profile calculations', () => {
       currentWins: 2,
       bestTop4: 5,
     });
-    expect(streaks(fixture(Array(50).fill(8))).bestTop4).toBe(0);
+    expect(streaks(fixture(Array(30).fill(8))).bestTop4).toBe(0);
   });
-  it('compares exact disjoint 25-game windows', () => {
-    const c = playerComparison(fixture([...Array(25).fill(2), ...Array(25).fill(6)]))!;
+  it('compares exact disjoint 15-game windows', () => {
+    const c = playerComparison(fixture([...Array(15).fill(2), ...Array(15).fill(6)]))!;
     expect(c.improvement).toBe(4);
     expect(c.top4Change).toBe(100);
     expect(c.scoreDelta).toBeGreaterThan(0);
@@ -114,11 +114,11 @@ describe('game profile calculations', () => {
     g[0]!.player.last_round = 20;
     expect(matchFeedback(g[0]!, g).some((x) => x.label === '짧았던 여정')).toBe(true);
   });
-  it('deduplicates match IDs and caps at 50', () => {
-    const g = fixture(Array(51).fill(1));
-    g[50]!.player.placement = 8;
+  it('deduplicates match IDs and caps at 30', () => {
+    const g = fixture(Array(31).fill(1));
+    g[30]!.player.placement = 8;
     expect(playerScore([...g, g[0]!])).toBe(1000);
-    expect(streaks([...g, g[0]!]).currentWins).toBe(50);
+    expect(streaks([...g, g[0]!]).currentWins).toBe(30);
   });
   it('renders sections in requested order without exposing locked secrets', async () => {
     const data = demoPlayer();

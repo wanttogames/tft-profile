@@ -35,7 +35,7 @@ const date = (n: number) =>
   <section id="matches" class="panel">
     <div class="section-head">
       <h2>
-        최근 50경기 전적 <span class="muted">{{ data.games.length }}</span>
+        최근 30경기 전적 <span class="muted">{{ data.games.length }}</span>
       </h2>
       <span class="small muted">최신순 · 랭크</span>
     </div>

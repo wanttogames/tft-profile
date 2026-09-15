@@ -7,7 +7,7 @@ import { playerScores } from '../src/analytics/playerScores';
 import { strengthWeakness } from '../src/analytics/strengthWeakness';
 const fixture = (placements: number[]) =>
   placements.map((placement, i) => {
-    const g = structuredClone(demoPlayer().games[i % 50]!);
+    const g = structuredClone(demoPlayer().games[i % 30]!);
     g.player.placement = placement;
     return g;
   });
@@ -22,16 +22,16 @@ describe('descriptive statistics', () => {
     expect(mean([])).toBeNull();
     expect(statistics([])).toEqual({ count: 0, average: null, top4: null, win: null });
   });
-  it('uses newest 25 and previous 25, positive is improvement', () => {
-    const f = formAnalysis(fixture([...Array(25).fill(2), ...Array(25).fill(5)]));
+  it('uses newest 15 and previous 15, positive is improvement', () => {
+    const f = formAnalysis(fixture([...Array(15).fill(2), ...Array(15).fill(5)]));
     expect(f.delta).toBe(3);
     expect(f.five).toBe(2);
     expect(f.previous).toBe(5);
   });
   it('never compares an incomplete previous window', () =>
-    expect(formAnalysis(fixture(Array(49).fill(1))).delta).toBeNull());
+    expect(formAnalysis(fixture(Array(29).fill(1))).delta).toBeNull());
   it('detects deterioration', () =>
-    expect(formAnalysis(fixture([...Array(25).fill(6), ...Array(25).fill(2)])).delta).toBe(-4));
+    expect(formAnalysis(fixture([...Array(15).fill(6), ...Array(15).fill(2)])).delta).toBe(-4));
 });
 describe('deck diversity', () => {
   it('one signature repeated is zero', () => {
@@ -64,13 +64,13 @@ describe('player card', () => {
     expect(scores?.stability).toBe(58);
   });
   it('perfect placement is bounded and not random', () => {
-    const g = fixture(Array(50).fill(1));
+    const g = fixture(Array(30).fill(1));
     expect(playerScores(g)?.ceiling).toBe(100);
     expect(playerScores(g)?.stability).toBe(100);
     expect(playerScores(g)?.form).toBe(75);
     expect(playerScores(g)).toEqual(playerScores(g));
   });
-  it('suppresses card under five matches and form under fifty', () => {
+  it('suppresses card under five matches and form under thirty', () => {
     expect(playerScores(fixture([1, 2, 3, 4]))).toBeNull();
     expect(playerScores(fixture([1, 2, 3, 4, 5]))?.form).toBeNull();
   });

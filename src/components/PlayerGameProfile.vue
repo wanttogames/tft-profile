@@ -45,7 +45,7 @@ const pct = (n: number | null) => (n == null ? '—' : Math.round(n * 100) + '%'
               ? `${data.rank.tier ?? ''} ${data.rank.rank ?? ''} · ${data.rank.leaguePoints ?? '—'} LP`
               : 'UNRANKED'
           }}
-          · 최근 50경기 범위 / {{ data.games.length }}경기
+          · 최근 30경기 범위 / {{ data.games.length }}경기
         </p>
       </div>
       <div class="game-score">
@@ -53,9 +53,9 @@ const pct = (n: number | null) => (n == null ? '—' : Math.round(n * 100) + '%'
         ><small>/ 1000 · 자체 지표</small>
         <p v-if="comparison">
           {{ comparison.scoreDelta >= 0 ? '▲' : '▼' }} {{ Math.abs(comparison.scoreDelta) }}
-          <small>최근25 − 이전25 점수</small>
+          <small>최근15 − 이전15 점수</small>
         </p>
-        <p v-else class="small">25경기 간 점수 비교는 50경기 필요</p>
+        <p v-else class="small">15경기 간 점수 비교는 30경기 필요</p>
       </div>
       <div class="game-streak">
         <b>TOP4 STREAK ×{{ streak.currentTop4 }}</b
@@ -92,7 +92,7 @@ const pct = (n: number | null) => (n == null ? '—' : Math.round(n * 100) + '%'
       <details class="method">
         <summary>능력치 계산 방법</summary>
         <p v-for="help in scoreHelp" :key="help">{{ help }}</p>
-        <p>최근 최대 50경기의 실제 최종 보드와 경기 결과를 0~100으로 정규화한 자체 지표입니다.</p>
+        <p>최근 최대 30경기의 실제 최종 보드와 경기 결과를 0~100으로 정규화한 자체 지표입니다.</p>
       </details>
     </section>
     <section class="panel">
@@ -106,8 +106,8 @@ const pct = (n: number | null) => (n == null ? '—' : Math.round(n * 100) + '%'
             <thead>
               <tr>
                 <th>기록</th>
-                <th>최근 25경기</th>
-                <th>이전 25경기</th>
+                <th>최근 15경기</th>
+                <th>이전 15경기</th>
               </tr>
             </thead>
             <tbody>
@@ -142,7 +142,7 @@ const pct = (n: number | null) => (n == null ? '—' : Math.round(n * 100) + '%'
         <p>{{ comparison.comment }}</p></template
       >
       <p v-else class="empty-note">
-        데이터 부족 · 최근 25경기와 이전 25경기를 비교하려면 50경기가 필요합니다.
+        데이터 부족 · 최근 15경기와 이전 15경기를 비교하려면 30경기가 필요합니다.
       </p>
     </section>
     <section class="panel game-boss">
@@ -181,7 +181,7 @@ const pct = (n: number | null) => (n == null ? '—' : Math.round(n * 100) + '%'
         >
       </div>
       <p class="small muted">
-        최근 최대 50경기로 재계산합니다. 영구 수집·획득 날짜를 저장하지 않으며 기록 범위가 바뀌면
+        최근 최대 30경기로 재계산합니다. 영구 수집·획득 날짜를 저장하지 않으며 기록 범위가 바뀌면
         달성 상태도 바뀝니다.
       </p>
       <div class="achievement-grid">

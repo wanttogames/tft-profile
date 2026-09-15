@@ -15,7 +15,7 @@ const name = (kind: 'unit' | 'trait', id: string, set: number) =>
     <section class="panel">
       <div class="section-head">
         <h2>반복 사용과 후반 기록</h2>
-        <span class="pill">최근 50경기 · 자체 분석</span>
+        <span class="pill">최근 30경기 · 자체 분석</span>
       </div>
       <div v-for="kind in ['unit', 'trait'] as const" :key="kind">
         <h3>{{ kind === 'unit' ? '챔피언' : '활성 특성' }} 의존도 · 사용 집중도</h3>
@@ -58,7 +58,7 @@ const name = (kind: 'unit' | 'trait', id: string, set: number) =>
     <section class="panel">
       <div class="section-head">
         <h2>고점·저점의 보드 차이</h2>
-        <span class="pill">최근 50경기 · 자체 분석</span>
+        <span class="pill">최근 30경기 · 자체 분석</span>
       </div>
       <div class="table-scroll">
         <table>

@@ -47,7 +47,7 @@ export interface RiotParticipantDto extends Omit<Participant, 'units'> {
 }
 
 export interface Match {
-  metadata: { match_id: string };
+  metadata: { match_id: string; participants?: string[] };
   info: {
     game_datetime: number;
     game_length: number;

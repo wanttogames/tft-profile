@@ -16,9 +16,9 @@ import PlayerCard from '../src/components/PlayerCard.vue';
 import App from '../src/App.vue';
 import MatchList from '../src/components/MatchList.vue';
 import PreferencePanel from '../src/components/PreferencePanel.vue';
-// Synthetic boundary fixtures. Never presented as fifty captured live matches.
+// Synthetic boundary fixtures. Never presented as thirty captured live matches.
 const sample = () =>
-  demoPlayer().games.map((g, i) => ({ ...g, player: { ...g.player, placement: i < 30 ? 1 : 8 } }));
+  demoPlayer().games.map((g, i) => ({ ...g, player: { ...g.player, placement: i < 18 ? 1 : 8 } }));
 const varied = () =>
   sample().map((g, i) => ({
     ...g,
@@ -54,23 +54,23 @@ describe('real participant fields', () => {
     },
   );
 });
-describe('50-game board preferences', () => {
+describe('30-game board preferences', () => {
   it.each(['unit', 'item', 'trait'] as const)(
     'counts distinct games and exact performance for %s',
     (kind) => {
       const games = sample();
       const p = preferenceAnalysis(games, kind);
-      expect(p.total).toBe(50);
+      expect(p.total).toBe(30);
       expect(p.top.length).toBeLessThanOrEqual(10);
       const r = p.top[0]!;
       expect(r.count).toBeGreaterThan(0);
       if (kind !== 'trait')
-        expect(r).toMatchObject({ count: 50, average: 3.8, top4: 0.6, rate: 1 });
+        expect(r).toMatchObject({ count: 30, average: 3.8, top4: 0.6, rate: 1 });
     },
   );
   it('counts repeated items as copies but gives their match one statistical vote', () => {
     const p = preferenceAnalysis(varied(), 'item');
-    expect(p.top[0]).toMatchObject({ count: 50, copies: 100, average: 3.8, top4: 0.6 });
+    expect(p.top[0]).toMatchObject({ count: 30, copies: 60, average: 3.8, top4: 0.6 });
   });
   it('deduplicates units and traits and excludes inactive traits', () => {
     const games = sample();
@@ -82,11 +82,11 @@ describe('50-game board preferences', () => {
         { ...g.player.traits[0]!, name: 'off', tier_current: 0 },
       ];
     });
-    expect(preferenceAnalysis(games, 'unit').top[0]!.count).toBe(50);
+    expect(preferenceAnalysis(games, 'unit').top[0]!.count).toBe(30);
     expect(preferenceAnalysis(games, 'trait').rows.some((r) => r.id === 'off')).toBe(false);
-    expect(preferenceAnalysis(games, 'trait').top[0]!.count).toBe(20);
+    expect(preferenceAnalysis(games, 'trait').top[0]!.count).toBe(12);
   });
-  it('caps input at newest fifty without mutating caller data', () => {
+  it('caps input at newest thirty without mutating caller data', () => {
     const games = sample();
     const extra = {
       ...games[0]!,
@@ -95,14 +95,14 @@ describe('50-game board preferences', () => {
       player: { ...games[0]!.player, placement: 8 },
     };
     const input = [extra, ...games];
-    expect(preferenceAnalysis(input, 'item').total).toBe(50);
+    expect(preferenceAnalysis(input, 'item').total).toBe(30);
     expect(playerProfile(input).stats.average).toBe(3.8);
     expect(input[0]).toBe(extra);
   });
   it('marks rare observations as insufficient and excludes missing boards', () => {
     const games = varied();
     games[0]!.player.units = [];
-    expect(preferenceAnalysis(games, 'unit').available).toBe(49);
+    expect(preferenceAnalysis(games, 'unit').available).toBe(29);
     expect(preferenceAnalysis(games, 'unit').top.every((r) => !r.enough)).toBe(true);
   });
 });
@@ -119,7 +119,7 @@ describe('profile formulas and multi-signal names', () => {
   });
   it('penalizes maximum variance and bounds every score', () => {
     const games = sample();
-    games.forEach((g, i) => (g.player.placement = i < 25 ? 1 : 8));
+    games.forEach((g, i) => (g.player.placement = i < 15 ? 1 : 8));
     expect(playerScores(games)!.stability).toBe(38);
     for (const value of Object.values(playerScores(games)!))
       if (value !== null) {
@@ -143,7 +143,7 @@ describe('profile formulas and multi-signal names', () => {
   });
   it('uses peak, stability and top-two rate together for high ceiling', () => {
     const games = varied();
-    games.forEach((g, i) => (g.player.placement = i < 35 ? 1 : 8));
+    games.forEach((g, i) => (g.player.placement = i < 21 ? 1 : 8));
     expect(playerProfile(games).name).toBe('고점 폭발형');
   });
   it('identifies stable top4 using average and variance too', () => {
@@ -179,8 +179,8 @@ describe('profile formulas and multi-signal names', () => {
     games.forEach((g) => (g.player.level = g.player.placement <= 2 ? 9 : 7));
     const r = extremeComparison(games);
     expect(r).toMatchObject({ enough: true, levelDelta: 2 });
-    expect(r.high.count).toBe(30);
-    expect(r.low.count).toBe(20);
+    expect(r.high.count).toBe(18);
+    expect(r.low.count).toBe(12);
     expect(extremeComparison(games.slice(0, 2)).enough).toBe(false);
   });
   it('selects core units from item-equipped final boards', () =>

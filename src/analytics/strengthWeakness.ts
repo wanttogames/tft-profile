@@ -1,3 +1,4 @@
+import { FORM_WINDOW } from '../config/analysis';
 import type { Game } from '../types/riot';
 import { mean, statistics, formAnalysis } from './formAnalysis';
 import { deckDiversity } from './deckDiversity';
@@ -10,10 +11,12 @@ export function strengthWeakness(games: Game[]) {
     s = statistics(games),
     d = deckDiversity(games);
   if (f.delta !== null && f.delta >= 0.3)
-    strengths.push(`최근 25경기 평균 등수가 이전 25경기보다 ${f.delta.toFixed(2)} 개선됐습니다.`);
+    strengths.push(
+      `최근 ${FORM_WINDOW}경기 평균 등수가 이전 ${FORM_WINDOW}경기보다 ${f.delta.toFixed(2)} 개선됐습니다.`,
+    );
   if (f.delta !== null && f.delta <= -0.3)
     weaknesses.push(
-      `최근 25경기 평균 등수가 이전 25경기보다 ${(-f.delta).toFixed(2)} 하락했습니다.`,
+      `최근 ${FORM_WINDOW}경기 평균 등수가 이전 ${FORM_WINDOW}경기보다 ${(-f.delta).toFixed(2)} 하락했습니다.`,
     );
   if (s.top4! >= 0.6)
     strengths.push(
@@ -48,7 +51,7 @@ export function strengthWeakness(games: Game[]) {
     weaknesses,
     comment:
       f.delta !== null && f.delta >= 0.3
-        ? '최근 25경기의 성적이 이전보다 개선되고 있습니다.'
+        ? `최근 ${FORM_WINDOW}경기의 성적이 이전보다 개선되고 있습니다.`
         : s.top4! >= 0.6
           ? '최근 기록에서는 하위권보다 TOP4에 진입한 경기가 더 많습니다.'
           : '최근 기록을 충분히 모아, 반복되는 보드와 성적의 관계를 살펴보세요.',

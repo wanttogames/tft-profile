@@ -55,7 +55,7 @@ it('routes all meta kinds and reads secrets from request bindings; summary queri
               {
                 match_count: 301,
                 participant_count: 2408,
-                player_count: 500,
+                player_count: 300,
                 latest_collected_at: null,
               },
             ]
@@ -83,7 +83,7 @@ it('routes all meta kinds and reads secrets from request bindings; summary queri
   expect(requests.some((x) => x.includes('v_tft_champion_stats'))).toBe(true);
   expect(requests.some((x) => x.includes('v_tft_trait_stats'))).toBe(true);
 });
-it('frontend uses relative /api and combines two 25-match Pages invocations into all 50 games', async () => {
+it('frontend uses relative /api and uses one Pages invocation for all 30 games', async () => {
   const browserPaths: string[] = [],
     counts: number[] = [],
     details = new Set<string>();
@@ -106,15 +106,15 @@ it('frontend uses relative /api and combines two 25-match Pages invocations into
       if (url.includes('/accounts/'))
         return Response.json({
           puuid: 'fixture-player-7',
-          gameName: 'cloudflare-fifty',
+          gameName: 'cloudflare-thirty',
           tagLine: 'KR1',
         });
       if (url.includes('/tft/league/')) return Response.json([]);
       if (url.includes('/ids?')) {
         const params = new URL(url).searchParams;
-        expect(params.get('count')).toBe('25');
+        expect(params.get('count')).toBe('30');
         return Response.json(
-          Array.from({ length: 25 }, (_, i) => `CF_${Number(params.get('start')) + i}`),
+          Array.from({ length: 30 }, (_, i) => `CF_${Number(params.get('start')) + i}`),
         );
       }
       const id = url.split('/').at(-1)!;
@@ -126,11 +126,11 @@ it('frontend uses relative /api and combines two 25-match Pages invocations into
       return Response.json(raw);
     }),
   );
-  const result = await fetchPlayer('cloudflare-fifty', 'KR1');
-  expect(browserPaths).toHaveLength(2);
+  const result = await fetchPlayer('cloudflare-thirty', 'KR1');
+  expect(browserPaths).toHaveLength(1);
   expect(browserPaths.every((x) => x.startsWith('/api/tft/profile?'))).toBe(true);
-  expect(result.games).toHaveLength(50);
-  expect(result.scanned).toBe(50);
-  expect(details.size).toBe(50);
-  expect(counts).toEqual([28, 28]);
+  expect(result.games).toHaveLength(30);
+  expect(result.scanned).toBe(30);
+  expect(details.size).toBe(30);
+  expect(counts).toEqual([33]);
 }, 15000);

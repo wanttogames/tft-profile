@@ -1,9 +1,10 @@
+import { ANALYSIS_MATCH_COUNT } from '../config/analysis';
 import type { PlayerData, Game } from '../types/riot';
 /** Synthetic demonstration, deliberately labelled. Never returned by the live API. */
 export function demoPlayer(): PlayerData {
   const basePlacements = [2, 1, 5, 3, 2, 4, 1, 7, 3, 2, 6, 4, 8, 3, 5, 2, 7, 4, 6, 1];
   const placements = Array.from(
-    { length: 50 },
+    { length: ANALYSIS_MATCH_COUNT },
     (_, i) => basePlacements[i % basePlacements.length]!,
   );
   const names = ['아리', '야스오', '니코', '세트', '애쉬', '리 신', '신드라', '라칸', '오른'];
@@ -59,7 +60,7 @@ export function demoPlayer(): PlayerData {
     assets,
     warnings: [],
     fetchedAt: 1789020000000,
-    scanned: 50,
+    scanned: ANALYSIS_MATCH_COUNT,
     demo: true,
   };
 }

@@ -8,7 +8,7 @@ import published from './fixtures/riot-match-v5.anonymized.json';
 
 const games = (placements: number[]) =>
   placements.map((placement, index) => {
-    const game = structuredClone(demoPlayer().games[index % 50]!);
+    const game = structuredClone(demoPlayer().games[index % 30]!);
     game.id = `score-${index}`;
     game.date = 2_000_000 - index;
     game.player.placement = placement;
@@ -36,19 +36,19 @@ describe('eight-metric TFT player profile', () => {
   });
 
   it('raises peak, stability and survival for the matching placement patterns', () => {
-    expect(playerScores(games(Array(50).fill(1)))!.ceiling).toBeGreaterThan(
-      playerScores(games(Array(50).fill(5)))!.ceiling,
+    expect(playerScores(games(Array(30).fill(1)))!.ceiling).toBeGreaterThan(
+      playerScores(games(Array(30).fill(5)))!.ceiling,
     );
-    expect(playerScores(games(Array(50).fill(4)))!.stability).toBeGreaterThan(
-      playerScores(games([...Array(25).fill(1), ...Array(25).fill(8)]))!.stability,
+    expect(playerScores(games(Array(30).fill(4)))!.stability).toBeGreaterThan(
+      playerScores(games([...Array(15).fill(1), ...Array(15).fill(8)]))!.stability,
     );
-    expect(playerScores(games(Array(50).fill(3)))!.survival).toBeGreaterThan(
-      playerScores(games(Array(50).fill(6)))!.survival,
+    expect(playerScores(games(Array(30).fill(3)))!.survival).toBeGreaterThan(
+      playerScores(games(Array(30).fill(6)))!.survival,
     );
   });
 
   it('calculates late-game operation from level, round and high/low level difference', () => {
-    const high = games([...Array(25).fill(2), ...Array(25).fill(8)]);
+    const high = games([...Array(15).fill(2), ...Array(15).fill(8)]);
     const low = structuredClone(high);
     high.forEach((game) => {
       game.player.level = game.player.placement <= 2 ? 10 : 8;
@@ -62,7 +62,7 @@ describe('eight-metric TFT player profile', () => {
   });
 
   it('separates deck diversity and concentration-based flexibility', () => {
-    const repeated = games(Array(50).fill(4));
+    const repeated = games(Array(30).fill(4));
     const varied = structuredClone(repeated);
     repeated.forEach((game) => {
       game.player.units = [{ character_id: 'same-unit', tier: 2, rarity: 1, items: [] }];
@@ -141,10 +141,10 @@ describe('eight-metric TFT player profile', () => {
   });
 
   it('classifies titles from multiple metrics and usage concentration', () => {
-    const stable = games(Array(50).fill(3));
+    const stable = games(Array(30).fill(3));
     expect(playerStyle(stable).name).toBe('안정적 순방형');
 
-    const peak = games([...Array(35).fill(1), ...Array(15).fill(8)]);
+    const peak = games([...Array(21).fill(1), ...Array(9).fill(8)]);
     peak.forEach((game, index) => {
       game.player.units = [{ character_id: `peak-unit-${index}`, tier: 2, rarity: 1, items: [] }];
       game.player.traits = [

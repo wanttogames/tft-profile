@@ -107,7 +107,7 @@ describe('Netlify function contract', () => {
               losses: 8,
             },
           ]);
-        if (input.endsWith('/ids?start=0&count=50')) return Response.json(['KR_test']);
+        if (input.endsWith('/ids?start=0&count=30')) return Response.json(['KR_test']);
         return Response.json(m);
       }),
     );
@@ -161,7 +161,7 @@ describe('Netlify function contract', () => {
         '/TAG',
     );
     expect(requested).toContain(
-      'https://asia.api.riotgames.com/tft/match/v1/matches/by-puuid/fixture-player-7/ids?start=0&count=50',
+      'https://asia.api.riotgames.com/tft/match/v1/matches/by-puuid/fixture-player-7/ids?start=0&count=30',
     );
     expect(JSON.stringify(body)).not.toContain('secret-fixture');
   });

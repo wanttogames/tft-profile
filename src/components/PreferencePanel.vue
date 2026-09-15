@@ -20,7 +20,7 @@ const name = (id: string, set: number) =>
       <span class="pill">자체 분석</span>
     </div>
     <p class="small muted">
-      최근 50경기 기준 · 분석 {{ result.total }}경기 · 해당 보드 기록 {{ result.available }}경기
+      최근 30경기 기준 · 분석 {{ result.total }}경기 · 해당 보드 기록 {{ result.available }}경기
     </p>
     <div v-if="result.top.length" class="table-scroll">
       <table>

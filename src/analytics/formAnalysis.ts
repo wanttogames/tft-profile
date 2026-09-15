@@ -12,7 +12,7 @@ export function statistics(games: Game[]) {
     win: n ? p.filter((x) => x === 1).length / n : null,
   };
 }
-/** Input is newest first: all 50 games contribute to the 25 vs 25 trend. */
+/** Input is newest first: all 30 games contribute to the 15 vs 15 trend. */
 export function formAnalysis(games: Game[]) {
   const recent = mean(games.slice(0, FORM_WINDOW).map((g) => g.player.placement));
   const previous =

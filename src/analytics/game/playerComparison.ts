@@ -1,3 +1,4 @@
+import { ANALYSIS_MATCH_COUNT, FORM_WINDOW } from '../../config/analysis';
 import type { Game } from '../../types/riot';
 import { statistics } from '../formAnalysis';
 import { sample } from './sample';
@@ -6,14 +7,14 @@ import { playerScores } from '../playerScores';
 import type { AssetMap } from '../../static-data/catalog';
 export function playerComparison(input: Game[], assets: AssetMap = {}) {
   const g = sample(input);
-  if (g.length < 50) return null;
+  if (g.length < ANALYSIS_MATCH_COUNT) return null;
   const group = (g: Game[]) => ({
     stats: statistics(g),
     scores: playerScores(g, assets)!,
     score: playerScore(g)!,
   });
-  const recent = group(g.slice(0, 25)),
-    past = group(g.slice(25, 50));
+  const recent = group(g.slice(0, FORM_WINDOW)),
+    past = group(g.slice(FORM_WINDOW, ANALYSIS_MATCH_COUNT));
   const improvement = past.stats.average! - recent.stats.average!,
     top4Change = (recent.stats.top4! - past.stats.top4!) * 100;
   return {

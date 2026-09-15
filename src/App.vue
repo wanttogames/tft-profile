@@ -59,7 +59,7 @@ const decimal = (v: number | null | undefined) => (v == null ? '—' : v.toFixed
 const percent = (v: number | null) => (v === null ? '—' : Math.round(v * 100) + '%');
 const formLabel = computed(() =>
   form.value.delta === null
-    ? '50경기 필요'
+    ? '30경기 필요'
     : Math.abs(form.value.delta) < 0.005
       ? '변화 없음'
       : `${form.value.delta > 0 ? '▲' : '▼'} ${Math.abs(form.value.delta).toFixed(2)} ${form.value.delta > 0 ? '개선' : '하락'}`,
@@ -143,7 +143,7 @@ const deckName = (key: string) =>
             <div>
               <p class="eyebrow">YOUR GAME. YOUR PATTERN.</p>
               <h1>나의 플레이를 읽다<span>.</span></h1>
-              <p class="muted">최근 50경기 속에 숨어 있는 당신의 TFT 플레이 습관.</p>
+              <p class="muted">최근 30경기 속에 숨어 있는 당신의 TFT 플레이 습관.</p>
             </div>
             <form class="search-form" @submit.prevent="search()">
               <div class="search-fields">
@@ -236,7 +236,7 @@ const deckName = (key: string) =>
                 </div>
               </div>
               <div class="profile-period">
-                <span class="pill">최근 50경기 기준 · {{ stats.count }}경기 분석</span>
+                <span class="pill">최근 30경기 기준 · {{ stats.count }}경기 분석</span>
                 <p class="small muted">
                   {{ new Date(data.fetchedAt).toLocaleString('ko-KR') }} 기준
                 </p>
@@ -265,7 +265,7 @@ const deckName = (key: string) =>
                   }"
                   >{{ formLabel }}</strong
                 >
-                <p>이전 25경기 → 최근 25경기</p>
+                <p>이전 15경기 → 최근 15경기</p>
               </section>
             </div>
             <div class="analysis-note">
@@ -289,14 +289,14 @@ const deckName = (key: string) =>
                     최근 5경기<strong>{{ decimal(form.five) }}<small>위</small></strong>
                   </div>
                   <div>
-                    최근 25경기<strong>{{ decimal(form.recent) }}<small>위</small></strong>
+                    최근 15경기<strong>{{ decimal(form.recent) }}<small>위</small></strong>
                   </div>
                   <div>
-                    이전 25경기<strong>{{ decimal(form.previous) }}<small>위</small></strong>
+                    이전 15경기<strong>{{ decimal(form.previous) }}<small>위</small></strong>
                   </div>
                 </div>
                 <p class="small muted">
-                  5·25경기 미만은 확보된 경기 평균입니다. 폼 변화는 50경기부터 표시합니다.
+                  5·15경기 미만은 확보된 경기 평균입니다. 폼 변화는 30경기부터 표시합니다.
                 </p>
               </section>
               <PlayerCard :data="data" />
