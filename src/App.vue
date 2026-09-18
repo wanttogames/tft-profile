@@ -1,28 +1,33 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
+import InformationPage from './pages/InformationPage.vue';
+import HomeContent from './components/HomeContent.vue';
+import MetaPreview from './components/MetaPreview.vue';
+import { normalizePath, updatePageMetadata } from './seo/pages';
+import { profileFromQuery, profileLink } from './utils/profileLink';
 import MetaDashboard from './components/MetaDashboard.vue';
 import SiteFooter from './components/SiteFooter.vue';
 import PrivacyPolicy from './pages/PrivacyPolicy.vue';
 import TermsOfService from './pages/TermsOfService.vue';
 import { legalPage } from './config/legal';
-const page = legalPage(typeof window === 'undefined' ? '/' : window.location.pathname);
-function navigateSection(next: 'profile' | 'meta') {
-  if (page) window.location.assign(next === 'meta' ? '/?section=meta' : '/');
-  else section.value = next;
-}
-if (typeof document !== 'undefined')
-  document.title =
-    page === 'privacy'
-      ? '개인정보처리방침 | TFT Profile Analyzer'
-      : page === 'terms'
-        ? '이용약관 | TFT Profile Analyzer'
-        : 'TFT Profile Analyzer';
+const props = defineProps<{ routePath?: string; routeSearch?: string }>();
+const path = normalizePath(
+  props.routePath ?? (typeof window === 'undefined' ? '/' : window.location.pathname),
+);
+const query = props.routeSearch ?? (typeof window === 'undefined' ? '' : window.location.search);
+const page = legalPage(path);
+const information = path === '/guide' ? 'guide' : path === '/about' ? 'about' : null;
+const metaKind = path === '/champions' ? 'champion' : path === '/traits' ? 'trait' : 'item';
 const section = ref<'profile' | 'meta'>(
-  typeof window !== 'undefined' &&
-    new URLSearchParams(window.location.search).get('section') === 'meta'
+  ['/meta', '/champions', '/items', '/traits'].includes(path) ||
+    new URLSearchParams(query).get('section') === 'meta'
     ? 'meta'
     : 'profile',
 );
+if (typeof document !== 'undefined') updatePageMetadata(path);
+function navigateSection(next: 'profile' | 'meta') {
+  window.location.assign(next === 'meta' ? '/meta' : '/');
+}
 import { parseRiotId } from './utils/riotId';
 import type { PlayerData } from './types/riot';
 import { fetchPlayer, recentSearches, saveSearch } from './api/player';
@@ -84,6 +89,9 @@ async function search(n = name.value, t = tag.value) {
   data.value = null;
   try {
     data.value = await fetchPlayer(n, t);
+    const url = new URL(profileLink(n, t));
+    window.history.replaceState(null, '', url.pathname + url.search);
+    updatePageMetadata('/profile');
     history.value = saveSearch({ gameName: n.trim(), tagLine: t.replace(/^#/, '').trim() });
   } catch (e) {
     error.value = e instanceof Error ? e.message : '조회 실패';
@@ -95,6 +103,16 @@ function demo() {
   error.value = '';
   data.value = demoPlayer();
 }
+onMounted(() => {
+  if (path === '/profile') {
+    try {
+      const id = profileFromQuery(query);
+      void search(id.gameName, id.tagLine);
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : '공유 링크를 확인해 주세요.';
+    }
+  } else if (path === '/' && new URLSearchParams(query).get('demo') === '1') demo();
+});
 const assetName = (id: string | null) =>
   id && data.value ? displayName(data.value.assets, 'trait', id, data.value.games[0]?.set) : '—';
 const deckName = (key: string) =>
@@ -116,34 +134,30 @@ const deckName = (key: string) =>
         <span class="brand-mark">P</span>TFT<span>PROFILE</span>
       </a>
       <nav class="primary-nav" aria-label="주 메뉴">
-        <button
-          type="button"
-          :aria-pressed="!page && section === 'profile'"
-          @click="navigateSection('profile')"
+        <a href="/" :aria-current="path === '/' || path === '/profile' ? 'page' : undefined"
+          >개인 분석</a
         >
-          개인 분석
-        </button>
-        <button
-          type="button"
-          :aria-pressed="!page && section === 'meta'"
-          @click="navigateSection('meta')"
-        >
-          메타
-        </button>
+        <a href="/meta" :aria-current="section === 'meta' ? 'page' : undefined">메타</a>
+        <a href="/guide">사용 가이드</a>
+        <a href="/about">소개</a>
       </nav>
       <span class="region">KR <span class="muted">한국 서버</span></span>
     </header>
     <main>
       <PrivacyPolicy v-if="page === 'privacy'" />
       <TermsOfService v-else-if="page === 'terms'" />
+      <InformationPage v-else-if="information" :kind="information" />
       <template v-else>
-        <KeepAlive><MetaDashboard v-if="section === 'meta'" /></KeepAlive>
-        <div v-show="section === 'profile'">
+        <KeepAlive><MetaDashboard v-if="section === 'meta'" :initial-kind="metaKind" /></KeepAlive>
+        <div v-if="section === 'profile'">
           <section class="search-area">
             <div>
               <p class="eyebrow">YOUR GAME. YOUR PATTERN.</p>
               <h1>나의 플레이를 읽다<span>.</span></h1>
-              <p class="muted">최근 30경기 속에 숨어 있는 당신의 TFT 플레이 습관.</p>
+              <p class="muted">
+                최근 30경기로 읽는 나의 TFT 플레이 습관. 평균 등수와 TOP4, 선호 챔피언·아이템·특성을
+                살펴보고 플레이 스타일을 카드로 공유하세요.
+              </p>
             </div>
             <form class="search-form" @submit.prevent="search()">
               <div class="search-fields">
@@ -196,17 +210,14 @@ const deckName = (key: string) =>
               경기 기록을 모아 플레이 패턴을 계산합니다. 첫 조회는 조금 더 걸릴 수 있습니다.
             </p>
           </div>
-          <section v-if="!data && !busy" class="welcome panel">
-            <span class="eyebrow">PLAYER LAB / 01</span>
-            <h2>메타보다 먼저,<br />나의 플레이를 이해하세요.</h2>
-            <p class="muted">
-              평균 등수부터 보드 성향까지.<br />완료된 랭크 경기로 나의 강점과 반복되는 패턴을
-              확인합니다.
-            </p>
-            <button class="secondary" @click="demo">
-              샘플 분석 둘러보기 <span aria-hidden="true">→</span>
-            </button>
-            <p class="small muted">샘플은 UI 확인용 가상 데이터입니다.</p>
+          <section v-if="!data && !busy" class="panel public-welcome">
+            <div>
+              <h2>어떤 분석인지 먼저 살펴보세요</h2>
+              <p class="small muted">
+                샘플은 UI 확인용 가상 데이터입니다. 실제 플레이어 전적이 아닙니다.
+              </p>
+            </div>
+            <button class="secondary" @click="demo">샘플 분석 둘러보기 →</button>
           </section>
           <template v-if="data"
             ><div v-if="data.demo" class="notice demo">
@@ -451,6 +462,8 @@ const deckName = (key: string) =>
             <PreferencePanel :data="data" kind="trait" />
             <MatchList :data="data" />
           </template>
+          <MetaPreview v-if="!data && !busy" />
+          <HomeContent />
         </div>
       </template>
       <SiteFooter />

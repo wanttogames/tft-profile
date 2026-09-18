@@ -271,3 +271,8 @@ Skipped만 있으면 성공 종료합니다. Failed matches 또는 Failed player
 모든 View는 security_invoker=true이고 anon/authenticated 조회 권한을 부여하지 않습니다. Netlify 서버만 service_role로 조회합니다. 테이블 RLS를 끄지 마세요. 참고: https://supabase.com/docs/guides/database/postgres/row-level-security
 
 일반 View는 조회할 때 집계합니다. 현재 수백 경기 규모를 위한 구조이며 데이터가 커져 느려지면 실행 계획을 확인한 뒤 materialized view/정기 집계 테이블로 전환하세요. `supabase/tests/005_meta_views.test.sql`은 중복 아이템·챔피언, 활성 특성, NULL patch, 불완전/다른 queue 제외, 최소 표본 및 권한을 검증합니다. 테스트 데이터는 롤백됩니다.
+
+
+## 공유 카드와 공개 페이지
+
+공유 PNG, 프로필 URL, 공개 페이지 사전 렌더링 및 배포 확인 사항은 [구현 결과](docs/public-content-sharing.md)를 참고하세요. `npm run build`는 공개 HTML 9개도 생성합니다. 추가 환경변수는 없습니다.

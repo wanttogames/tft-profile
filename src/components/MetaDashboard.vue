@@ -5,7 +5,8 @@ import type { MetaData, MetaKind, MetaSort, MetaRow } from '../types/meta';
 import { lookupAsset } from '../static-data/catalog';
 import AssetBadge from './AssetBadge.vue';
 import MetaCompanions from './MetaCompanions.vue';
-const kind = ref<MetaKind>('item'),
+const props = withDefaults(defineProps<{ initialKind?: MetaKind }>(), { initialKind: 'item' });
+const kind = ref<MetaKind>(props.initialKind),
   sort = ref<MetaSort>('sample_count'),
   page = ref(0);
 const data = ref<MetaData | null>(null),
@@ -50,15 +51,20 @@ const percent = (v: number) => (v * 100).toFixed(1) + '%';
     <p class="eyebrow">COLLECTED BOARDS / META</p>
     <h1>상위 래더의 최종 보드<span>.</span></h1>
     <p class="muted">전체 수집 기간 · 패치 구분 없음 · KR 랭크 경기</p>
+    <p class="small muted">
+      사용 빈도와 성적은 다른 지표입니다. 표본이 많은 항목부터 비교한 뒤 평균 등수(낮을수록 좋음),
+      TOP4, 1위율을 함께 확인하세요. 최종 보드에서 관찰한 통계이며 특정 선택이 성적의 원인임을
+      뜻하지 않습니다. <a href="/guide">통계 읽는 방법 →</a>
+    </p>
     <nav class="meta-tabs" aria-label="메타 통계 종류">
-      <button
+      <a
         v-for="tab in tabs"
         :key="tab.id"
-        :aria-pressed="kind === tab.id"
-        @click="kind = tab.id"
+        :aria-current="kind === tab.id ? 'page' : undefined"
+        :href="{ item: '/items', champion: '/champions', trait: '/traits' }[tab.id]"
       >
         {{ tab.name }}
-      </button>
+      </a>
     </nav>
     <div class="stats-grid meta-summary" aria-live="polite">
       <section class="stat">

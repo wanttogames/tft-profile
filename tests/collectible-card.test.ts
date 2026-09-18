@@ -27,7 +27,7 @@ describe('collectible profile presentation', () => {
     expect(html).toContain('아리');
     expect(html).toContain('30경기 분석');
     expect(html).toContain('가상 데이터');
-    expect(html).toContain('내 카드 이미지로 공유');
+    expect(html).toContain('공유 카드 만들기');
   });
   it('keeps missing-data and unranked states instead of inventing scores', async () => {
     const data = demoPlayer();

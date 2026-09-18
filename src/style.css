@@ -1384,3 +1384,57 @@ progress {
 .legal-back {
   font-size: 13px;
 }
+
+/* Public navigation keeps real links accessible on narrow screens. */
+.primary-nav a,
+.meta-tabs a {
+  display: inline-block;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+.primary-nav a[aria-current='page'],
+.meta-tabs a[aria-current='page'] {
+  background: #253343;
+  color: var(--mint);
+}
+.primary-nav {
+  flex-wrap: wrap;
+}
+.search-area .muted {
+  max-width: 600px;
+}
+@media (max-width: 600px) {
+  .primary-nav {
+    gap: 2px;
+  }
+  .primary-nav a {
+    padding: 9px 10px;
+    font-size: 12px;
+  }
+}
+.public-welcome {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  margin: 18px 0;
+}
+.public-welcome h2 {
+  font-size: 17px;
+  margin-bottom: 8px;
+}
+.public-welcome p {
+  margin: 0;
+}
+@media (max-width: 600px) {
+  .public-welcome {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .primary-nav a {
+    flex: 1;
+    text-align: center;
+  }
+}

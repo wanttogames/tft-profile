@@ -5,7 +5,9 @@ import { SERVICE_NAME, RIOT_DISCLAIMER } from '../config/legal';
   <footer class="site-footer">
     <div class="footer-links">
       <span>{{ SERVICE_NAME }}</span>
-      <nav aria-label="서비스 정책">
+      <nav aria-label="서비스 안내와 정책">
+        <a href="/">홈</a><a href="/meta">메타</a><a href="/guide">사용 가이드</a
+        ><a href="/about">서비스 소개</a>
         <a href="/privacy">개인정보처리방침</a>
         <a href="/terms">이용약관</a>
         <a href="/#riot-disclaimer">Riot Games 비제휴 고지</a>

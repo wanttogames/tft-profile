@@ -128,7 +128,7 @@ const sharing = ref(false);
         aria-controls="share-profile-card"
         @click="sharing = !sharing"
       >
-        {{ sharing ? '공유 카드 닫기 ×' : '내 카드 이미지로 공유 ↗' }}
+        {{ sharing ? '공유 카드 닫기 ×' : '공유 카드 만들기 ↗' }}
       </button>
     </div>
     <div v-if="sharing" id="share-profile-card" class="share-panel">

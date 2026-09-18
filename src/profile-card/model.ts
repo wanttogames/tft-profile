@@ -1,3 +1,5 @@
+import { preferenceAnalysis } from '../analytics/preferences';
+import { profileLink } from '../utils/profileLink';
 import { playStyleIllustration } from '../analytics/playStyleIllustration';
 import type { PlayerData } from '../types/riot';
 import { playerScores } from '../analytics/playerScores';
@@ -42,6 +44,15 @@ export function profileCardModel(data: PlayerData) {
       asset: lookupAsset(data.assets, kind, r.id, r.set),
     }));
   return {
+    shareUrl: profileLink(
+      data.account.gameName || '플레이어',
+      data.account.tagLine || 'KR1',
+      !!data.demo,
+    ),
+    items: preferenceAnalysis(data.games, 'item')
+      .top.slice(0, 3)
+      .map((r) => ({ ...r, name: displayName(data.assets, 'item', r.id, r.set) })),
+    averageLevel: profile.level,
     theme: cardTheme(data.rank?.tier),
     art: playStyleIllustration(profile.key),
     name: data.account.gameName || '플레이어',
