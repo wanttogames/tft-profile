@@ -1,13 +1,19 @@
 import { styleArtPaths } from './styleArt';
 import { scoreLabels, type ProfileCardModel } from './model';
-/** Self-contained canvas: no remote images/secrets, no CORS-tainted PNG exports.
+/** Same-origin supplied artwork (or built-in vector fallback), no remote image dependencies.
  * This exact canvas is both the visible share preview and downloadable image. */
 export function renderShareCard(
   canvas: HTMLCanvasElement,
   model: ProfileCardModel,
   format: 'portrait' | 'landscape' = 'portrait',
+<<<<<<< HEAD
 ) {
   if (format === 'landscape') return renderLandscape(canvas, model);
+=======
+  artwork?: HTMLImageElement | null,
+) {
+  if (format === 'landscape') return renderLandscape(canvas, model, artwork);
+>>>>>>> c1bba7b (hero-art-init)
   canvas.width = 900;
   canvas.height = 1500;
   const c = canvas.getContext('2d');
@@ -37,28 +43,32 @@ export function renderShareCard(
   c.strokeRect(18, 18, 864, 1464);
   c.lineWidth = 1;
   c.strokeRect(32, 32, 836, 1436);
+  drawFrameOrnaments(c, 900, 1500, accent, secondary);
   text('TFT / PLAYER ARCHIVE', 65, 82, 19, accent);
   text(model.edition, 590, 82, 17, accent, 240);
   text(model.name, 65, 150, 43, '#ffffff', 750);
   text(model.tag, 65, 186, 22, '#abbcd2');
-  // Shared vector scene used by the main SVG card: no network/CORS dependencies.
-  c.save();
-  c.translate(65, 220);
-  c.scale(770 / 600, 770 / 600);
-  for (const layer of styleArtPaths(model.art)) {
-    const path = new Path2D(layer.d);
-    c.globalAlpha = layer.opacity;
-    if (layer.fill !== 'none') {
-      c.fillStyle = layer.fill;
-      c.fill(path);
+  if (artwork) drawHero(c, artwork, 45, 205, 810, 350);
+  else {
+    // Shared vector scene used by the main SVG card: no network/CORS dependencies.
+    c.save();
+    c.translate(65, 220);
+    c.scale(770 / 600, 770 / 600);
+    for (const layer of styleArtPaths(model.art)) {
+      const path = new Path2D(layer.d);
+      c.globalAlpha = layer.opacity;
+      if (layer.fill !== 'none') {
+        c.fillStyle = layer.fill;
+        c.fill(path);
+      }
+      if (layer.stroke) {
+        c.strokeStyle = layer.stroke;
+        c.lineWidth = 1.6;
+        c.stroke(path);
+      }
     }
-    if (layer.stroke) {
-      c.strokeStyle = layer.stroke;
-      c.lineWidth = 1.6;
-      c.stroke(path);
-    }
+    c.restore();
   }
-  c.restore();
   c.textAlign = 'center';
   text(model.art.illustrationTheme, 450, 556, 19, model.art.color);
   text(`${model.rank}  /  ${model.lp} LP`, 450, 596, 25, accent);
@@ -137,7 +147,15 @@ export function renderShareCard(
 }
 
 /** 1200×630 community card. Only measured data, no invented profile level. */
+<<<<<<< HEAD
 function renderLandscape(canvas: HTMLCanvasElement, model: ProfileCardModel) {
+=======
+function renderLandscape(
+  canvas: HTMLCanvasElement,
+  model: ProfileCardModel,
+  artwork?: HTMLImageElement | null,
+) {
+>>>>>>> c1bba7b (hero-art-init)
   canvas.width = 1200;
   canvas.height = 630;
   const c = canvas.getContext('2d');
@@ -152,6 +170,7 @@ function renderLandscape(canvas: HTMLCanvasElement, model: ProfileCardModel) {
   c.strokeStyle = model.theme.accent;
   c.lineWidth = 3;
   c.strokeRect(10, 10, 1180, 610);
+<<<<<<< HEAD
   c.save();
   c.translate(20, 104);
   c.scale(0.65, 0.65);
@@ -169,6 +188,28 @@ function renderLandscape(canvas: HTMLCanvasElement, model: ProfileCardModel) {
     }
   }
   c.restore();
+=======
+  if (artwork) drawHero(c, artwork, 25, 108, 380, 155);
+  else {
+    c.save();
+    c.translate(20, 104);
+    c.scale(0.65, 0.65);
+    for (const p of styleArtPaths(model.art)) {
+      const shape = new Path2D(p.d);
+      c.globalAlpha = p.opacity;
+      if (p.fill !== 'none') {
+        c.fillStyle = p.fill;
+        c.fill(shape);
+      }
+      if (p.stroke) {
+        c.strokeStyle = p.stroke;
+        c.lineWidth = 1.6;
+        c.stroke(shape);
+      }
+    }
+    c.restore();
+  }
+>>>>>>> c1bba7b (hero-art-init)
   text('TFT PROFILE / ' + model.edition, 38, 48, 16, model.theme.accent);
   text(model.name + ' ' + model.tag, 38, 90, 30, '#fff', 1110);
   text(model.rank + ' · ' + model.lp + ' LP', 40, 284, 20, model.theme.accent, 350);
@@ -203,7 +244,11 @@ function renderLandscape(canvas: HTMLCanvasElement, model: ProfileCardModel) {
     text(label, 440, 392 + i * 34, 16, '#aabcce', 140);
     text(rows[0]?.name ?? '기록 부족', 590, 392 + i * 34, 20, '#e8effa', 550);
   });
+<<<<<<< HEAD
   // Flavor is decorative, while the measured summary remains visible above.
+=======
+  // Actual measured summary, wrapped for Korean text.
+>>>>>>> c1bba7b (hero-art-init)
   c.font = '600 16px \"Noto Sans KR\", sans-serif';
   let summary = '',
     summaryY = 497;
@@ -220,3 +265,62 @@ function renderLandscape(canvas: HTMLCanvasElement, model: ProfileCardModel) {
   text('tft-profile.pages.dev', 40, 593, 20, model.theme.accent);
   text('기록은 변해도, 나의 플레이는 남는다', 800, 593, 15, '#98adc5', 350);
 }
+<<<<<<< HEAD
+=======
+
+/** Cover crop, aligned slightly above center to retain the character face. */
+function drawHero(
+  c: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+) {
+  const scale = Math.max(w / image.naturalWidth, h / image.naturalHeight);
+  const sw = w / scale,
+    sh = h / scale;
+  c.drawImage(
+    image,
+    (image.naturalWidth - sw) / 2,
+    (image.naturalHeight - sh) * 0.35,
+    sw,
+    sh,
+    x,
+    y,
+    w,
+    h,
+  );
+  const fade = c.createLinearGradient(0, y, 0, y + h);
+  fade.addColorStop(0, '#10172633');
+  fade.addColorStop(0.65, '#10172600');
+  fade.addColorStop(1, '#101726');
+  c.fillStyle = fade;
+  c.fillRect(x, y, w, h);
+}
+function drawFrameOrnaments(
+  c: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  accent: string,
+  secondary: string,
+) {
+  for (const [x, y, sx, sy] of [
+    [20, 20, 1, 1],
+    [w - 20, 20, -1, 1],
+    [20, h - 20, 1, -1],
+    [w - 20, h - 20, -1, -1],
+  ]) {
+    c.save();
+    c.translate(x!, y!);
+    c.scale(sx!, sy!);
+    c.fillStyle = secondary;
+    c.strokeStyle = accent;
+    c.lineWidth = 2;
+    const shape = new Path2D('M0 90V15L15 0H90L53 13H26L13 26V53Z M8 65 19 20 58 5 31 30Z');
+    c.fill(shape);
+    c.stroke(shape);
+    c.restore();
+  }
+}
+>>>>>>> c1bba7b (hero-art-init)

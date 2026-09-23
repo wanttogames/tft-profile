@@ -1,0 +1,14 @@
+{
+  "ahri": {
+    "aggressive": "/profile-art/ahri/aggressive.webp",
+    "flexible": "/profile-art/ahri/flexible.webp",
+    "lategame": "/profile-art/ahri/lategame.webp",
+    "stable": "/profile-art/ahri/stable.webp"
+  },
+  "gnar": {
+    "aggressive": "/profile-art/gnar/aggressive.webp",
+    "flexible": "/profile-art/gnar/flexible.webp",
+    "lategame": "/profile-art/gnar/lategame.webp",
+    "stable": "/profile-art/gnar/stable.webp"
+  }
+}

@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+import { championArtworkKey, getProfileArtwork, STYLE_ART } from './artwork';
+>>>>>>> c1bba7b (hero-art-init)
 import { preferenceAnalysis } from '../analytics/preferences';
 import { profileLink } from '../utils/profileLink';
 import { playStyleIllustration } from '../analytics/playStyleIllustration';
@@ -43,7 +47,19 @@ export function profileCardModel(data: PlayerData) {
       name: displayName(data.assets, kind, r.id, r.set),
       asset: lookupAsset(data.assets, kind, r.id, r.set),
     }));
+  const units = preferences('unit');
+  const championKey = championArtworkKey(units[0]?.id, units[0]?.name);
+  const artStyle = STYLE_ART[profile.key];
   return {
+<<<<<<< HEAD
+=======
+    artwork: {
+      championKey,
+      artStyle,
+      src: getProfileArtwork(championKey, artStyle),
+      name: units[0]?.name ?? '',
+    },
+>>>>>>> c1bba7b (hero-art-init)
     shareUrl: profileLink(
       data.account.gameName || '플레이어',
       data.account.tagLine || 'KR1',
@@ -61,7 +77,7 @@ export function profileCardModel(data: PlayerData) {
     lp: data.rank?.leaguePoints == null ? '—' : String(data.rank.leaguePoints),
     profile,
     scores,
-    units: preferences('unit'),
+    units,
     traits: preferences('trait'),
     stats: [
       { label: '평균 등수', value: profile.stats.average?.toFixed(2) ?? '—' },

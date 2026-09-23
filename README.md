@@ -276,3 +276,10 @@ Skipped만 있으면 성공 종료합니다. Failed matches 또는 Failed player
 ## 공유 카드와 공개 페이지
 
 공유 PNG, 프로필 URL, 공개 페이지 사전 렌더링 및 배포 확인 사항은 [구현 결과](docs/public-content-sharing.md)를 참고하세요. `npm run build`는 공개 HTML 9개도 생성합니다. 추가 환경변수는 없습니다.
+<<<<<<< HEAD
+=======
+
+## 제공 Hero Artwork 및 티어 프레임
+
+프로필 카드의 나르/아리 제공 아트, 자동 파일 인덱스, fallback 및 자산 확장 방법은 [Hero Artwork 안내](docs/profile-hero-artwork.md)를 참고하세요. 신규 AI 이미지 생성 없이 제공된 8개 WebP를 사용합니다.
+>>>>>>> c1bba7b (hero-art-init)

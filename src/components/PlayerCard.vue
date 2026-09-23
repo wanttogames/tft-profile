@@ -3,7 +3,9 @@ import { computed, ref } from 'vue';
 import type { PlayerData } from '../types/riot';
 import { scoreHelp } from '../analytics/playerScores';
 import { profileCardModel, scoreLabels } from '../profile-card/model';
-import PlayStyleArt from './PlayStyleArt.vue';
+import RankFrame from './RankFrame.vue';
+import HeroArtworkPanel from './HeroArtworkPanel.vue';
+import RankBadge from './RankBadge.vue';
 import AssetBadge from './AssetBadge.vue';
 import ShareProfileCard from './ShareProfileCard.vue';
 const props = defineProps<{ data: PlayerData }>();
@@ -22,31 +24,22 @@ const sharing = ref(false);
     }"
     aria-label="TFT 플레이어 프로필 카드"
   >
-    <article class="collectible-card" :data-tier="card.theme.tier">
+    <RankFrame class="collectible-card" :tier="card.theme.tier">
       <div class="card-topline">
         <span>TFT / PLAYER ARCHIVE</span><span>{{ card.edition }}</span>
       </div>
       <div class="collectible-body">
         <div class="card-identity">
-          <div class="identity-heading">
-            <span class="card-kicker">TFT PLAYER PROFILE</span
-            ><span class="card-rank-chip">{{ card.rank }}</span>
-          </div>
           <h2>
             {{ card.name }}<small>{{ card.tag }}</small>
           </h2>
+          <HeroArtworkPanel :model="card" />
+          <RankBadge :rank="card.rank" :lp="card.lp" />
           <p class="card-title">「{{ card.profile.name }}」</p>
           <div class="style-tags" aria-label="보조 성향">
             <span v-for="tag in card.profile.tags" :key="tag">{{ tag }}</span
             ><span v-if="!card.profile.tags.length">성향 태그는 표본 확보 후 표시</span>
           </div>
-          <div class="style-art-frame" :data-style="card.profile.key">
-            <PlayStyleArt :art="card.art" /><span class="style-art-caption">{{
-              card.art.illustrationTheme
-            }}</span>
-          </div>
-          <p class="style-flavor">{{ card.art.shortFlavorText }}</p>
-          <p class="style-rank">{{ card.rank }} · {{ card.lp }} LP</p>
           <p class="card-sample">{{ card.sample }}</p>
           <div class="collectible-stats">
             <div v-for="s in card.stats" :key="s.label">
@@ -110,7 +103,7 @@ const sharing = ref(false);
       <div class="card-bottomline">
         <span>기록이 만드는 나만의 카드</span><span>TFT PROFILE ANALYZER</span>
       </div>
-    </article>
+    </RankFrame>
     <div class="card-controls">
       <details class="method">
         <summary>점수·칭호 계산 기준</summary>
@@ -138,197 +131,157 @@ const sharing = ref(false);
 </template>
 <style scoped>
 .profile-collection {
-  margin: 24px 0 32px;
-  --card-accent: #b6ceff;
-  --card-secondary: #9b88e6;
+  margin: 30px 0;
   min-width: 0;
-}
-.collectible-card {
-  position: relative;
-  isolation: isolate;
-  border: 1px solid var(--card-accent);
-  border-radius: 22px;
-  padding: 22px 28px 16px;
-  background:
-    radial-gradient(
-      ellipse at 10% 0%,
-      color-mix(in srgb, var(--card-secondary) 20%, transparent),
-      transparent 58%
-    ),
-    linear-gradient(135deg, #192335, #101722 65%, #1d2635);
-  box-shadow:
-    0 18px 55px #0005,
-    inset 0 0 0 5px #101620,
-    inset 0 0 0 6px color-mix(in srgb, var(--card-accent) 32%, transparent);
-  overflow: hidden;
-}
-.collectible-card:before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: -1;
-  background: linear-gradient(
-    115deg,
-    transparent 30%,
-    #ffffff06 31%,
-    transparent 45%,
-    #ffffff04 67%,
-    transparent 68%
-  );
 }
 .card-topline,
 .card-bottomline {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  gap: 14px;
+  flex-wrap: wrap;
   color: var(--card-accent);
-  font-size: 10px;
-  letter-spacing: 0.16em;
+  font-size: 11px;
+  letter-spacing: 0.07em;
   font-weight: 700;
 }
 .card-topline {
-  padding-bottom: 20px;
-  border-bottom: 1px solid #ffffff13;
+  margin: 12px 8px 16px;
 }
 .card-bottomline {
-  padding-top: 16px;
-  opacity: 0.75;
   font-size: 9px;
+  opacity: 0.7;
+  margin: 22px 8px 0;
 }
 .collectible-body {
-  display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.15fr);
-  gap: 36px;
-  padding: 26px 0;
-}
-.card-identity {
-  min-width: 0;
-}
-.identity-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-.card-kicker {
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  color: #acbad1;
-}
-.card-rank-chip {
-  border: 1px solid color-mix(in srgb, var(--card-accent) 50%, transparent);
-  background: #ffffff05;
-  color: var(--card-accent);
-  padding: 5px 9px;
-  border-radius: 5px;
-  font-size: 10px;
-  letter-spacing: 0.08em;
+  display: block;
 }
 .card-identity h2 {
-  font-size: clamp(24px, 3vw, 36px);
-  margin: 14px 0 0;
-  letter-spacing: -0.035em;
+  font-size: clamp(27px, 5vw, 42px);
+  line-height: 1.2;
+  margin: 18px 8px 0;
   overflow-wrap: anywhere;
-  line-height: 1.3;
 }
 .card-identity h2 small {
   display: block;
-  font-size: 14px;
-  font-weight: 500;
-  color: #a0b1c8;
-  margin-top: 6px;
-  letter-spacing: 0;
+  font-size: 18px;
+  color: #afc1da;
+  margin-top: 7px;
 }
 .card-title {
   text-align: center;
-  font-size: 21px;
-  font-weight: 700;
+  font-size: clamp(22px, 4vw, 32px);
+  margin: 12px 0;
   line-height: 1.4;
-  margin: 10px 0;
+  color: #e9f5ff;
+}
+.style-tags {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+  color: #c4d7ee;
+}
+.style-tags span {
+  padding: 3px 8px;
+  border-bottom: 1px solid color-mix(in srgb, var(--card-accent) 35%, transparent);
 }
 .card-sample {
   text-align: center;
-  font-size: 11px;
-  color: #a6b5ca;
-  margin: 0 0 20px;
+  font-size: 12px;
+  color: #adc3dd;
+  margin: 14px 0 20px;
 }
 .collectible-stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  padding: 16px 0;
-  border-top: 1px solid #ffffff17;
-  border-bottom: 1px solid #ffffff17;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 18px 0 24px;
 }
 .collectible-stats > div {
+  min-width: 0;
   text-align: center;
-  border-right: 1px solid #ffffff17;
-}
-.collectible-stats > div:last-child {
-  border: 0;
+  border: 1px solid color-mix(in srgb, var(--card-accent) 60%, transparent);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--card-secondary) 14%, #0a1422),
+    #09111f
+  );
+  padding: 15px 4px;
+  clip-path: polygon(
+    9px 0,
+    calc(100% - 9px) 0,
+    100% 9px,
+    100% calc(100% - 9px),
+    calc(100% - 9px) 100%,
+    9px 100%,
+    0 calc(100% - 9px),
+    0 9px
+  );
 }
 .collectible-stats span {
   display: block;
-  font-size: 11px;
-  color: #b1bfd1;
+  color: #bed0e4;
+  font-size: 12px;
 }
 .collectible-stats strong {
-  font-size: 29px;
   display: block;
-  margin-top: 6px;
+  font-size: clamp(25px, 4vw, 37px);
   font-variant-numeric: tabular-nums;
+  margin-top: 5px;
 }
 .card-abilities {
-  border-left: 1px solid #ffffff17;
-  padding-left: 34px;
-  min-width: 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--card-accent);
 }
 .dna-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
-  gap: 8px;
+  gap: 10px;
+  margin-bottom: 18px;
 }
 .dna-heading h3 {
-  margin: 0;
   color: var(--card-accent);
   font-size: 15px;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.07em;
+  margin: 0;
 }
 .dna-heading > span {
-  font-size: 10px;
-  color: #9baec7;
+  font-size: 11px;
+  color: #aabed5;
 }
 .collectible-dna {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 19px 28px;
+  gap: 17px 26px;
 }
 .ability > div {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  font-size: 12px;
+  gap: 5px;
+  align-items: center;
+  font-size: 13px;
 }
 .ability strong {
+  font-size: 23px;
   color: var(--card-accent);
-  font-size: 22px;
   font-variant-numeric: tabular-nums;
 }
 .ability progress {
   width: 100%;
-  height: 4px;
-  border: 0;
+  height: 6px;
   display: block;
+  margin-top: 6px;
   appearance: none;
-  margin-top: 7px;
-  background: #344154;
-  border-radius: 0;
+  border: 0;
+  border-radius: 3px;
+  background: #2b4054;
+  overflow: hidden;
 }
 .ability progress::-webkit-progress-bar {
-  background: #344154;
+  background: #2b4054;
 }
 .ability progress::-webkit-progress-value {
   background: linear-gradient(90deg, var(--card-secondary), var(--card-accent));
@@ -338,243 +291,118 @@ const sharing = ref(false);
 }
 .signature-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
-  margin-top: 26px;
-  padding-top: 20px;
-  border-top: 1px solid #ffffff17;
+  padding: 24px 0;
+  margin-top: 24px;
+  border-top: 1px solid color-mix(in srgb, var(--card-accent) 45%, transparent);
 }
 .signature-grid h3 {
-  font-size: 11px;
+  font-size: 13px;
+  color: var(--card-accent);
   margin: 0 0 14px;
 }
 .signature-grid h3 span {
-  color: var(--card-accent);
-  font-size: 9px;
-  margin-left: 4px;
+  font-size: 10px;
 }
 .signature-list {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 .signature {
   min-width: 0;
 }
 .signature :deep(.asset) {
   font-size: 12px;
-  display: flex;
-  min-width: 0;
-  gap: 8px;
+  overflow-wrap: anywhere;
 }
-.signature :deep(.asset img),
+.signature :deep(img),
 .signature :deep(.asset-letter) {
   width: 28px;
   height: 28px;
-  flex-shrink: 0;
-  border: 1px solid #ffffff24;
-  border-radius: 5px;
+  border-radius: 4px;
 }
-.signature :deep(.asset > span:last-child) {
-  overflow-wrap: anywhere;
-}
-.signature > small {
+.signature small {
   display: block;
-  font-size: 9px;
-  color: #a2b2c9;
-  margin: 2px 0 0 36px;
+  font-size: 10px;
+  color: #8fa8c4;
+  margin-top: 4px;
 }
 .card-flavor {
-  border-top: 1px solid color-mix(in srgb, var(--card-accent) 25%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--card-accent) 25%, transparent);
-  padding: 17px 4px;
-  display: flex;
-  gap: 24px;
-  align-items: center;
+  padding: 16px 0;
+  border-top: 1px solid color-mix(in srgb, var(--card-accent) 45%, transparent);
 }
 .card-flavor > span {
-  font-size: 9px;
   color: var(--card-accent);
-  white-space: nowrap;
-  letter-spacing: 0.1em;
+  font-size: 10px;
+  letter-spacing: 0.12em;
 }
 .card-flavor p {
   font-size: 13px;
-  line-height: 1.7;
-  margin: 0;
-  color: #d3dcea;
+  color: #bfd0e5;
+  line-height: 1.8;
+  margin: 8px 0 0;
+  overflow-wrap: anywhere;
 }
 .card-controls {
+  max-width: 760px;
+  margin: 18px auto;
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
   align-items: flex-start;
-  gap: 20px;
-  margin-top: 14px;
 }
-.card-controls .method {
+.method {
   flex: 1;
-  margin: 0;
+  min-width: 220px;
 }
 .share-toggle {
-  border: 1px solid #ffffff25;
-  border-radius: 8px;
-  background: #1c2635;
-  padding: 11px 16px;
-  font-size: 12px;
-  flex-shrink: 0;
-}
-.share-toggle:hover {
-  border-color: var(--card-accent);
+  padding: 12px;
+  border: 1px solid var(--card-accent);
+  border-radius: 5px;
+  background: #142136;
   color: var(--card-accent);
 }
 .share-panel {
-  padding: 0 28px 24px;
+  padding: 0 20px 24px;
   background: #101824;
   border: 1px solid #2c384d;
-  border-radius: 16px;
-  margin-top: 16px;
+  border-radius: 12px;
 }
-@media (max-width: 760px) {
-  .collectible-body {
+@media (max-width: 520px) {
+  .card-topline {
+    font-size: 9px;
+    margin: 7px 2px 14px;
+    letter-spacing: 0;
+  }
+  .collectible-dna {
+    gap: 13px 16px;
+  }
+  .ability > div {
+    font-size: 11px;
+  }
+  .ability strong {
+    font-size: 20px;
+  }
+  .signature-grid {
     grid-template-columns: 1fr;
-    gap: 26px;
-  }
-  .card-abilities {
-    border-left: 0;
-    border-top: 1px solid #ffffff17;
-    padding: 24px 0 0;
-  }
-  .collectible-card {
-    max-width: 560px;
-    margin: auto;
-    padding: 20px 22px 16px;
-  }
-  .card-controls {
-    max-width: 560px;
-    margin: 14px auto 0;
-    flex-wrap: wrap;
+    gap: 18px;
   }
   .card-controls .method {
     flex-basis: 100%;
   }
-  .card-identity h2 {
-    font-size: 30px;
+  .collectible-stats {
+    gap: 6px;
   }
-  .card-flavor {
-    display: block;
+  .collectible-stats span {
+    font-size: 11px;
   }
-  .card-flavor > span {
-    display: block;
-    margin-bottom: 7px;
-  }
-  .card-topline {
-    font-size: 9px;
+  .dna-heading > span {
+    font-size: 10px;
   }
   .share-panel {
-    padding: 0 18px 20px;
-  }
-}
-@media (max-width: 380px) {
-  .collectible-card {
-    padding: 18px;
-  }
-  .collectible-dna {
-    gap: 16px;
-  }
-  .signature-grid {
-    gap: 12px;
-  }
-  .card-rank-chip {
-    font-size: 9px;
-  }
-  .card-bottomline {
-    letter-spacing: 0.04em;
-    font-size: 8px;
-  }
-  .card-title {
-    font-size: 18px;
-  }
-}
-
-.style-art-frame {
-  position: relative;
-  height: 205px;
-  margin-top: 18px;
-  overflow: hidden;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--style-color) 35%, transparent);
-  background: var(--style-backdrop);
-}
-.style-art-caption {
-  position: absolute;
-  bottom: 9px;
-  left: 0;
-  right: 0;
-  text-align: center;
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  color: var(--style-color);
-  text-shadow: 0 1px 8px #000;
-  background: #101722a8;
-  padding: 4px;
-}
-.style-tags {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
-}
-.style-tags span {
-  font-size: 10px;
-  border: 1px solid color-mix(in srgb, var(--style-color) 25%, transparent);
-  background: #ffffff05;
-  border-radius: 20px;
-  padding: 4px 9px;
-  color: var(--style-color);
-}
-.card-title {
-  font-size: clamp(22px, 2.5vw, 29px);
-  margin: 24px 0 12px;
-  color: var(--style-color);
-}
-.style-flavor {
-  text-align: center;
-  font-size: 11px;
-  color: #b9c8db;
-  margin: 11px 0;
-}
-.style-rank {
-  text-align: center;
-  font-size: 12px;
-  color: var(--card-accent);
-  margin: 13px 0 6px;
-  letter-spacing: 0.06em;
-}
-.card-abilities .dna-heading h3,
-.ability strong {
-  color: var(--style-color);
-}
-.ability progress::-webkit-progress-value {
-  background: linear-gradient(90deg, var(--style-secondary), var(--style-color));
-}
-.ability progress::-moz-progress-bar {
-  background: var(--style-color);
-}
-.collectible-card {
-  background:
-    radial-gradient(
-      ellipse at 12% 5%,
-      color-mix(in srgb, var(--style-color) 14%, transparent),
-      transparent 65%
-    ),
-    linear-gradient(135deg, var(--style-backdrop), #101722 65%, #1d2635);
-}
-@media (max-width: 380px) {
-  .style-art-frame {
-    height: 160px;
-  }
-  .card-title {
-    font-size: 21px;
+    padding-inline: 10px;
   }
 }
 </style>

@@ -191,7 +191,7 @@ describe('profile rendering', () => {
     const data = demoPlayer();
     const html = await renderToString(createSSRApp(PlayerCard, { data }));
     for (const text of [
-      'TFT PLAYER PROFILE',
+      'TFT / PLAYER ARCHIVE',
       '나의 플레이어',
       'DIAMOND',
       '67 LP',

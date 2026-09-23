@@ -209,7 +209,8 @@ describe('twelve descriptive archetypes', () => {
     const model = profileCardModel(data);
     const html = await renderToString(createSSRApp(PlayerCard, { data }));
     expect(html).toContain(`data-style="${model.profile.key}"`);
-    expect(html).toContain(model.art.illustrationTheme);
+    if (model.artwork.src) expect(html).toContain(model.artwork.src);
+    else expect(html).toContain(model.art.illustrationTheme);
     expect(html).toContain(model.profile.name);
     for (const tag of model.profile.tags) expect(html).toContain(tag);
   });
