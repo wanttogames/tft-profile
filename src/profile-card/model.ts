@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-=======
 import { championArtworkKey, getProfileArtwork, STYLE_ART } from './artwork';
->>>>>>> c1bba7b (hero-art-init)
 import { preferenceAnalysis } from '../analytics/preferences';
 import { profileLink } from '../utils/profileLink';
 import { playStyleIllustration } from '../analytics/playStyleIllustration';
@@ -51,15 +48,12 @@ export function profileCardModel(data: PlayerData) {
   const championKey = championArtworkKey(units[0]?.id, units[0]?.name);
   const artStyle = STYLE_ART[profile.key];
   return {
-<<<<<<< HEAD
-=======
     artwork: {
       championKey,
       artStyle,
       src: getProfileArtwork(championKey, artStyle),
       name: units[0]?.name ?? '',
     },
->>>>>>> c1bba7b (hero-art-init)
     shareUrl: profileLink(
       data.account.gameName || '플레이어',
       data.account.tagLine || 'KR1',

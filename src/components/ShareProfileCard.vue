@@ -5,35 +5,23 @@ import { loadProfileArtwork } from '../profile-card/artwork';
 import { renderShareCard } from '../profile-card/renderShareCard';
 const props = defineProps<{ model: ProfileCardModel }>();
 const canvas = ref<HTMLCanvasElement>(),
-<<<<<<< HEAD
-  format = ref<'landscape' | 'portrait'>('landscape');
-=======
   format = ref<'landscape' | 'portrait'>('portrait');
->>>>>>> c1bba7b (hero-art-init)
 const error = ref(''),
   message = ref(''),
   readyFile = ref<File>(),
   canShare = ref(false),
   manualCopy = ref(false);
 let generation = 0;
-<<<<<<< HEAD
-function draw() {
-=======
 async function draw() {
->>>>>>> c1bba7b (hero-art-init)
   const current = ++generation;
   readyFile.value = undefined;
   try {
     if (!canvas.value) return;
-<<<<<<< HEAD
-    renderShareCard(canvas.value, props.model, format.value);
-=======
     const model = props.model;
     const selectedFormat = format.value;
     const artwork = await loadProfileArtwork(model.artwork.src);
     if (current !== generation || !canvas.value) return;
     renderShareCard(canvas.value, model, selectedFormat, artwork);
->>>>>>> c1bba7b (hero-art-init)
     canvas.value.toBlob((blob) => {
       if (blob && current === generation)
         readyFile.value = new File([blob], 'tft-profile-card.png', { type: 'image/png' });

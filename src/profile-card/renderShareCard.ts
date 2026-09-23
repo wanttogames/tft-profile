@@ -6,14 +6,9 @@ export function renderShareCard(
   canvas: HTMLCanvasElement,
   model: ProfileCardModel,
   format: 'portrait' | 'landscape' = 'portrait',
-<<<<<<< HEAD
-) {
-  if (format === 'landscape') return renderLandscape(canvas, model);
-=======
   artwork?: HTMLImageElement | null,
 ) {
   if (format === 'landscape') return renderLandscape(canvas, model, artwork);
->>>>>>> c1bba7b (hero-art-init)
   canvas.width = 900;
   canvas.height = 1500;
   const c = canvas.getContext('2d');
@@ -147,15 +142,11 @@ export function renderShareCard(
 }
 
 /** 1200×630 community card. Only measured data, no invented profile level. */
-<<<<<<< HEAD
-function renderLandscape(canvas: HTMLCanvasElement, model: ProfileCardModel) {
-=======
 function renderLandscape(
   canvas: HTMLCanvasElement,
   model: ProfileCardModel,
   artwork?: HTMLImageElement | null,
 ) {
->>>>>>> c1bba7b (hero-art-init)
   canvas.width = 1200;
   canvas.height = 630;
   const c = canvas.getContext('2d');
@@ -170,25 +161,6 @@ function renderLandscape(
   c.strokeStyle = model.theme.accent;
   c.lineWidth = 3;
   c.strokeRect(10, 10, 1180, 610);
-<<<<<<< HEAD
-  c.save();
-  c.translate(20, 104);
-  c.scale(0.65, 0.65);
-  for (const p of styleArtPaths(model.art)) {
-    const shape = new Path2D(p.d);
-    c.globalAlpha = p.opacity;
-    if (p.fill !== 'none') {
-      c.fillStyle = p.fill;
-      c.fill(shape);
-    }
-    if (p.stroke) {
-      c.strokeStyle = p.stroke;
-      c.lineWidth = 1.6;
-      c.stroke(shape);
-    }
-  }
-  c.restore();
-=======
   if (artwork) drawHero(c, artwork, 25, 108, 380, 155);
   else {
     c.save();
@@ -209,7 +181,6 @@ function renderLandscape(
     }
     c.restore();
   }
->>>>>>> c1bba7b (hero-art-init)
   text('TFT PROFILE / ' + model.edition, 38, 48, 16, model.theme.accent);
   text(model.name + ' ' + model.tag, 38, 90, 30, '#fff', 1110);
   text(model.rank + ' · ' + model.lp + ' LP', 40, 284, 20, model.theme.accent, 350);
@@ -244,11 +215,7 @@ function renderLandscape(
     text(label, 440, 392 + i * 34, 16, '#aabcce', 140);
     text(rows[0]?.name ?? '기록 부족', 590, 392 + i * 34, 20, '#e8effa', 550);
   });
-<<<<<<< HEAD
-  // Flavor is decorative, while the measured summary remains visible above.
-=======
   // Actual measured summary, wrapped for Korean text.
->>>>>>> c1bba7b (hero-art-init)
   c.font = '600 16px \"Noto Sans KR\", sans-serif';
   let summary = '',
     summaryY = 497;
@@ -265,8 +232,6 @@ function renderLandscape(
   text('tft-profile.pages.dev', 40, 593, 20, model.theme.accent);
   text('기록은 변해도, 나의 플레이는 남는다', 800, 593, 15, '#98adc5', 350);
 }
-<<<<<<< HEAD
-=======
 
 /** Cover crop, aligned slightly above center to retain the character face. */
 function drawHero(
@@ -323,4 +288,3 @@ function drawFrameOrnaments(
     c.restore();
   }
 }
->>>>>>> c1bba7b (hero-art-init)
