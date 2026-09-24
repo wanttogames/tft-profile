@@ -25,7 +25,7 @@ it('rejects invalid views/sorts/pages and invalid minimum', async () => {
   vi.stubEnv('MIN_SAMPLE_SIZE', '0');
   expect((await handler(new Request('https://test/api'))).status).toBe(503);
 });
-it('queries aggregate views only, applies min sample, lower average first, pagination, cache and no patch filter', async () => {
+it('queries aggregate views only, applies min sample, lower average first, pagination, cache and server-owned patch scope', async () => {
   const mock = vi.fn(async (input: string) =>
     Response.json(
       input.includes('summary')
@@ -64,7 +64,13 @@ it('queries aggregate views only, applies min sample, lower average first, pagin
         u.includes('offset=50'),
     ),
   ).toBe(true);
-  expect(urls.every((u) => u.includes('/mv_tft_') && !u.includes('patch'))).toBe(true);
+  expect(
+    urls.every(
+      (u) =>
+        (u.includes('/mv_tft_') || u.includes('/v_tft_meta_current_summary')) &&
+        !u.includes('tft_matches'),
+    ),
+  ).toBe(true);
   expect(JSON.stringify(body)).not.toContain('sb_secret_test');
   await handler(req);
   expect(mock).toHaveBeenCalledTimes(2);
@@ -80,13 +86,13 @@ it('reports missing migration and prevents upstream body leaks', async () => {
   expect(text).toContain('008');
   expect(text).not.toContain('private body');
 });
-it('renders meta controls, all-period scope, cohort caveat and low-is-good guidance', async () => {
+it('renders meta controls, current-patch scope, cohort caveat and low-is-good guidance', async () => {
   const html = await renderToString(createSSRApp(MetaDashboard));
   for (const text of [
     '아이템',
     '챔피언',
     '특성',
-    '패치 구분 없음',
+    '현재 패치 확인 대기',
     '평균 등수는 낮을수록',
     'Challenger',
   ])

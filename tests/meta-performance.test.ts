@@ -42,7 +42,12 @@ it.each(['item', 'champion', 'trait'])(
       assets: {},
     });
     const paths = fetch.mock.calls.map(([u]) => new URL(u));
-    expect(paths.every((u) => u.pathname.includes('/mv_tft_'))).toBe(true);
+    expect(
+      paths.every(
+        (u) =>
+          u.pathname.includes('/mv_tft_') || u.pathname.endsWith('/v_tft_meta_current_summary'),
+      ),
+    ).toBe(true);
     expect(paths[0]!.searchParams.get('order')).toContain('win_rate.desc');
     expect(paths[0]!.searchParams.get('offset')).toBe('100');
     expect(paths[0]!.searchParams.get('limit')).toBe('51');
@@ -168,7 +173,9 @@ it('refresh is one batch RPC with no retries, including failure', async () => {
   expect(fetch).toHaveBeenCalledTimes(1);
 });
 it('RPC busy is explicit, malformed results fail', async () => {
-  expect(await refreshMetaStats({ request: vi.fn(async () => ({ status: 'busy' })) })).toBe('busy');
+  expect(
+    await refreshMetaStats({ request: vi.fn(async () => ({ status: 'busy' })) }),
+  ).toMatchObject({ status: 'busy' });
   await expect(refreshMetaStats({ request: vi.fn(async () => null) })).rejects.toThrow();
 });
 it('migration is additive with server-only refresh and unique concurrent indexes', () => {
@@ -183,4 +190,24 @@ it('migration is additive with server-only refresh and unique concurrent indexes
   );
   expect(sql).toContain('SET search_path = pg_catalog, pg_temp');
   expect(sql).toContain('pg_try_advisory_xact_lock');
+});
+
+it('suppresses legacy aggregates before the first scoped refresh', async () => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (url: string) =>
+      Response.json(
+        url.includes('summary')
+          ? [{ ...summary, scope_ready: false, current_patch: null, retention_days: 7 }]
+          : Array.from({ length: 51 }, () => ({ item_name: 'legacy', sample_count: 100 })),
+      ),
+    ),
+  );
+  const response = await handler(new Request('https://test/api'), env());
+  expect(await response.json()).toMatchObject({
+    rows: [],
+    hasMore: false,
+    assets: {},
+    summary: { scope_ready: false },
+  });
 });

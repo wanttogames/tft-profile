@@ -8,6 +8,7 @@ function raw(id = 'KR_1') {
   const r = structuredClone(fixture);
   r.metadata.match_id = id;
   r.info.queue_id = 1100;
+  r.info.game_datetime = Date.now() - 60000;
   r.info.game_version = 'TFT Unreal Version ?.?.?.?';
   return r;
 }

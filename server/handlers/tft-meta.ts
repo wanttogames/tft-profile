@@ -81,7 +81,7 @@ export default async function handler(
         });
         throw Error(
           r.status === 404
-            ? '메타 집계가 없습니다. Supabase에 008 SQL을 적용해 주세요.'
+            ? '메타 집계가 없습니다. Supabase에 008 및 009 SQL을 적용해 주세요.'
             : `메타 DB 조회 실패 (HTTP ${r.status}). 서버 연결과 View 권한을 확인해 주세요.`,
         );
       }
@@ -118,15 +118,13 @@ export default async function handler(
       });
       const [raw, summary] = await Promise.all([
         summaryOnly ? Promise.resolve([]) : query(`${views[kind]}?${params}`, 'db-query'),
-        query(
-          'mv_tft_meta_summary?select=match_count,participant_count,player_count,latest_collected_at',
-          'summary-query',
-        ),
+        query('v_tft_meta_current_summary?select=*', 'summary-query'),
       ]);
       if (!summary[0]) throw Error('메타 요약 View를 확인해 주세요.');
       // SQL pairs and item totals both count distinct participant boards.
       // Preserve the response contract using the same materialized distinct-board totals.
-      const rows = (raw.slice(0, 50) as MetaRow[]).map((row) => ({
+      const scopedRaw = (summary[0] as MetaData['summary']).scope_ready === false ? [] : raw;
+      const rows = (scopedRaw.slice(0, 50) as MetaRow[]).map((row) => ({
         ...row,
         ...(row.common_champions
           ? {
@@ -156,7 +154,7 @@ export default async function handler(
         rows,
         summary: summary[0] as MetaData['summary'],
         minSampleSize: min,
-        hasMore: raw.length > 50,
+        hasMore: scopedRaw.length > 50,
         page,
         assets,
       };

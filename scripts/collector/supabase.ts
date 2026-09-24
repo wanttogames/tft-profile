@@ -82,11 +82,9 @@ export class Store {
   async existing(ids: string[]) {
     const found = new Set<string>();
     for (let i = 0; i < ids.length; i += 50) {
-      const query = new URLSearchParams({
-        select: 'match_id',
-        match_id: `in.(${ids.slice(i, i + 50).join(',')})`,
+      const rows = await this.request('rpc/tft_meta_existing_matches', 'POST', {
+        ids: ids.slice(i, i + 50),
       });
-      const rows = await this.request(`tft_matches?${query}`);
       if (!Array.isArray(rows)) throw new Error('Invalid existing match response');
       for (const row of rows) {
         if (typeof row.match_id !== 'string') throw new Error('Invalid existing match row');

@@ -53,6 +53,7 @@ describe('best-effort patch extraction', () => {
         const raw = structuredClone(fixture);
         raw.metadata.match_id = id;
         raw.info.queue_id = 1100;
+        raw.info.game_datetime = Date.now() - 60000;
         raw.info.game_version = versions[Number(id.slice(3)) - 1]!;
         return raw;
       }),

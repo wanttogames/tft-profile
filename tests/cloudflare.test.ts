@@ -79,7 +79,7 @@ it('routes all meta kinds and reads secrets from request bindings; summary queri
   const r = await summary({ request: new Request('https://test/api/meta/summary'), env });
   expect(await r.json()).toMatchObject({ match_count: 301 });
   expect(requests.length - before).toBe(1);
-  expect(requests.at(-1)).toContain('v_tft_meta_summary');
+  expect(requests.at(-1)).toContain('v_tft_meta_current_summary');
   expect(requests.some((x) => x.includes('v_tft_champion_stats'))).toBe(true);
   expect(requests.some((x) => x.includes('v_tft_trait_stats'))).toBe(true);
 });

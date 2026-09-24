@@ -257,7 +257,7 @@ Skipped만 있으면 성공 종료합니다. Failed matches 또는 Failed player
 
 경로: Vue → `/.netlify/functions/tft-meta` → Supabase 집계 View. 원본 경기/참가자 배열을 브라우저에서 집계하지 않습니다. 서버에서 최소 표본과 정렬을 적용하고 50개씩 페이지 처리합니다. 평균 등수는 오름차순, 나머지 정렬은 내림차순입니다. 응답은 최대 약 60초 캐시되므로 수집 직후 반영에 잠시 걸릴 수 있습니다.
 
-대상은 **전체 수집 기간의 완료된 KR queue_id=1100 경기 전체 참가자**입니다. Challenger/Grandmaster는 수집을 시작한 래더이며, 상대 참가자의 티어를 동일하다고 가정하지 않습니다. patch=NULL도 정상 포함합니다. 여러 세트/패치가 합쳐진 과거 관측 통계이므로 현재 패치의 덱 강도나 아이템 효과로 해석하지 않습니다.
+대상은 **확인된 현재 패치 · 최근 7일의 완료된 KR queue_id=1100 경기 전체 참가자**입니다. Challenger/Grandmaster는 수집을 시작한 래더이며, 상대 참가자의 티어를 동일하다고 가정하지 않습니다. patch=NULL은 메타 통계에서 제외합니다. 패치 확인 전에는 빈 통계를 표시합니다. 관측 통계이며 특정 아이템의 효과를 인과적으로 증명하지 않습니다.
 
 - `v_tft_item_stats`: participant_id + item_name DISTINCT. DB의 UNIQUE(match_id,puuid) 때문에 요청한 (match_id,puuid,item_name) 기준과 같습니다. 중복 장착으로 가중하지 않습니다.
 - `v_tft_champion_stats`: 참가자별 같은 character_id를 한 표본으로 집계합니다. avg_star_level은 동일 보드 내 해당 챔피언들의 tier를 먼저 평균한 뒤 보드별 평균을 냅니다.
@@ -285,3 +285,8 @@ Skipped만 있으면 성공 종료합니다. Failed matches 또는 Failed player
 ## 메타 사전 집계 (008)
 
 메타 API는 Materialized View를 조회합니다. 배포 전 Supabase SQL Editor에서 `supabase/migrations/008_tft_meta_performance.sql`을 실행하세요. Collector 종료 후 서비스 전용 RPC로 한 번 갱신합니다. [진단·성능·적용 안내](docs/meta-performance.md)를 참고하세요. 환경변수와 API 계약은 유지합니다.
+
+
+### 메타 용량 및 현재 패치 (009)
+
+[운영/최초 적용 안내](docs/meta-retention.md)를 따르세요. 009 migration은 원본을 삭제하지 않습니다. Collector의 동일한 patch parser → 최근 최대 100경기, 최소 30경기·90% 확인 → 현재 패치 최근 7일 MV 갱신 및 검증 → 별도 RPC 200경기씩 정리 순서입니다. 최초 API 검증 후 SQL로 cleanup_enabled를 켜야 합니다. game_version이 불명확하면 패치를 추측하지 않으며 빈 메타 + 7일 보관만 가능합니다. 개인 프로필 캐시와 메타 보관 정책은 분리되어 있습니다.

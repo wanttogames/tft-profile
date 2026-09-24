@@ -17,6 +17,7 @@ function match(id = 'KR_1') {
   const raw = structuredClone(fixture);
   raw.metadata.match_id = id;
   raw.info.queue_id = 1100;
+  raw.info.game_datetime = Date.now() - 60000;
   return raw;
 }
 describe('collector normalization', () => {

@@ -22,6 +22,11 @@ export interface MetaData {
     participant_count: number;
     player_count: number;
     latest_collected_at: string | null;
+    current_patch?: string | null;
+    retention_days?: number;
+    as_of?: string | null;
+    refreshed_at?: string | null;
+    scope_ready?: boolean;
   };
   minSampleSize: number;
   hasMore: boolean;

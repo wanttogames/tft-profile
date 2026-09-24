@@ -77,6 +77,12 @@ export async function collectMatches(
         );
         patchWarningLogged = true;
       }
+      // Do not reinsert expired games after retention cleanup (Riot lists may include them).
+      if (payload.game_datetime < Date.now() - 7 * 86400000) {
+        result['Skipped matches']++;
+        console.log('[MATCH SKIPPED]', { matchId: id, reason: 'Outside 7-day match window' });
+        continue;
+      }
       stage = 'Supabase atomic save';
       const status = await saveNormalizedMatch(store, payload);
       if (status === 'saved') {

@@ -50,7 +50,14 @@ const percent = (v: number) => (v * 100).toFixed(1) + '%';
   <section class="meta-area">
     <p class="eyebrow">COLLECTED BOARDS / META</p>
     <h1>상위 래더의 최종 보드<span>.</span></h1>
-    <p class="muted">전체 수집 기간 · 패치 구분 없음 · KR 랭크 경기</p>
+    <p class="muted">
+      {{
+        data?.summary.current_patch
+          ? `현재 패치 ${data.summary.current_patch}`
+          : '현재 패치 확인 대기'
+      }}
+      · 최근 7일 · KR 랭크 경기
+    </p>
     <p class="small muted">
       사용 빈도와 성적은 다른 지표입니다. 표본이 많은 항목부터 비교한 뒤 평균 등수(낮을수록 좋음),
       TOP4, 1위율을 함께 확인하세요. 최종 보드에서 관찰한 통계이며 특정 선택이 성적의 원인임을
@@ -66,6 +73,10 @@ const percent = (v: number) => (v * 100).toFixed(1) + '%';
         {{ tab.name }}
       </a>
     </nav>
+    <p v-if="data && !data.summary.current_patch" class="muted">
+      경기 데이터에서 패치가 충분히 확인되면 통계가 표시됩니다. 패치가 불명확한 경기는 집계하지
+      않습니다.
+    </p>
     <div class="stats-grid meta-summary" aria-live="polite">
       <section class="stat">
         <span>수집 Match</span
