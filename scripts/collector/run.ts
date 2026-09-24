@@ -1,3 +1,4 @@
+import { refreshMetaStats } from './refreshMeta';
 import { logError } from './diagnostics';
 import { config } from './config';
 import { RiotClient } from './riot';
@@ -12,6 +13,12 @@ try {
   const result = await collectMatches(riot, store, players, observed, settings.matchesPerPlayer);
   for (const [name, value] of Object.entries(result)) console.log(`${name}: ${value}`);
   process.exitCode = collectorExitCode(result);
+  try {
+    await refreshMetaStats(store);
+  } catch (error) {
+    logError(error, { stage: 'Meta aggregate refresh (saved matches preserved)' });
+    process.exitCode = 1;
+  }
 } catch (error) {
   logError(error, { stage: 'Collector setup / player collection / existing match lookup' });
   process.exitCode = 1;

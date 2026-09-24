@@ -9,8 +9,8 @@ export class Store {
     protect(secret);
     protect(url);
   }
-  async request(path: string, method = 'GET', body?: unknown): Promise<unknown> {
-    for (let attempt = 0; attempt < 3; attempt++) {
+  async request(path: string, method = 'GET', body?: unknown, attempts = 3): Promise<unknown> {
+    for (let attempt = 0; attempt < attempts; attempt++) {
       let response: Response;
       try {
         response = await this.fetcher(`${this.url.replace(/\/$/, '')}/rest/v1/${path}`, {
@@ -27,7 +27,7 @@ export class Store {
           signal: AbortSignal.timeout(30000),
         });
       } catch (error) {
-        if (attempt === 2)
+        if (attempt === attempts - 1)
           throw new StageError('SUPABASE ERROR', {
             stage: 'Supabase request',
             table: path.split('?')[0],
@@ -49,7 +49,7 @@ export class Store {
           });
         }
       }
-      if ((response.status >= 500 || response.status === 429) && attempt < 2) {
+      if ((response.status >= 500 || response.status === 429) && attempt < attempts - 1) {
         await sleep(
           Math.max(1000 * 2 ** attempt, Number(response.headers.get('retry-after') ?? 0) * 1000),
         );

@@ -1,18 +1,19 @@
+import { metaErrorBody, metaErrorCategory } from '../lib/metaDiagnostics';
 import type { ApiEnv } from '../env';
 import { loadMetaAssets } from '../lib/staticData';
 import type { MetaData, MetaKind, MetaRow, MetaSort } from '../../src/types/meta';
 const views = {
-  item: 'v_tft_item_stats',
-  champion: 'v_tft_champion_stats',
-  trait: 'v_tft_trait_stats',
+  item: 'mv_tft_item_stats',
+  champion: 'mv_tft_champion_stats',
+  trait: 'mv_tft_trait_stats',
 };
 const ids = { item: 'item_name', champion: 'character_id', trait: 'trait_name' };
 const cache = new Map<string, { expires: number; data: MetaData }>();
 const pending = new Map<string, Promise<MetaData>>();
-const reply = (body: unknown, status = 200) =>
+const reply = (body: unknown, status = 200, ttl = 60) =>
   Response.json(body, {
     status,
-    headers: { 'Cache-Control': status === 200 ? 'public,max-age=60' : 'no-store' },
+    headers: { 'Cache-Control': status === 200 ? `public,max-age=${ttl}` : 'no-store' },
   });
 export default async function handler(
   request: Request,
@@ -55,26 +56,58 @@ export default async function handler(
   }
   const key = `${base}|${min}|${kind}|${sort}|${page}|${summaryOnly}|${env.TFT_STATIC_VERSION}`;
   const hit = cache.get(key);
-  if (hit && hit.expires > Date.now()) return reply(hit.data);
-  async function query(path: string) {
-    const r = await fetch(`${base}/rest/v1/${path}`, {
-      headers: {
-        apikey: secret!,
-        ...(secret!.startsWith('eyJ') ? { Authorization: `Bearer ${secret}` } : {}),
-      },
-      signal: AbortSignal.timeout(12000),
-    });
-    if (!r.ok)
-      throw new Error(
-        r.status === 404
-          ? '메타 View가 없습니다. Supabase에 005 SQL을 적용해 주세요.'
-          : `메타 DB 조회 실패 (HTTP ${r.status}). 서버 연결과 View 권한을 확인해 주세요.`,
-      );
-    const rows: unknown = await r.json();
-    if (!Array.isArray(rows)) throw Error('메타 응답 형식을 확인할 수 없습니다.');
-    return rows;
+  if (hit && hit.expires > Date.now()) {
+    console.info(`[meta] ${kind} cache-hit`);
+    return reply(hit.data, 200, Math.max(0, Math.floor((hit.expires - Date.now()) / 1000)));
+  }
+  async function query(path: string, stage: string) {
+    const started = Date.now();
+    try {
+      const r = await fetch(`${base}/rest/v1/${path}`, {
+        headers: {
+          apikey: secret!,
+          ...(secret!.startsWith('eyJ') ? { Authorization: `Bearer ${secret}` } : {}),
+        },
+        signal: AbortSignal.timeout(12000),
+      });
+      if (!r.ok) {
+        const body = await r.text();
+        console.error('[meta][supabase-error]', {
+          path: path.split('?')[0],
+          status: r.status,
+          elapsed: Date.now() - started,
+          category: metaErrorCategory(body),
+          body: metaErrorBody(body, [secret, env.RIOT_API_KEY]),
+        });
+        throw Error(
+          r.status === 404
+            ? '메타 집계가 없습니다. Supabase에 008 SQL을 적용해 주세요.'
+            : `메타 DB 조회 실패 (HTTP ${r.status}). 서버 연결과 View 권한을 확인해 주세요.`,
+        );
+      }
+      const rows: unknown = await r.json();
+      if (!Array.isArray(rows)) throw Error('메타 응답 형식을 확인할 수 없습니다.');
+      return rows;
+    } catch (error) {
+      if (
+        !(error instanceof Error && error.message.startsWith('메타 DB 조회 실패')) &&
+        !(error instanceof Error && error.message.startsWith('메타 집계가 없습니다'))
+      )
+        console.error('[meta][query-error]', {
+          path: path.split('?')[0],
+          elapsed: Date.now() - started,
+          body: metaErrorBody(
+            error instanceof Error ? `${error.name}: ${error.message}` : String(error),
+            [secret, env.RIOT_API_KEY],
+          ),
+        });
+      throw error;
+    } finally {
+      console.info(`[meta] ${kind} ${stage} ${Date.now() - started}ms`);
+    }
   }
   if (!pending.has(key)) {
+    const started = Date.now();
     const job = (async (): Promise<MetaData> => {
       const params = new URLSearchParams({
         select: '*',
@@ -84,14 +117,15 @@ export default async function handler(
         limit: '51',
       });
       const [raw, summary] = await Promise.all([
-        summaryOnly ? Promise.resolve([]) : query(`${views[kind]}?${params}`),
+        summaryOnly ? Promise.resolve([]) : query(`${views[kind]}?${params}`, 'db-query'),
         query(
-          'v_tft_meta_summary?select=match_count,participant_count,player_count,latest_collected_at',
+          'mv_tft_meta_summary?select=match_count,participant_count,player_count,latest_collected_at',
+          'summary-query',
         ),
       ]);
       if (!summary[0]) throw Error('메타 요약 View를 확인해 주세요.');
       // SQL pairs and item totals both count distinct participant boards.
-      // Compute here so existing 005 views also provide the ratio without a DB migration.
+      // Preserve the response contract using the same materialized distinct-board totals.
       const rows = (raw.slice(0, 50) as MetaRow[]).map((row) => ({
         ...row,
         ...(row.common_champions
@@ -111,18 +145,28 @@ export default async function handler(
         ...(row.common_champions ?? []).map((c) => ({ kind: 'unit' as const, id: c.id })),
         ...(row.common_items ?? []).map((c) => ({ kind: 'item' as const, id: c.id })),
       ]);
+      const assetStarted = Date.now();
+      let assets: MetaData['assets'];
+      try {
+        assets = requests.length ? await loadMetaAssets(requests, env.TFT_STATIC_VERSION) : {};
+      } finally {
+        console.info(`[meta] ${kind} asset-load ${Date.now() - assetStarted}ms`);
+      }
       const data: MetaData = {
         rows,
         summary: summary[0] as MetaData['summary'],
         minSampleSize: min,
         hasMore: raw.length > 50,
         page,
-        assets: requests.length ? await loadMetaAssets(requests, env.TFT_STATIC_VERSION) : {},
+        assets,
       };
       if (cache.size >= 64) cache.delete(cache.keys().next().value!);
       cache.set(key, { expires: Date.now() + 60000, data });
       return data;
-    })().finally(() => pending.delete(key));
+    })().finally(() => {
+      pending.delete(key);
+      console.info(`[meta] ${kind} total ${Date.now() - started}ms`);
+    });
     pending.set(key, job);
   }
   try {

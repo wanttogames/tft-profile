@@ -64,7 +64,7 @@ it('queries aggregate views only, applies min sample, lower average first, pagin
         u.includes('offset=50'),
     ),
   ).toBe(true);
-  expect(urls.every((u) => u.includes('/v_tft_') && !u.includes('patch'))).toBe(true);
+  expect(urls.every((u) => u.includes('/mv_tft_') && !u.includes('patch'))).toBe(true);
   expect(JSON.stringify(body)).not.toContain('sb_secret_test');
   await handler(req);
   expect(mock).toHaveBeenCalledTimes(2);
@@ -77,7 +77,7 @@ it('reports missing migration and prevents upstream body leaks', async () => {
   const r = await handler(new Request('https://test/api?kind=trait'));
   expect(r.status).toBe(503);
   const text = await r.text();
-  expect(text).toContain('005');
+  expect(text).toContain('008');
   expect(text).not.toContain('private body');
 });
 it('renders meta controls, all-period scope, cohort caveat and low-is-good guidance', async () => {

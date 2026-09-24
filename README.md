@@ -280,3 +280,8 @@ Skipped만 있으면 성공 종료합니다. Failed matches 또는 Failed player
 ## 제공 Hero Artwork 및 티어 프레임
 
 프로필 카드의 나르/아리 제공 아트, 자동 파일 인덱스, fallback 및 자산 확장 방법은 [Hero Artwork 안내](docs/profile-hero-artwork.md)를 참고하세요. 신규 AI 이미지 생성 없이 제공된 8개 WebP를 사용합니다.
+
+
+## 메타 사전 집계 (008)
+
+메타 API는 Materialized View를 조회합니다. 배포 전 Supabase SQL Editor에서 `supabase/migrations/008_tft_meta_performance.sql`을 실행하세요. Collector 종료 후 서비스 전용 RPC로 한 번 갱신합니다. [진단·성능·적용 안내](docs/meta-performance.md)를 참고하세요. 환경변수와 API 계약은 유지합니다.
