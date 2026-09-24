@@ -122,12 +122,13 @@ describe('supplied profile artwork', () => {
     vi.stubGlobal('Image', FakeImage);
     expect(await loadProfileArtwork('/profile-art/ahri/stable.webp')).toBeInstanceOf(FakeImage);
   });
-  it.each(['portrait', 'landscape'] as const)(
+  it.each(['gnar', 'ahri'] as const)(
     'draws actual hero pixels in %s exports and keeps labels',
-    (format) => {
+    (champion) => {
       const texts: string[] = [];
       const c = {
         createLinearGradient: () => ({ addColorStop: vi.fn() }),
+        createRadialGradient: () => ({ addColorStop: vi.fn() }),
         fillText: (s: string) => texts.push(s),
         fillRect: vi.fn(),
         strokeRect: vi.fn(),
@@ -144,11 +145,12 @@ describe('supplied profile artwork', () => {
       vi.stubGlobal('Path2D', class {});
       const image = { naturalWidth: 1086, naturalHeight: 1448 } as HTMLImageElement;
       const model = profileCardModel(demoPlayer());
-      renderShareCard(canvas as unknown as HTMLCanvasElement, model, format, image);
+      model.artwork.championKey = champion;
+      renderShareCard(canvas as unknown as HTMLCanvasElement, model, image);
       expect(c.drawImage).toHaveBeenCalledTimes(1);
       expect(c.drawImage.mock.calls[0]![0]).toBe(image);
       expect(texts.join(' ')).toContain(model.profile.name);
-      expect(texts).toContain('보드 완성도');
+      expect(texts).toContain('PLAY DNA / 자체 분석');
     },
   );
 });

@@ -1,54 +1,47 @@
 import { styleArtPaths } from './styleArt';
-import { scoreLabels, type ProfileCardModel } from './model';
-/** Same-origin supplied artwork (or built-in vector fallback), no remote image dependencies.
- * This exact canvas is both the visible share preview and downloadable image. */
+import type { ProfileCardModel } from './model';
+import { SHARE_LAYOUT, heroCoverCrop, topShareScores } from './shareLayout';
+/** Dedicated collectible export. Never lays out the detailed profile component.
+ * Hero bounds are fixed at 55% of total height regardless of text or missing data. */
 export function renderShareCard(
   canvas: HTMLCanvasElement,
   model: ProfileCardModel,
-  format: 'portrait' | 'landscape' = 'portrait',
   artwork?: HTMLImageElement | null,
 ) {
-  if (format === 'landscape') return renderLandscape(canvas, model, artwork);
-  canvas.width = 900;
-  canvas.height = 1500;
+  canvas.width = SHARE_LAYOUT.width;
+  canvas.height = SHARE_LAYOUT.height;
   const c = canvas.getContext('2d');
   if (!c) throw new Error('이 브라우저에서는 카드 이미지를 만들 수 없습니다.');
   const { accent, secondary } = model.theme;
-  const text = (s: string, x: number, y: number, size = 24, color = '#eaf0fa', max = 748) => {
+  const text = (s: string, x: number, y: number, size = 26, color = '#eaf2ff', max = 930) => {
     c.fillStyle = color;
     c.font = `600 ${size}px "Noto Sans KR", sans-serif`;
     c.fillText(s, x, y, max);
   };
-  const line = (y: number) => {
-    c.fillStyle = accent + '44';
-    c.fillRect(65, y, 770, 1);
-  };
-  const gradient = c.createLinearGradient(0, 0, 900, 1500);
-  gradient.addColorStop(0, model.art.backdrop);
-  gradient.addColorStop(0.6, '#101726');
-  gradient.addColorStop(1, '#222035');
-  c.fillStyle = gradient;
-  c.fillRect(0, 0, 900, 1500);
-  const frame = c.createLinearGradient(0, 0, 900, 1500);
-  frame.addColorStop(0, accent);
-  frame.addColorStop(0.5, secondary);
-  frame.addColorStop(1, accent);
-  c.strokeStyle = frame;
-  c.lineWidth = 8;
-  c.strokeRect(18, 18, 864, 1464);
-  c.lineWidth = 1;
-  c.strokeRect(32, 32, 836, 1436);
-  drawFrameOrnaments(c, 900, 1500, accent, secondary);
-  text('TFT / PLAYER ARCHIVE', 65, 82, 19, accent);
-  text(model.edition, 590, 82, 17, accent, 240);
-  text(model.name, 65, 150, 43, '#ffffff', 750);
-  text(model.tag, 65, 186, 22, '#abbcd2');
-  if (artwork) drawHero(c, artwork, 45, 205, 810, 350);
-  else {
-    // Shared vector scene used by the main SVG card: no network/CORS dependencies.
+  c.fillStyle = '#0a1220';
+  c.fillRect(0, 0, canvas.width, canvas.height);
+  const hero = SHARE_LAYOUT.hero;
+  if (artwork) {
+    const crop = heroCoverCrop(
+      artwork.naturalWidth,
+      artwork.naturalHeight,
+      model.artwork.championKey,
+    );
+    c.drawImage(
+      artwork,
+      crop.sx,
+      crop.sy,
+      crop.sw,
+      crop.sh,
+      hero.x,
+      hero.y,
+      hero.width,
+      hero.height,
+    );
+  } else {
     c.save();
-    c.translate(65, 220);
-    c.scale(770 / 600, 770 / 600);
+    c.translate(hero.x, hero.y + hero.height / 2 - hero.width / 5);
+    c.scale(hero.width / 600, hero.width / 600);
     for (const layer of styleArtPaths(model.art)) {
       const path = new Path2D(layer.d);
       c.globalAlpha = layer.opacity;
@@ -64,205 +57,62 @@ export function renderShareCard(
     }
     c.restore();
   }
-  c.textAlign = 'center';
-  text(model.art.illustrationTheme, 450, 556, 19, model.art.color);
-  text(`${model.rank}  /  ${model.lp} LP`, 450, 596, 25, accent);
-  text('「' + model.profile.name + '」', 450, 646, 34, model.art.color, 740);
-  text(
-    model.profile.tags.join('  ·  ') || '성향 태그는 표본 확보 후 표시',
-    450,
-    686,
-    19,
-    '#c5d1e1',
-  );
-  text(model.sample, 450, 728, 18, '#a8b7cd');
-  c.textAlign = 'left';
-  c.save();
-  c.translate(0, 220);
-  line(540);
-  model.stats.forEach((s, i) => {
-    const x = 80 + i * 260;
-    text(s.label, x, 580, 18, '#a8b7cd');
-    text(s.value, x, 625, 37);
-  });
-  line(650);
-  text('PLAY DNA / 자체 분석', 65, 689, 18, accent);
-  Object.entries(scoreLabels).forEach(([key, label], i) => {
-    const x = 65 + (i % 2) * 398,
-      y = 732 + Math.floor(i / 2) * 55;
-    const score = model.scores?.[key as keyof typeof scoreLabels];
-    text(label, x, y, 20);
-    text(String(score ?? '—'), x + 304, y, 24, accent, 60);
-    c.fillStyle = '#334055';
-    c.fillRect(x, y + 12, 348, 4);
-    if (score != null) {
-      c.fillStyle = accent;
-      c.fillRect(x, y + 12, (348 * score) / 100, 4);
-    }
-  });
-  line(929);
-  text('선호 챔피언 TOP 3', 65, 966, 18, accent);
-  text(
-    model.units.map((r) => r.name + (r.enough ? '' : '*')).join(' · ') || '기록 부족',
-    65,
-    1000,
-    23,
-  );
-  text('선호 활성 특성 TOP 3', 65, 1037, 18, accent);
-  text(
-    model.traits.map((r) => r.name + (r.enough ? '' : '*')).join(' · ') || '기록 부족',
-    65,
-    1071,
-    23,
-  );
-  const comment = model.profile.comment;
-  const wrap = (size: number) => {
-    c.font = `600 ${size}px "Noto Sans KR", sans-serif`;
-    const rows: string[] = [];
-    let row = '';
-    for (const character of comment) {
-      if (c.measureText(row + character).width > 750) {
-        rows.push(row);
-        row = '';
-      }
-      row += character;
-    }
-    if (row) rows.push(row);
-    return rows;
-  };
-  let size = 20,
-    rows = wrap(size);
-  while (rows.length * (size + 5) > 90 && size > 12) {
-    size--;
-    rows = wrap(size);
-  }
-  rows.forEach((row, i) => text(row, 65, 1110 + i * (size + 5), size, '#c6d1e1'));
-  text('TFT PROFILE ANALYZER  ·  자체 지표 / * 표본 부족', 65, 1230, 16, '#a8b7cd');
-  c.restore();
-}
-
-/** 1200×630 community card. Only measured data, no invented profile level. */
-function renderLandscape(
-  canvas: HTMLCanvasElement,
-  model: ProfileCardModel,
-  artwork?: HTMLImageElement | null,
-) {
-  canvas.width = 1200;
-  canvas.height = 630;
-  const c = canvas.getContext('2d');
-  if (!c) throw new Error('카드 이미지를 만들 수 없습니다.');
-  const text = (s: string, x: number, y: number, size = 20, color = '#e8effa', max = 1050) => {
-    c.fillStyle = color;
-    c.font = `600 ${size}px "Noto Sans KR", sans-serif`;
-    c.fillText(s, x, y, max);
-  };
-  c.fillStyle = '#101824';
-  c.fillRect(0, 0, 1200, 630);
-  c.strokeStyle = model.theme.accent;
-  c.lineWidth = 3;
-  c.strokeRect(10, 10, 1180, 610);
-  if (artwork) drawHero(c, artwork, 25, 108, 380, 155);
-  else {
-    c.save();
-    c.translate(20, 104);
-    c.scale(0.65, 0.65);
-    for (const p of styleArtPaths(model.art)) {
-      const shape = new Path2D(p.d);
-      c.globalAlpha = p.opacity;
-      if (p.fill !== 'none') {
-        c.fillStyle = p.fill;
-        c.fill(shape);
-      }
-      if (p.stroke) {
-        c.strokeStyle = p.stroke;
-        c.lineWidth = 1.6;
-        c.stroke(shape);
-      }
-    }
-    c.restore();
-  }
-  text('TFT PROFILE / ' + model.edition, 38, 48, 16, model.theme.accent);
-  text(model.name + ' ' + model.tag, 38, 90, 30, '#fff', 1110);
-  text(model.rank + ' · ' + model.lp + ' LP', 40, 284, 20, model.theme.accent, 350);
-  text(model.profile.name, 40, 325, 28, model.art.color, 350);
-  text(model.profile.tags.join(' · ') || '분석 표본 부족', 40, 360, 15, '#c1cee0', 350);
-  text(model.sample, 40, 395, 17, '#b2c1d8', 350);
-  text('평균 최종 레벨 ' + (model.averageLevel?.toFixed(1) ?? '—'), 40, 427, 17, '#b2c1d8', 350);
-  model.stats.forEach((s, i) => {
-    const x = 440 + i * 235;
-    text(s.label, x, 157, 18, '#aabcce');
-    text(s.value, x, 204, 39, model.art.color, 210);
-  });
-  Object.entries(scoreLabels).forEach(([key, label], i) => {
-    const x = 440 + (i % 4) * 178,
-      y = 259 + Math.floor(i / 4) * 59;
-    text(label, x, y, 16, '#aabcce', 165);
-    text(
-      String(model.scores?.[key as keyof typeof scoreLabels] ?? '—'),
-      x,
-      y + 27,
-      23,
-      model.art.color,
-      165,
-    );
-  });
-  const groups = [
-    ['대표 챔피언', model.units],
-    ['대표 아이템', model.items],
-    ['대표 활성 특성', model.traits],
-  ] as const;
-  groups.forEach(([label, rows], i) => {
-    text(label, 440, 392 + i * 34, 16, '#aabcce', 140);
-    text(rows[0]?.name ?? '기록 부족', 590, 392 + i * 34, 20, '#e8effa', 550);
-  });
-  // Actual measured summary, wrapped for Korean text.
-  c.font = '600 16px \"Noto Sans KR\", sans-serif';
-  let summary = '',
-    summaryY = 497;
-  for (const char of model.profile.comment) {
-    if (c.measureText(summary + char).width > 1110) {
-      text(summary, 40, summaryY, 16, '#d7e1ef', 1110);
-      summary = '';
-      summaryY += 21;
-    }
-    summary += char;
-  }
-  text(summary, 40, summaryY, 16, '#d7e1ef', 1110);
-  text('자체 분석 · 최종 보드 기준 / 공식 실력·백분위가 아닙니다', 40, 559, 15, '#98adc5');
-  text('tft-profile.pages.dev', 40, 593, 20, model.theme.accent);
-  text('기록은 변해도, 나의 플레이는 남는다', 800, 593, 15, '#98adc5', 350);
-}
-
-/** Cover crop, aligned slightly above center to retain the character face. */
-function drawHero(
-  c: CanvasRenderingContext2D,
-  image: HTMLImageElement,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-) {
-  const scale = Math.max(w / image.naturalWidth, h / image.naturalHeight);
-  const sw = w / scale,
-    sh = h / scale;
-  c.drawImage(
-    image,
-    (image.naturalWidth - sw) / 2,
-    (image.naturalHeight - sh) * 0.35,
-    sw,
-    sh,
-    x,
-    y,
-    w,
-    h,
-  );
-  const fade = c.createLinearGradient(0, y, 0, y + h);
-  fade.addColorStop(0, '#10172633');
-  fade.addColorStop(0.65, '#10172600');
-  fade.addColorStop(1, '#101726');
+  const vignette = c.createRadialGradient(540, 540, 100, 540, 540, 640);
+  vignette.addColorStop(0, '#0a122000');
+  vignette.addColorStop(0.65, '#0a12200a');
+  vignette.addColorStop(1, '#0a1220bb');
+  c.fillStyle = vignette;
+  c.fillRect(hero.x, hero.y, hero.width, hero.height);
+  const fade = c.createLinearGradient(0, hero.y, 0, hero.y + hero.height);
+  fade.addColorStop(0, '#0a122066');
+  fade.addColorStop(0.12, '#0a122000');
+  fade.addColorStop(0.78, '#0a122000');
+  fade.addColorStop(1, '#0a1220');
   c.fillStyle = fade;
-  c.fillRect(x, y, w, h);
+  c.fillRect(hero.x, hero.y, hero.width, hero.height);
+  c.strokeStyle = accent;
+  c.lineWidth = 4;
+  c.strokeRect(18, 18, 1044, 1314);
+  c.strokeStyle = secondary;
+  c.lineWidth = 1;
+  c.strokeRect(27, 27, 1026, 1296);
+  drawFrameOrnaments(c, 1080, 1350, accent, secondary);
+  text(model.name, 65, 91, 48, '#ffffff', 940);
+  text(model.tag, 67, 134, 27, '#b8cce2', 420);
+  c.textAlign = 'right';
+  text(`${model.rank} / ${model.lp} LP`, 1015, 151, 30, accent, 610);
+  c.textAlign = 'center';
+  if (model.artwork.name) text(model.artwork.name, 540, 901, 24, '#d9e7f8', 750);
+  text('「' + model.profile.name + '」', 540, 981, 43, accent, 930);
+  model.stats.forEach((s, i) => {
+    const x = 214 + i * 326;
+    text(s.label, x, 1048, 24, '#b8cce2', 290);
+    text(s.value, x, 1107, 49, '#ffffff', 290);
+  });
+  c.fillStyle = accent + '44';
+  c.fillRect(75, 1140, 930, 1);
+  text('PLAY DNA / 자체 분석', 540, 1180, 21, '#afc4dd', 900);
+  const scores = topShareScores(model.scores);
+  if (!scores.length) text('분석 표본 부족', 540, 1232, 28, '#b8cce2');
+  scores.forEach((s, i) =>
+    text(
+      `${s.label}  ${s.value}`,
+      scores.length === 1 ? 540 : 300 + i * 480,
+      1232,
+      31,
+      accent,
+      430,
+    ),
+  );
+  text('TFT PROFILE ANALYZER', 540, 1298, 23, accent, 900);
+  // Keep synthetic previews visibly labelled without adding real-profile detail sections.
+  if (model.edition.startsWith('DEMO')) {
+    c.textAlign = 'left';
+    text('DEMO · 가상 데이터', 65, 55, 16, '#b8cce2', 400);
+  }
+  c.textAlign = 'left';
 }
+
 function drawFrameOrnaments(
   c: CanvasRenderingContext2D,
   w: number,

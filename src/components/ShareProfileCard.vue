@@ -4,8 +4,7 @@ import type { ProfileCardModel } from '../profile-card/model';
 import { loadProfileArtwork } from '../profile-card/artwork';
 import { renderShareCard } from '../profile-card/renderShareCard';
 const props = defineProps<{ model: ProfileCardModel }>();
-const canvas = ref<HTMLCanvasElement>(),
-  format = ref<'landscape' | 'portrait'>('portrait');
+const canvas = ref<HTMLCanvasElement>();
 const error = ref(''),
   message = ref(''),
   readyFile = ref<File>(),
@@ -18,10 +17,9 @@ async function draw() {
   try {
     if (!canvas.value) return;
     const model = props.model;
-    const selectedFormat = format.value;
     const artwork = await loadProfileArtwork(model.artwork.src);
     if (current !== generation || !canvas.value) return;
-    renderShareCard(canvas.value, model, selectedFormat, artwork);
+    renderShareCard(canvas.value, model, artwork);
     canvas.value.toBlob((blob) => {
       if (blob && current === generation)
         readyFile.value = new File([blob], 'tft-profile-card.png', { type: 'image/png' });
@@ -36,11 +34,14 @@ onMounted(async () => {
   await document.fonts.ready;
   draw();
 });
-watch([() => props.model, format], () => {
-  error.value = '';
-  message.value = '';
-  draw();
-});
+watch(
+  () => props.model,
+  () => {
+    error.value = '';
+    message.value = '';
+    draw();
+  },
+);
 function save() {
   if (!readyFile.value) return;
   const url = URL.createObjectURL(readyFile.value),
@@ -89,13 +90,7 @@ async function share() {
 <template>
   <div class="share-layout">
     <div class="share-preview">
-      <label
-        >카드 비율
-        <select v-model="format">
-          <option value="landscape">SNS 가로형 · 1200 × 630</option>
-          <option value="portrait">수집형 세로 · 900 × 1500</option>
-        </select></label
-      >
+      <p class="share-size">수집형 공유 카드 · 1080 × 1350 · 4:5</p>
       <canvas
         ref="canvas"
         role="img"
@@ -140,25 +135,16 @@ async function share() {
 .share-preview {
   min-width: 0;
 }
-.share-preview label {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
-  font-size: 13px;
-  margin-bottom: 18px;
-}
-.share-preview select {
-  background: #172435;
-  color: #d9e6f4;
-  padding: 8px;
-  border: 1px solid #3e4c60;
-  border-radius: 6px;
+.share-size {
+  font-size: 12px;
+  color: #a9bdd6;
+  margin-bottom: 14px;
 }
 .share-preview canvas {
   display: block;
-  width: 100%;
-  max-height: 750px;
+  width: min(100%, 600px);
+  margin-inline: auto;
+  aspect-ratio: 4 / 5;
   object-fit: contain;
   height: auto;
   box-shadow: 0 10px 35px #0004;

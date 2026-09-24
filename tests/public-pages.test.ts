@@ -53,9 +53,11 @@ describe('public pages and sharing', () => {
     expect(model.averageLevel).toBeGreaterThan(0);
     expect(model.shareUrl).toContain('demo=1');
   });
-  it('renders a 1200x630 card including item, statistics and source attribution', () => {
+  it('renders a focused 4:5 card with statistics and branding', () => {
     const texts: string[] = [];
     const c = {
+      createLinearGradient: () => ({ addColorStop: vi.fn() }),
+      createRadialGradient: () => ({ addColorStop: vi.fn() }),
       measureText: (s: string) => ({ width: s.length * 16 }),
       fillText: (s: string) => texts.push(s),
       fillRect: vi.fn(),
@@ -70,12 +72,12 @@ describe('public pages and sharing', () => {
     const canvas = { width: 0, height: 0, getContext: () => c };
     vi.stubGlobal('Path2D', class {});
     const model = profileCardModel(demoPlayer());
-    renderShareCard(canvas as unknown as HTMLCanvasElement, model, 'landscape');
-    expect([canvas.width, canvas.height]).toEqual([1200, 630]);
-    expect(texts).toContain(model.items[0]!.name);
-    expect(texts).toContain('tft-profile.pages.dev');
-    expect(texts).toContain(model.profile.name);
-    expect(texts).toContain(model.sample);
+    renderShareCard(canvas as unknown as HTMLCanvasElement, model);
+    expect([canvas.width, canvas.height]).toEqual([1080, 1350]);
+    expect(texts).not.toContain(model.items[0]!.name);
+    expect(texts).toContain('TFT PROFILE ANALYZER');
+    expect(texts.join()).toContain(model.profile.name);
+    expect(texts).not.toContain(model.sample);
   });
   it('retains one AdSense head script, no slots, and a sitemap matching all public routes', () => {
     const html = readFileSync('index.html', 'utf8');
