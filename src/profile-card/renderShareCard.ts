@@ -1,26 +1,77 @@
 import { styleArtPaths } from './styleArt';
 import type { ProfileCardModel } from './model';
 import { SHARE_LAYOUT, heroCoverCrop, topShareScores } from './shareLayout';
-/** Dedicated collectible export. Never lays out the detailed profile component.
- * Hero bounds are fixed at 55% of total height regardless of text or missing data. */
+/** Independent 5:7 trading-card export. Hero occupies 47.6% of the canvas.
+ * All information below has dedicated bounds; prose cannot resize or clip the artwork. */
 export function renderShareCard(
   canvas: HTMLCanvasElement,
   model: ProfileCardModel,
   artwork?: HTMLImageElement | null,
 ) {
-  canvas.width = SHARE_LAYOUT.width;
-  canvas.height = SHARE_LAYOUT.height;
+  const { width: w, height: h, hero } = SHARE_LAYOUT;
+  canvas.width = w;
+  canvas.height = h;
   const c = canvas.getContext('2d');
-  if (!c) throw new Error('이 브라우저에서는 카드 이미지를 만들 수 없습니다.');
+  if (!c) throw Error('이 브라우저에서는 카드 이미지를 만들 수 없습니다.');
   const { accent, secondary } = model.theme;
-  const text = (s: string, x: number, y: number, size = 26, color = '#eaf2ff', max = 930) => {
+  // Fit at a readable font size; unusually long strings ellipsize, never distort horizontally.
+  const text = (source: string, x: number, y: number, size = 26, color = '#eaf2ff', max = 930) => {
+    let value = source,
+      fontSize = size;
+    const font = () => {
+      c.font = `600 ${fontSize}px "Noto Sans KR", sans-serif`;
+    };
+    font();
+    while (fontSize > size * 0.72 && c.measureText(value).width > max) {
+      fontSize -= 1;
+      font();
+    }
+    if (c.measureText(value).width > max) {
+      const chars = Array.from(value);
+      while (chars.length && c.measureText(chars.join('') + '…').width > max) chars.pop();
+      value = chars.join('') + '…';
+    }
     c.fillStyle = color;
-    c.font = `600 ${size}px "Noto Sans KR", sans-serif`;
-    c.fillText(s, x, y, max);
+    c.fillText(value, x, y);
   };
-  c.fillStyle = '#0a1220';
-  c.fillRect(0, 0, canvas.width, canvas.height);
-  const hero = SHARE_LAYOUT.hero;
+  const panel = (x: number, y: number, width: number, height: number) => {
+    c.fillStyle = '#0c1c2c';
+    c.fillRect(x, y, width, height);
+    c.strokeStyle = secondary + '88';
+    c.lineWidth = 1;
+    c.strokeRect(x, y, width, height);
+  };
+  c.fillStyle = '#09121e';
+  c.fillRect(0, 0, w, h);
+  const foil = c.createLinearGradient(0, 0, w, h);
+  foil.addColorStop(0, secondary + '55');
+  foil.addColorStop(0.45, '#0a122000');
+  foil.addColorStop(1, accent + '22');
+  c.fillStyle = foil;
+  c.fillRect(0, 0, w, h);
+  c.strokeStyle = accent;
+  c.lineWidth = 4;
+  c.strokeRect(20, 20, w - 40, h - 40);
+  c.strokeStyle = secondary;
+  c.lineWidth = 1;
+  c.strokeRect(32, 32, w - 64, h - 64);
+  drawFrameOrnaments(c, w, h, accent, secondary);
+  // Name bar and tier. No invented player levels or rarity scores.
+  panel(58, 48, 964, 138);
+  text('TFT / PLAYER ARCHIVE', 78, 77, 17, accent, 440);
+  c.textAlign = 'right';
+  text(model.edition, 1000, 77, 17, accent, 460);
+  c.textAlign = 'left';
+  text(model.name, 78, 128, 46, '#ffffff', 916);
+  text(model.tag, 78, 165, 25, '#b9cedd', 400);
+  c.textAlign = 'right';
+  text(`${model.rank} / ${model.lp} LP`, 1000, 165, 25, accent, 490);
+  c.textAlign = 'left';
+  // Dedicated art window. Cover crop retains champion-specific focal points.
+  c.save();
+  c.beginPath();
+  c.rect(hero.x, hero.y, hero.width, hero.height);
+  c.clip();
   if (artwork) {
     const crop = heroCoverCrop(
       artwork.naturalWidth,
@@ -57,59 +108,70 @@ export function renderShareCard(
     }
     c.restore();
   }
-  const vignette = c.createRadialGradient(540, 540, 100, 540, 540, 640);
-  vignette.addColorStop(0, '#0a122000');
-  vignette.addColorStop(0.65, '#0a12200a');
-  vignette.addColorStop(1, '#0a1220bb');
+  const vignette = c.createRadialGradient(
+    w / 2,
+    hero.y + hero.height / 2,
+    120,
+    w / 2,
+    hero.y + hero.height / 2,
+    620,
+  );
+  vignette.addColorStop(0, '#09121e00');
+  vignette.addColorStop(0.65, '#09121e10');
+  vignette.addColorStop(1, '#09121eaa');
   c.fillStyle = vignette;
   c.fillRect(hero.x, hero.y, hero.width, hero.height);
   const fade = c.createLinearGradient(0, hero.y, 0, hero.y + hero.height);
-  fade.addColorStop(0, '#0a122066');
-  fade.addColorStop(0.12, '#0a122000');
-  fade.addColorStop(0.78, '#0a122000');
-  fade.addColorStop(1, '#0a1220');
+  fade.addColorStop(0, '#09121e33');
+  fade.addColorStop(0.18, '#09121e00');
+  fade.addColorStop(0.7, '#09121e00');
+  fade.addColorStop(1, '#09121ee6');
   c.fillStyle = fade;
   c.fillRect(hero.x, hero.y, hero.width, hero.height);
+  c.restore();
   c.strokeStyle = accent;
-  c.lineWidth = 4;
-  c.strokeRect(18, 18, 1044, 1314);
-  c.strokeStyle = secondary;
+  c.lineWidth = 2;
+  c.strokeRect(hero.x, hero.y, hero.width, hero.height);
+  c.strokeStyle = secondary + '66';
   c.lineWidth = 1;
-  c.strokeRect(27, 27, 1026, 1296);
-  drawFrameOrnaments(c, 1080, 1350, accent, secondary);
-  text(model.name, 65, 91, 48, '#ffffff', 940);
-  text(model.tag, 67, 134, 27, '#b8cce2', 420);
-  c.textAlign = 'right';
-  text(`${model.rank} / ${model.lp} LP`, 1015, 151, 30, accent, 610);
+  c.strokeRect(hero.x + 7, hero.y + 7, hero.width - 14, hero.height - 14);
   c.textAlign = 'center';
-  if (model.artwork.name) text(model.artwork.name, 540, 901, 24, '#d9e7f8', 750);
-  text('「' + model.profile.name + '」', 540, 981, 43, accent, 930);
-  model.stats.forEach((s, i) => {
-    const x = 214 + i * 326;
-    text(s.label, x, 1048, 24, '#b8cce2', 290);
-    text(s.value, x, 1107, 49, '#ffffff', 290);
+  if (model.artwork.name)
+    text(model.artwork.name, w / 2, hero.y + hero.height - 22, 22, '#dfeefa', 830);
+  // Style plaque, tags, three stats and two signature DNA scores only.
+  text('「' + model.profile.name + '」', w / 2, 984, 41, accent, 916);
+  text(model.profile.tags.slice(0, 3).join('  ·  '), w / 2, 1025, 23, '#adc4d7', 900);
+  model.stats.forEach((stat, i) => {
+    const x = 58 + i * 326;
+    panel(x, 1054, 312, 130);
+    text(stat.label, x + 156, 1092, 23, '#a5bdd1', 275);
+    text(stat.value, x + 156, 1157, 48, '#ffffff', 275);
   });
-  c.fillStyle = accent + '44';
-  c.fillRect(75, 1140, 930, 1);
-  text('PLAY DNA / 자체 분석', 540, 1180, 21, '#afc4dd', 900);
+  c.textAlign = 'left';
+  text('PLAY DNA / TOP 2', 78, 1220, 18, accent, 450);
+  c.textAlign = 'right';
+  text('자체 분석', 1002, 1220, 18, '#90a9c1', 230);
   const scores = topShareScores(model.scores);
-  if (!scores.length) text('분석 표본 부족', 540, 1232, 28, '#b8cce2');
-  scores.forEach((s, i) =>
-    text(
-      `${s.label}  ${s.value}`,
-      scores.length === 1 ? 540 : 300 + i * 480,
-      1232,
-      31,
-      accent,
-      430,
-    ),
-  );
-  text('TFT PROFILE ANALYZER', 540, 1298, 23, accent, 900);
-  // Keep synthetic previews visibly labelled without adding real-profile detail sections.
-  if (model.edition.startsWith('DEMO')) {
+  c.textAlign = 'center';
+  if (!scores.length) text('분석 표본 부족', w / 2, 1275, 28, '#b8cce2');
+  scores.forEach((s, i) => {
+    const x = scores.length === 1 ? 304 : 78 + i * 490;
     c.textAlign = 'left';
-    text('DEMO · 가상 데이터', 65, 55, 16, '#b8cce2', 400);
-  }
+    text(s.label, x, 1263, 27, '#e0ecf6', 300);
+    c.textAlign = 'right';
+    text(String(s.value), x + 432, 1263, 35, accent, 110);
+    c.fillStyle = '#263b50';
+    c.fillRect(x, 1283, 432, 5);
+    c.fillStyle = accent;
+    c.fillRect(x, 1283, (432 * Math.max(0, Math.min(100, s.value))) / 100, 5);
+  });
+  c.fillStyle = secondary + '66';
+  c.fillRect(78, 1321, 924, 1);
+  c.textAlign = 'center';
+  // Flavor is the existing short style concept, not the long statistical explanation.
+  text(model.art.shortFlavorText, w / 2, 1363, 24, '#bdd0e0', 906);
+  text('TFT PROFILE ANALYZER', w / 2, 1432, 24, accent, 900);
+  text('tft-profile.pages.dev', w / 2, 1466, 18, '#92abc0', 800);
   c.textAlign = 'left';
 }
 

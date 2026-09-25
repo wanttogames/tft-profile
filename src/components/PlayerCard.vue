@@ -40,6 +40,8 @@ const sharing = ref(false);
             <span v-for="tag in card.profile.tags" :key="tag">{{ tag }}</span
             ><span v-if="!card.profile.tags.length">성향 태그는 표본 확보 후 표시</span>
           </div>
+        </div>
+        <div class="card-abilities">
           <p class="card-sample">{{ card.sample }}</p>
           <div class="collectible-stats">
             <div v-for="s in card.stats" :key="s.label">
@@ -47,8 +49,6 @@ const sharing = ref(false);
               ><strong>{{ s.value }}</strong>
             </div>
           </div>
-        </div>
-        <div class="card-abilities">
           <div class="dna-heading">
             <h3>PLAY DNA</h3>
             <span>자체 분석 · 0–100</span>
@@ -70,29 +70,29 @@ const sharing = ref(false);
           <p v-if="!card.scores" class="small muted">
             분석 표본 부족 · 점수는 5경기 이상 필요합니다.
           </p>
-          <div class="signature-grid">
-            <div>
-              <h3 aria-label="선호 챔피언 TOP 3">선호 챔피언 <span>TOP 3</span></h3>
-              <div class="signature-list">
-                <div v-for="r in card.units" :key="r.id" class="signature">
-                  <AssetBadge :id="r.id" :asset="r.asset" /><small
-                    >{{ r.count }}경기{{ r.enough ? '' : ' · 표본 부족' }}</small
-                  >
-                </div>
-                <p v-if="!card.units.length" class="small muted">기록 부족</p>
-              </div>
+        </div>
+      </div>
+      <div class="signature-grid">
+        <div>
+          <h3 aria-label="선호 챔피언 TOP 3">선호 챔피언 <span>TOP 3</span></h3>
+          <div class="signature-list">
+            <div v-for="r in card.units" :key="r.id" class="signature">
+              <AssetBadge :id="r.id" :asset="r.asset" /><small
+                >{{ r.count }}경기{{ r.enough ? '' : ' · 표본 부족' }}</small
+              >
             </div>
-            <div>
-              <h3 aria-label="선호 활성 특성 TOP 3">선호 활성 특성 <span>TOP 3</span></h3>
-              <div class="signature-list">
-                <div v-for="r in card.traits" :key="r.id" class="signature">
-                  <AssetBadge :id="r.id" :asset="r.asset" /><small
-                    >{{ r.count }}경기{{ r.enough ? '' : ' · 표본 부족' }}</small
-                  >
-                </div>
-                <p v-if="!card.traits.length" class="small muted">기록 부족</p>
-              </div>
+            <p v-if="!card.units.length" class="small muted">기록 부족</p>
+          </div>
+        </div>
+        <div>
+          <h3 aria-label="선호 활성 특성 TOP 3">선호 활성 특성 <span>TOP 3</span></h3>
+          <div class="signature-list">
+            <div v-for="r in card.traits" :key="r.id" class="signature">
+              <AssetBadge :id="r.id" :asset="r.asset" /><small
+                >{{ r.count }}경기{{ r.enough ? '' : ' · 표본 부족' }}</small
+              >
             </div>
+            <p v-if="!card.traits.length" class="small muted">기록 부족</p>
           </div>
         </div>
       </div>
@@ -153,13 +153,41 @@ const sharing = ref(false);
   opacity: 0.7;
   margin: 22px 8px 0;
 }
-.collectible-body {
-  display: block;
+.collectible-card {
+  max-width: 1180px;
 }
+.collectible-body {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(24px, 3vw, 42px);
+  align-items: center;
+}
+.card-identity,
+.card-abilities {
+  min-width: 0;
+}
+.card-identity :deep(.hero-artwork) {
+  margin-inline: 0;
+  aspect-ratio: 1.15;
+}
+.card-identity :deep(.hero-artwork > svg) {
+  min-height: 0;
+}
+.card-identity :deep(.rank-badge strong) {
+  font-size: clamp(18px, 2.3vw, 25px);
+}
+.card-identity :deep(.rank-badge svg) {
+  width: 130px;
+  height: 65px;
+}
+.card-identity :deep(.rank-badge) {
+  margin-top: -44px;
+}
+
 .card-identity h2 {
-  font-size: clamp(27px, 5vw, 42px);
+  font-size: clamp(25px, 2.8vw, 37px);
   line-height: 1.2;
-  margin: 18px 8px 0;
+  margin: 0 0 12px;
   overflow-wrap: anywhere;
 }
 .card-identity h2 small {
@@ -170,7 +198,7 @@ const sharing = ref(false);
 }
 .card-title {
   text-align: center;
-  font-size: clamp(22px, 4vw, 32px);
+  font-size: clamp(21px, 2.3vw, 27px);
   margin: 12px 0;
   line-height: 1.4;
   color: #e9f5ff;
@@ -191,13 +219,13 @@ const sharing = ref(false);
   text-align: center;
   font-size: 12px;
   color: #adc3dd;
-  margin: 14px 0 20px;
+  margin: 0 0 14px;
 }
 .collectible-stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
-  margin: 18px 0 24px;
+  margin: 0 0 26px;
 }
 .collectible-stats > div {
   min-width: 0;
@@ -232,8 +260,8 @@ const sharing = ref(false);
   margin-top: 5px;
 }
 .card-abilities {
-  padding-top: 18px;
-  border-top: 1px solid var(--card-accent);
+  padding: 20px 0 20px 26px;
+  border-left: 1px solid color-mix(in srgb, var(--card-accent) 30%, transparent);
 }
 .dna-heading {
   display: flex;
@@ -293,7 +321,7 @@ const sharing = ref(false);
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
-  padding: 24px 0;
+  padding: 20px 0;
   margin-top: 24px;
   border-top: 1px solid color-mix(in srgb, var(--card-accent) 45%, transparent);
 }
@@ -346,7 +374,7 @@ const sharing = ref(false);
   overflow-wrap: anywhere;
 }
 .card-controls {
-  max-width: 760px;
+  max-width: 1180px;
   margin: 18px auto;
   display: flex;
   flex-wrap: wrap;
@@ -369,6 +397,23 @@ const sharing = ref(false);
   background: #101824;
   border: 1px solid #2c384d;
   border-radius: 12px;
+}
+@media (max-width: 760px) {
+  .collectible-body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+  .card-abilities {
+    border-left: 0;
+    border-top: 1px solid color-mix(in srgb, var(--card-accent) 30%, transparent);
+    padding: 22px 0 0;
+  }
+  .card-identity :deep(.hero-artwork) {
+    aspect-ratio: 1.1;
+  }
+  .card-identity h2 {
+    font-size: 30px;
+  }
 }
 @media (max-width: 520px) {
   .card-topline {

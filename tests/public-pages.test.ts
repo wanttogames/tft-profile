@@ -53,7 +53,7 @@ describe('public pages and sharing', () => {
     expect(model.averageLevel).toBeGreaterThan(0);
     expect(model.shareUrl).toContain('demo=1');
   });
-  it('renders a focused 4:5 card with statistics and branding', () => {
+  it('renders a focused 5:7 card with statistics and branding', () => {
     const texts: string[] = [];
     const c = {
       createLinearGradient: () => ({ addColorStop: vi.fn() }),
@@ -61,6 +61,9 @@ describe('public pages and sharing', () => {
       measureText: (s: string) => ({ width: s.length * 16 }),
       fillText: (s: string) => texts.push(s),
       fillRect: vi.fn(),
+      beginPath: vi.fn(),
+      rect: vi.fn(),
+      clip: vi.fn(),
       strokeRect: vi.fn(),
       save: vi.fn(),
       restore: vi.fn(),
@@ -73,7 +76,7 @@ describe('public pages and sharing', () => {
     vi.stubGlobal('Path2D', class {});
     const model = profileCardModel(demoPlayer());
     renderShareCard(canvas as unknown as HTMLCanvasElement, model);
-    expect([canvas.width, canvas.height]).toEqual([1080, 1350]);
+    expect([canvas.width, canvas.height]).toEqual([1080, 1512]);
     expect(texts).not.toContain(model.items[0]!.name);
     expect(texts).toContain('TFT PROFILE ANALYZER');
     expect(texts.join()).toContain(model.profile.name);

@@ -32,10 +32,10 @@ it('selects exactly the two highest available DNA values with stable ties', () =
     'flexibility',
   ]);
 });
-it('reserves 55% of a 4:5 card for hero without dependence on detail text', () => {
-  expect(SHARE_LAYOUT.width / SHARE_LAYOUT.height).toBe(0.8);
-  expect(SHARE_LAYOUT.hero.height / SHARE_LAYOUT.height).toBeGreaterThan(0.5);
-  expect(SHARE_LAYOUT.hero.height / SHARE_LAYOUT.height).toBeLessThan(0.6);
+it('reserves 45–50% of a 5:7 card for hero without dependence on detail text', () => {
+  expect(SHARE_LAYOUT.width / SHARE_LAYOUT.height).toBe(5 / 7);
+  expect(SHARE_LAYOUT.hero.height / SHARE_LAYOUT.height).toBeGreaterThanOrEqual(0.45);
+  expect(SHARE_LAYOUT.hero.height / SHARE_LAYOUT.height).toBeLessThanOrEqual(0.5);
 });
 it.each(['gnar', 'ahri', 'other'])('keeps %s cover crop in source bounds', (champion) => {
   for (const [w, h] of [

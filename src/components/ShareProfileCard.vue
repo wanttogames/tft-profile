@@ -3,6 +3,7 @@ import { ref, watch, onMounted } from 'vue';
 import type { ProfileCardModel } from '../profile-card/model';
 import { loadProfileArtwork } from '../profile-card/artwork';
 import { renderShareCard } from '../profile-card/renderShareCard';
+import { SHARE_LAYOUT } from '../profile-card/shareLayout';
 const props = defineProps<{ model: ProfileCardModel }>();
 const canvas = ref<HTMLCanvasElement>();
 const error = ref(''),
@@ -90,9 +91,14 @@ async function share() {
 <template>
   <div class="share-layout">
     <div class="share-preview">
-      <p class="share-size">수집형 공유 카드 · 1080 × 1350 · 4:5</p>
+      <p class="share-size">
+        수집형 공유 카드 · {{ SHARE_LAYOUT.width }} × {{ SHARE_LAYOUT.height }} · 5:7
+      </p>
       <canvas
         ref="canvas"
+        :width="SHARE_LAYOUT.width"
+        :height="SHARE_LAYOUT.height"
+        :style="{ aspectRatio: `${SHARE_LAYOUT.width} / ${SHARE_LAYOUT.height}` }"
         role="img"
         :aria-label="`${model.name} 공유 카드: ${model.profile.name}, ${model.stats.map((s) => s.label + ' ' + s.value).join(', ')}`"
       ></canvas>
@@ -142,12 +148,23 @@ async function share() {
 }
 .share-preview canvas {
   display: block;
-  width: min(100%, 600px);
+  width: min(100%, 450px);
   margin-inline: auto;
-  aspect-ratio: 4 / 5;
+  border-radius: 14px;
   object-fit: contain;
   height: auto;
   box-shadow: 0 10px 35px #0004;
+}
+.share-caption {
+  align-self: center;
+  min-width: 0;
+}
+@media (min-width: 900px) {
+  .share-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
+    align-items: center;
+    gap: 36px;
+  }
 }
 .share-caption h3 {
   font-size: 22px;

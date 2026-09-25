@@ -1,8 +1,8 @@
 import { scoreLabels, type ProfileCardModel } from './model';
 export const SHARE_LAYOUT = {
   width: 1080,
-  height: 1350,
-  hero: { x: 32, y: 184, width: 1016, height: 742 },
+  height: 1512,
+  hero: { x: 58, y: 206, width: 964, height: 720 },
 } as const;
 /** CSS object-position equivalent; tune each champion without changing analysis. */
 export const SHARE_ART_POSITION: Record<string, { x: number; y: number }> = {

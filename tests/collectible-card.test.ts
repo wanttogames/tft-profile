@@ -53,6 +53,9 @@ it('renders a self-contained portrait export with Korean labels and missing scor
     createRadialGradient: () => ({ addColorStop: vi.fn() }),
     fillText: (text: string) => drawn.push(text),
     fillRect: vi.fn(),
+    beginPath: vi.fn(),
+    rect: vi.fn(),
+    clip: vi.fn(),
     strokeRect: vi.fn(),
     save: vi.fn(),
     restore: vi.fn(),
@@ -71,7 +74,7 @@ it('renders a self-contained portrait export with Korean labels and missing scor
     },
   );
   renderShareCard(canvas as unknown as HTMLCanvasElement, profileCardModel(data));
-  expect([canvas.width, canvas.height]).toEqual([1080, 1350]);
+  expect([canvas.width, canvas.height]).toEqual([1080, 1512]);
   expect(drawn).toContain('분석 표본 부족');
   expect(drawn.filter((t) => t === '—')).toHaveLength(3);
   expect(drawn.join(' ')).toContain('가상 데이터');

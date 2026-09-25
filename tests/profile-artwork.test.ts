@@ -131,6 +131,9 @@ describe('supplied profile artwork', () => {
         createRadialGradient: () => ({ addColorStop: vi.fn() }),
         fillText: (s: string) => texts.push(s),
         fillRect: vi.fn(),
+        beginPath: vi.fn(),
+        rect: vi.fn(),
+        clip: vi.fn(),
         strokeRect: vi.fn(),
         save: vi.fn(),
         restore: vi.fn(),
@@ -150,7 +153,7 @@ describe('supplied profile artwork', () => {
       expect(c.drawImage).toHaveBeenCalledTimes(1);
       expect(c.drawImage.mock.calls[0]![0]).toBe(image);
       expect(texts.join(' ')).toContain(model.profile.name);
-      expect(texts).toContain('PLAY DNA / 자체 분석');
+      expect(texts).toContain('PLAY DNA / TOP 2');
     },
   );
 });
