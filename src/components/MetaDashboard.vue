@@ -78,7 +78,7 @@ const percent = (v: number) => (v * 100).toFixed(1) + '%';
       않습니다.
     </p>
     <p v-if="data?.summary.patch_source === 'official'" class="muted">
-      공식 패치 정보와 동일 세트·확정 이후 경기 시각으로 검증한 표본입니다. 원본 버전에서 직접
+      공식 패치 정보와 동일 세트·최초 등록 이후 경기 시각으로 검증한 표본입니다. 원본 버전에서 직접
       확인한 패치와 구분합니다.
     </p>
     <div class="stats-grid meta-summary" aria-live="polite">

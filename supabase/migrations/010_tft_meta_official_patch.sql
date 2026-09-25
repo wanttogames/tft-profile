@@ -108,7 +108,8 @@ BEGIN
        OR string_to_array(s.external_patch,'.')::int[]>string_to_array(s.current_patch,'.')::int[]) THEN
    changed:=s.current_patch IS DISTINCT FROM s.external_patch OR s.patch_source IS DISTINCT FROM 'official';
    s.current_patch:=s.external_patch; s.patch_source:='official'; s.external_set_number:=ext_set;
-   IF changed THEN s.confirmed_at:=started; s.external_boundary_at:=started; END IF;
+   -- Keep the first official registration boundary: the confirming cohort must remain in scope.
+   IF changed THEN s.confirmed_at:=started; END IF;
   END IF;
  END IF;
  UPDATE public.tft_meta_state SET current_patch=s.current_patch,confirmed_at=s.confirmed_at,

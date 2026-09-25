@@ -294,4 +294,4 @@ Skipped만 있으면 성공 종료합니다. Failed matches 또는 Failed player
 
 ### 원본 game_version이 불명확한 경우 (010)
 
-[공식 TFT 패치 fallback 적용 안내](docs/meta-official-fallback.md). 009 다음에 010을 적용하고 GitHub Actions의 **Refresh TFT meta** 또는 `npm run refresh:meta`를 실행합니다. 공식 정보를 확인한 뒤 새 경기 표본으로 확정하며, NULL patch 원본은 변경하지 않습니다. 배포 완료 시각을 알 수 없으므로 confirmed_at 이후 시작한 경기만 외부 판별 scope에 포함합니다.
+[공식 TFT 패치 fallback 적용 안내](docs/meta-official-fallback.md). 009 다음에 010을 적용하고 GitHub Actions의 **Refresh TFT meta** 또는 `npm run refresh:meta`를 실행합니다. 공식 정보를 확인한 뒤 새 경기 표본으로 확정하며, NULL patch 원본은 변경하지 않습니다. 외부 판별 scope는 공식 패치 최초 등록 시각(external_boundary_at) 이후 경기부터 포함합니다. 확정 시 confirmed_at만 갱신하고 이 경계는 유지합니다. 이미 010을 적용했다면 011을 추가 적용하세요.

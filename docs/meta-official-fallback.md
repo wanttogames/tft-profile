@@ -9,19 +9,19 @@
 3. 실제 페이지의 `__NEXT_DATA__`에서 TFT 제품, game_updates 분류, patch_notes 태그, 제목, 공식 article URL, 게시 시각을 함께 검증합니다. Data Dragon/LoL 버전은 사용하지 않습니다. 현재 번호 하드코딩은 없습니다.
 4. `register_tft_external_patch()`가 detected_patch, 출처 URL, 게시 시각, 검증 시각을 기록합니다. 원본 patch를 UPDATE하지 않습니다.
 5. 공식 정보를 처음 검증한 이후 시작한 경기 중 최소 30개가 모두 동일한 유효 set_number이고, 최신 판별 기록에 parseable patch가 없으면 외부 패치를 확정합니다. 세트 혼합, 세트 누락, 표본 부족, 오래된 공식 확인으로는 확정하지 않습니다.
-6. 게시 시각을 KR 적용 완료 시각으로 취급하지 않습니다. 실제 배포 완료 시각을 제공하지 않는 출처이므로 **최종 confirmed_at을 scope 시작 경계**로 사용합니다. 그 이전 NULL 경기는 현재 패치로 소급 포함하지 않습니다. 이는 공식 정보를 이용한 보수적인 scope 분류이며 개별 경기의 원본 버전 확인과는 다릅니다.
-7. NULL 경기 포함 조건은 현재 공식 패치와 동일한 external_patch, 확인된 set_number, confirmed_at 이후 경기 시각, 최근 7일, 최근 24시간 내 공식 source 재확인입니다. 원본에 patch가 있으면 기존 `patch=current_patch` 조건을 사용합니다.
-8. cleanup은 포함된 NULL 경기를 보존합니다. 외부 확정 직후 scope가 아직 0이면 `awaiting-matches`로 삭제를 보류합니다. 원본 데이터가 필요 이상 삭제되는 것을 막기 위한 조건입니다.
+6. 게시 시각을 KR 적용 완료 시각으로 취급하지 않습니다. 실제 배포 완료 시각을 제공하지 않는 출처이므로 **공식 패치 최초 등록 시각 external_boundary_at을 scope 시작 경계**로 사용합니다. 그 이전 NULL 경기는 현재 패치로 소급 포함하지 않습니다. 이는 공식 정보를 이용한 보수적인 scope 분류이며 개별 경기의 원본 버전 확인과는 다릅니다.
+7. NULL 경기 포함 조건은 현재 공식 패치와 동일한 external_patch, 확인된 set_number, external_boundary_at 이후 경기 시각, 최근 7일, 최근 24시간 내 공식 source 재확인입니다. 원본에 patch가 있으면 기존 `patch=current_patch` 조건을 사용합니다.
+8. cleanup은 포함된 NULL 경기를 보존합니다. 외부 확정 직후 scope가 예외적으로 0이면 `awaiting-matches`로 삭제를 보류합니다. 원본 데이터가 필요 이상 삭제되는 것을 막기 위한 조건입니다.
 
 ## 첫 적용에서 즉시 모든 과거 경기가 나오지 않는 이유
 
 공식 패치 노트 게시 시각은 실제 KR 적용 완료 시각이 아닙니다. 외부 source를 처음 조회한 직후 과거 7일의 NULL 경기를 전부 현재 패치로 간주하지 않습니다.
 
 - 첫 실행: 공식 정보 등록. detected_patch는 채워지고 current_patch는 표본을 기다릴 수 있습니다.
-- 첫 확인 이후 새 동일 세트 경기 최소 30개를 수집: current_patch 확정, confirmed_at 경계 설정.
-- 확정 시각 이후 시작한 경기가 수집된 다음 refresh: scope/통계 생성.
+- 첫 확인 이후 새 동일 세트 경기 최소 30개를 수집: current_patch 확정, confirmed_at만 갱신. external_boundary_at은 최초 등록값 유지.
+- 확정에 사용한 30경기는 같은 refresh에서 scope와 통계에 포함됩니다. 추가 수집을 기다리지 않습니다.
 
-따라서 수집 주기에 따라 두 번 이상의 batch가 필요할 수 있습니다. source 조회가 성공해도 표본/세트 검증은 생략하지 않습니다. 이는 “과거 경계를 추측하지 말 것” 요구를 우선한 동작입니다. 공식 적용 완료 시각이 별도로 검증되지 않은 상황에서 즉시 과거 경기까지 포함시키는 것은 안전하게 구현할 수 없습니다.
+최초 등록 이후 신규 표본이 모이면 확정과 집계를 한 번에 수행합니다. source 조회가 성공해도 표본/세트 검증은 생략하지 않습니다. 이는 “과거 경계를 추측하지 말 것” 요구를 우선한 동작입니다. 공식 적용 완료 시각이 별도로 검증되지 않은 상황에서 즉시 과거 경기까지 포함시키는 것은 안전하게 구현할 수 없습니다.
 
 같은 패치 재조회는 확정 경계를 이동시키지 않습니다. 새 공식 패치가 발견되면 새 경계/새 표본으로 확인합니다. 기존 확정은 일시적인 외부 조회 실패로 임의 삭제하지 않지만 24시간 재검증이 끊기면 NULL 경기 scope는 다음 refresh에서 비워집니다. 다음 정상 수집/refresh로 복구됩니다.
 
@@ -74,4 +74,13 @@ select
 공식 출처: https://teamfighttactics.leagueoflegends.com/en-us/news/tags/patch-notes/
 
 
-검증 결과: `npm test` 29개 파일/295개 테스트 통과, `npm run build` 성공(TypeScript + Vite + 9개 prerender), Cloudflare Functions 컴파일 성공. 실운영 DB는 변경하지 않았습니다. 별도 조회 파일: `supabase/diagnostics/meta_patch_status.sql`.
+검증 결과: `npm test` 29개 파일/296개 테스트 통과, `npm run build` 성공(TypeScript + Vite + 9개 prerender), Cloudflare Functions 컴파일 성공. 실운영 DB는 변경하지 않았습니다. 별도 조회 파일: `supabase/diagnostics/meta_patch_status.sql`.
+
+
+## 011 경계 유지 수정
+
+이미 010을 실행했다면 **011_tft_meta_keep_external_boundary.sql** 전체만 추가 실행하세요. 010을 다시 실행하면 기존 컬럼/함수 생성과 충돌할 수 있습니다. 그 후 `select public.refresh_tft_meta_stats();`를 실행합니다.
+
+신규 설치용 010도 동일하게 수정했습니다. View는 기존부터 external_boundary_at을 참조하며 cleanup도 동일 경계 이전만 제외하므로 조건 변경이 필요하지 않습니다. SQL 회귀 테스트에서 T1 등록 → 신규 30경기 → T2 확정 → T1 유지 → scope 30 → cleanup 후 30 유지 → 재등록/재확정 후 T1/T2 불변을 검증합니다.
+
+구버전이 이미 T1을 덮어쓴 경우 원래 T1을 DB에서 안전하게 복원할 근거가 없으므로 자동 소급 복구하지 않습니다. 011은 현재 저장된 경계를 보존하고 이후 확정에서의 덮어쓰기를 방지합니다.
