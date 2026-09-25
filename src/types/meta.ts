@@ -23,6 +23,9 @@ export interface MetaData {
     player_count: number;
     latest_collected_at: string | null;
     current_patch?: string | null;
+    patch_source?: 'match' | 'official' | null;
+    external_boundary_at?: string | null;
+    external_source_url?: string | null;
     retention_days?: number;
     as_of?: string | null;
     refreshed_at?: string | null;

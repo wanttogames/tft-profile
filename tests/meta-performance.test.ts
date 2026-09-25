@@ -163,9 +163,10 @@ it('successful and HTTP-error client calls clear timers', async () => {
   expect(vi.getTimerCount()).toBe(0);
 });
 it('refresh is one batch RPC with no retries, including failure', async () => {
-  const request = vi.fn(async () => ({ status: 'refreshed' }));
+  const request = vi.fn(async (_path: string) => ({ status: 'refreshed' }));
   await refreshMetaStats({ request });
-  expect(request).toHaveBeenCalledExactlyOnceWith('rpc/refresh_tft_meta_stats', 'POST', {}, 1);
+  expect(request).toHaveBeenCalledWith('rpc/refresh_tft_meta_stats', 'POST', {}, 1);
+  expect(request.mock.calls.filter((c) => c[0] === 'rpc/refresh_tft_meta_stats')).toHaveLength(1);
   const fetch = vi.fn(async () =>
     Response.json({ code: '57014', message: 'timeout' }, { status: 500 }),
   );

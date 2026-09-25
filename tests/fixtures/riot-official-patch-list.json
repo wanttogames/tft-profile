@@ -1,0 +1,28 @@
+{
+  "source": "https://teamfighttactics.leagueoflegends.com/en-us/news/tags/patch-notes/",
+  "retrievedAt": "2026-09-25",
+  "note": "Only actual article metadata retained. publishedAt is NOT a deployment timestamp.",
+  "cards": [
+    {
+      "title": "Teamfight Tactics patch 18.3",
+      "action": {
+        "type": "weblink",
+        "payload": {
+          "url": "/en-us/news/game-updates/teamfight-tactics-patch-18-3"
+        }
+      },
+      "publishedAt": "2026-09-22T18:00:00.000Z",
+      "product": {
+        "machineName": "teamfight_tactics"
+      },
+      "category": {
+        "machineName": "game_updates"
+      },
+      "tags": [
+        {
+          "machineName": "patch_notes"
+        }
+      ]
+    }
+  ]
+}

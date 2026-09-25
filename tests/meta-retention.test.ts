@@ -7,6 +7,7 @@ function store(fail?: string) {
     request: vi.fn(async (path: string) => {
       if (path === fail) throw Error('synthetic failure');
       if (path.includes('db_size')) return { bytes: 284 * 1024 ** 2 };
+      if (path.includes('patch_probe')) return { needsFallback: false } as never;
       if (path.includes('refresh')) return { status: 'refreshed', generation: 4 };
       return { status: 'cleaned', deletedMatches: 3 };
     }),
@@ -31,6 +32,7 @@ describe('retention orchestration', () => {
     expect(await maintainMeta(s, success)).toBe(false);
     expect(s.request.mock.calls.map((c) => c[0])).toEqual([
       'rpc/tft_meta_db_size',
+      'rpc/tft_meta_patch_probe',
       'rpc/refresh_tft_meta_stats',
       'rpc/cleanup_tft_meta_data',
       'rpc/tft_meta_db_size',
@@ -41,6 +43,7 @@ describe('retention orchestration', () => {
     const s = store();
     s.request.mockImplementation(async (path: string) => {
       if (path.includes('db_size')) return { bytes: 0 } as never;
+      if (path.includes('patch_probe')) return { needsFallback: false } as never;
       if (path.includes('refresh')) return { status: 'refreshed', generation: 4 };
       return { status: 'cleaned', deletedMatches: calls++ === 0 ? 200 : 3 };
     });

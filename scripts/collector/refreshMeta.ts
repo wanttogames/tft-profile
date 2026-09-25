@@ -1,4 +1,5 @@
 import type { Store } from './supabase';
+import { prepareOfficialPatch } from './officialPatch';
 export interface MetaRefreshResult {
   status: 'refreshed' | 'busy';
   generation?: number;
@@ -13,6 +14,7 @@ export interface MetaRefreshResult {
 /** One RPC per successful batch, without retries: a timed-out refresh may still run. */
 export async function refreshMetaStats(store: Pick<Store, 'request'>): Promise<MetaRefreshResult> {
   const started = Date.now();
+  await prepareOfficialPatch(store);
   const result = (await store.request(
     'rpc/refresh_tft_meta_stats',
     'POST',

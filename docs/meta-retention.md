@@ -1,5 +1,7 @@
 # 현재 패치 + 최근 7일 운영 (009)
 
+**010 적용 시 공식 패치 fallback이 추가됩니다. 아래 원본 버전만으로 판별하는 제약은 [최신 적용 안내](meta-official-fallback.md)를 우선 참고하세요.**
+
 ## 핵심 제약
 
 실제 Match API가 `TFT Unreal Version ?.?.?.?`를 반환하면 패치를 판별할 수 없습니다. 숫자를 임의로 채우거나 Data Dragon 버전을 대신 사용하지 않습니다. 기존 `scripts/collector/saveMatch.ts`의 `patchFromVersion()` 결과를 사용합니다. 외부 버전 API는 이번 기능에 사용하지 않습니다.

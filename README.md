@@ -290,3 +290,8 @@ Skipped만 있으면 성공 종료합니다. Failed matches 또는 Failed player
 ### 메타 용량 및 현재 패치 (009)
 
 [운영/최초 적용 안내](docs/meta-retention.md)를 따르세요. 009 migration은 원본을 삭제하지 않습니다. Collector의 동일한 patch parser → 최근 최대 100경기, 최소 30경기·90% 확인 → 현재 패치 최근 7일 MV 갱신 및 검증 → 별도 RPC 200경기씩 정리 순서입니다. 최초 API 검증 후 SQL로 cleanup_enabled를 켜야 합니다. game_version이 불명확하면 패치를 추측하지 않으며 빈 메타 + 7일 보관만 가능합니다. 개인 프로필 캐시와 메타 보관 정책은 분리되어 있습니다.
+
+
+### 원본 game_version이 불명확한 경우 (010)
+
+[공식 TFT 패치 fallback 적용 안내](docs/meta-official-fallback.md). 009 다음에 010을 적용하고 GitHub Actions의 **Refresh TFT meta** 또는 `npm run refresh:meta`를 실행합니다. 공식 정보를 확인한 뒤 새 경기 표본으로 확정하며, NULL patch 원본은 변경하지 않습니다. 배포 완료 시각을 알 수 없으므로 confirmed_at 이후 시작한 경기만 외부 판별 scope에 포함합니다.

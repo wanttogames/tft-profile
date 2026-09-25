@@ -14,6 +14,7 @@ beforeAll(async () => {
     '005_tft_meta_views',
     '008_tft_meta_performance',
     '009_tft_meta_retention',
+    '010_tft_meta_official_patch',
   ])
     await db.exec(readFileSync(`supabase/migrations/${name}.sql`, 'utf8'));
 }, 30000);
@@ -230,4 +231,109 @@ it('time window keeps boundary exactly seven days old and rejects one millisecon
   expect(
     await value("SELECT count(*) AS value FROM public.v_tft_meta_scope WHERE match_id='test2'"),
   ).toBe(0);
+});
+const externalUrl =
+  'https://teamfighttactics.leagueoflegends.com/en-us/news/game-updates/teamfight-tactics-patch-18-3';
+async function registerExternal() {
+  return value(
+    "SELECT public.register_tft_external_patch('18.3',$1,now()-interval '2 days') AS value",
+    [externalUrl],
+  );
+}
+it('official fallback confirms only fresh same-set NULL matches; preserves raw NULL', async () => {
+  await seed(null, 40, 0, 'before');
+  expect(await value('SELECT public.tft_meta_patch_probe() AS value')).toEqual({
+    needsFallback: true,
+  });
+  await registerExternal();
+  expect(await value('SELECT detected_patch AS value FROM public.tft_meta_state')).toBe('18.3');
+  expect(await refresh()).toMatchObject({ current: null, matchCount: 0 }); // Pre-confirmation games excluded.
+  // Time progression simulated in transaction, with synthetic post-boundary samples.
+  await db.exec("UPDATE public.tft_meta_state SET external_boundary_at=now()-interval '2 minutes'");
+  await seed(null, 30, 0, 'fresh');
+  await db.exec(
+    "UPDATE public.tft_matches SET set_number=18 WHERE match_id LIKE 'fresh%'; UPDATE public.tft_matches SET game_datetime=(extract(epoch FROM(now()-interval '5 minutes'))*1000)::bigint WHERE match_id LIKE 'before%'",
+  );
+  expect(await refresh()).toMatchObject({ current: '18.3', source: 'official', matchCount: 0 });
+  // Confirmation cutoff is now: only games starting after it can enter later refreshes.
+  await db.exec(
+    "UPDATE public.tft_meta_state SET confirmed_at=now()-interval '2 minutes', external_boundary_at=now()-interval '2 minutes'",
+  );
+  await db.exec(
+    "UPDATE public.tft_matches SET game_datetime=(extract(epoch FROM(now()-interval '5 minutes'))*1000)::bigint WHERE match_id LIKE 'before%'",
+  );
+  // The shared seed helper skips unit insertion for NULL patch; insert a real-shaped board here.
+  await db.exec(`INSERT INTO public.tft_units(participant_id,unit_index,character_id,tier,rarity)
+  SELECT participant_id,0,'TFT18_Test',2,1 FROM public.tft_participants WHERE match_id LIKE 'fresh%';
+  INSERT INTO public.tft_unit_items(unit_id,item_index,item_name) SELECT unit_id,0,'TFT_Item_Test' FROM public.tft_units;`);
+  const result = await refresh();
+  expect(result).toMatchObject({
+    current: '18.3',
+    matchCount: 30,
+    itemMaxSample: 240,
+    championMaxSample: 240,
+    traitMaxSample: 240,
+  });
+  expect(await value('SELECT count(patch) AS value FROM public.tft_matches')).toBe(0);
+  await enable();
+  await clean(result.generation);
+  expect(await value('SELECT count(*) AS value FROM public.v_tft_meta_scope')).toBe(30);
+  console.log('[verified fallback fixture]', JSON.stringify(result));
+});
+it('mixed sets and insufficient post-boundary samples cannot confirm external patch', async () => {
+  await seed(null, 30);
+  await registerExternal();
+  await db.exec(
+    "UPDATE public.tft_meta_state SET external_boundary_at=now()-interval '2 minutes'; UPDATE public.tft_matches SET set_number=18; UPDATE public.tft_matches SET set_number=17 WHERE match_id='test1'",
+  );
+  expect(await refresh()).toMatchObject({ current: null });
+});
+it('parseable primary patch always wins over an externally confirmed state', async () => {
+  await seed('16.19', 30);
+  await db.exec("UPDATE public.tft_meta_state SET current_patch='18.3',patch_source='official'");
+  expect(await refresh()).toMatchObject({ current: '16.19', source: 'match', matchCount: 30 });
+  expect(await registerExternal()).toMatchObject({ status: 'primary-available' });
+});
+it('NULL scope excludes boundary-minus-1ms, wrong set, and stale official verification', async () => {
+  await seed(null, 30);
+  await registerExternal();
+  await db.exec(`UPDATE public.tft_meta_state SET current_patch='18.3',patch_source='official',external_set_number=18,
+  external_boundary_at=now()-interval '1 hour',window_end=now();
+  UPDATE public.tft_matches SET set_number=18;
+  UPDATE public.tft_matches SET game_datetime=(extract(epoch FROM(now()-interval '1 hour'))*1000)::bigint-1 WHERE match_id='test1';
+  UPDATE public.tft_matches SET set_number=17 WHERE match_id='test2';`);
+  expect(await value('SELECT count(*) AS value FROM public.v_tft_meta_scope')).toBe(28);
+  await db.exec("UPDATE public.tft_meta_state SET external_checked_at=now()-interval '25 hours'");
+  expect(await value('SELECT count(*) AS value FROM public.v_tft_meta_scope')).toBe(0);
+});
+it('same official patch revalidation never moves the stored boundary', async () => {
+  await seed(null, 30);
+  await registerExternal();
+  await db.exec("UPDATE public.tft_meta_state SET external_boundary_at=now()-interval '1 hour'");
+  const before = await value('SELECT external_boundary_at AS value FROM public.tft_meta_state');
+  await registerExternal();
+  expect(await value('SELECT external_boundary_at AS value FROM public.tft_meta_state')).toEqual(
+    before,
+  );
+});
+it('external registration is server-only; cleanup waits for post-confirmation matches', async () => {
+  expect(
+    await value(
+      "SELECT has_function_privilege('anon','public.register_tft_external_patch(text,text,timestamptz)','EXECUTE') AS value",
+    ),
+  ).toBe(false);
+  expect(
+    await value(
+      "SELECT has_function_privilege('authenticated','public.tft_meta_patch_probe()','EXECUTE') AS value",
+    ),
+  ).toBe(false);
+  await seed(null, 30);
+  await registerExternal();
+  await db.exec(
+    "UPDATE public.tft_meta_state SET current_patch='18.3',patch_source='official',external_set_number=18,confirmed_at=now(),external_boundary_at=now()",
+  );
+  const r = await refresh();
+  await enable();
+  expect(await clean(r.generation)).toMatchObject({ status: 'awaiting-matches' });
+  expect(await value('SELECT count(*) AS value FROM public.tft_matches')).toBe(30);
 });

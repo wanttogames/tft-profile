@@ -59,7 +59,12 @@ export async function maintainMeta(
           1,
         )) as { status: string; deletedMatches?: number };
         console.log('[cleanup]', cleaned);
-        if (cleaned?.status === 'disabled' || cleaned?.status === 'busy') return true;
+        if (
+          cleaned?.status === 'disabled' ||
+          cleaned?.status === 'busy' ||
+          cleaned?.status === 'awaiting-matches'
+        )
+          return true;
         if (cleaned?.status !== 'cleaned' || !Number.isInteger(cleaned.deletedMatches))
           throw Error('Invalid cleanup response');
         if (cleaned.deletedMatches! < 200) return true;
