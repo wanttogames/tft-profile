@@ -41,6 +41,7 @@ import FormChart from './components/FormChart.vue';
 import BoardInsights from './components/BoardInsights.vue';
 import PlayerGameProfile from './components/PlayerGameProfile.vue';
 import PlayerCard from './components/PlayerCard.vue';
+import RecordHighlights from './components/RecordHighlights.vue';
 import MatchList from './components/MatchList.vue';
 import PreferencePanel from './components/PreferencePanel.vue';
 import { displayName } from './static-data/catalog';
@@ -226,6 +227,7 @@ const deckName = (key: string) =>
             </div>
             <div v-for="w in data.warnings" :key="w" class="notice">{{ w }}</div>
             <PlayerCard :data="data" />
+            <RecordHighlights v-if="!busy && !error" :data="data" />
             <details class="panel">
               <summary>성장 기록 · 연속 기록 · 업적 더 보기</summary>
               <PlayerGameProfile :data="data" />
