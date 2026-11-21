@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue';
 import InformationPage from './pages/InformationPage.vue';
+import RerollCalculator from './pages/RerollCalculator.vue';
 import HomeContent from './components/HomeContent.vue';
 import MetaPreview from './components/MetaPreview.vue';
 import { normalizePath, updatePageMetadata } from './seo/pages';
@@ -139,6 +140,7 @@ const deckName = (key: string) =>
           >개인 분석</a
         >
         <a href="/meta" :aria-current="section === 'meta' ? 'page' : undefined">메타</a>
+        <a href="/tools/reroll-calculator" :aria-current="path === '/tools/reroll-calculator' ? 'page' : undefined">리롤 계산기</a>
         <a href="/guide">사용 가이드</a>
         <a href="/about">소개</a>
       </nav>
@@ -148,6 +150,7 @@ const deckName = (key: string) =>
       <PrivacyPolicy v-if="page === 'privacy'" />
       <TermsOfService v-else-if="page === 'terms'" />
       <InformationPage v-else-if="information" :kind="information" />
+      <RerollCalculator v-else-if="path === '/tools/reroll-calculator'" />
       <template v-else>
         <KeepAlive><MetaDashboard v-if="section === 'meta'" :initial-kind="metaKind" /></KeepAlive>
         <div v-if="section === 'profile'">

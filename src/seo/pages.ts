@@ -30,6 +30,11 @@ export const PUBLIC_PAGES = {
     description:
       '최종 보드에서 활성화된 특성의 사용 표본과 평균 등수, TOP4 및 1위 비율을 살펴보세요.',
   },
+  '/tools/reroll-calculator': {
+    title: '롤토체스 리롤 확률 계산기 - 2성·3성 확률·레벨별 상점 확률 | TFT Profile',
+    description:
+      '롤체 리롤 계산기. 레벨·골드·챔피언 코스트·경쟁자 보유 장수를 입력해 2성·3성 확률을 계산하세요. 시즌18 상점 확률표와 공유 풀 정보 제공.',
+  },
   '/about': {
     title: 'TFT Profile 소개 - 데이터와 분석 방식',
     description:
