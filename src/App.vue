@@ -2,6 +2,9 @@
 import { computed, ref, onMounted } from 'vue';
 import InformationPage from './pages/InformationPage.vue';
 import RerollCalculator from './pages/RerollCalculator.vue';
+import Set19Overview from './pages/Set19Overview.vue';
+import Set19Unlocks from './pages/Set19Unlocks.vue';
+import Set19UnlockDetail from './pages/Set19UnlockDetail.vue';
 import HomeContent from './components/HomeContent.vue';
 import MetaPreview from './components/MetaPreview.vue';
 import { normalizePath, updatePageMetadata } from './seo/pages';
@@ -17,6 +20,7 @@ const path = normalizePath(
 );
 const query = props.routeSearch ?? (typeof window === 'undefined' ? '' : window.location.search);
 const page = legalPage(path);
+const set19Slug = path.startsWith('/set19/unlocks/') ? path.slice('/set19/unlocks/'.length) : '';
 const information = path === '/guide' ? 'guide' : path === '/about' ? 'about' : null;
 const metaKind = path === '/champions' ? 'champion' : path === '/traits' ? 'trait' : 'item';
 const section = ref<'profile' | 'meta'>(
@@ -141,6 +145,7 @@ const deckName = (key: string) =>
         >
         <a href="/meta" :aria-current="section === 'meta' ? 'page' : undefined">메타</a>
         <a href="/tools/reroll-calculator" :aria-current="path === '/tools/reroll-calculator' ? 'page' : undefined">리롤 계산기</a>
+        <a href="/set19" :aria-current="path.startsWith('/set19') ? 'page' : undefined">시즌19</a>
         <a href="/guide">사용 가이드</a>
         <a href="/about">소개</a>
       </nav>
@@ -151,6 +156,9 @@ const deckName = (key: string) =>
       <TermsOfService v-else-if="page === 'terms'" />
       <InformationPage v-else-if="information" :kind="information" />
       <RerollCalculator v-else-if="path === '/tools/reroll-calculator'" />
+      <Set19Overview v-else-if="path === '/set19'" />
+      <Set19Unlocks v-else-if="path === '/set19/unlocks'" />
+      <Set19UnlockDetail v-else-if="set19Slug" :slug="set19Slug" />
       <template v-else>
         <KeepAlive><MetaDashboard v-if="section === 'meta'" :initial-kind="metaKind" /></KeepAlive>
         <div v-if="section === 'profile'">

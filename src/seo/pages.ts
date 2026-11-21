@@ -35,6 +35,56 @@ export const PUBLIC_PAGES = {
     description:
       '롤체 리롤 계산기. 레벨·골드·챔피언 코스트·경쟁자 보유 장수를 입력해 2성·3성 확률을 계산하세요. 시즌18 상점 확률표와 공유 풀 정보 제공.',
   },
+  '/set19': {
+    title: '롤토체스 시즌19 프리즘 투어 - 출시일·특성·해금 챔피언 | TFT Profile',
+    description:
+      '롤토체스 시즌19 프리즘 투어 출시일은 2026년 12월 2일. 신규 음악 특성, 94종 챔피언, 32종 해금 조건과 PBE 변경사항을 정리했습니다.',
+  },
+  '/set19/unlocks': {
+    title: '롤토체스 시즌19 해금 조건 32종 - 챔피언 해금 도감 | TFT Profile',
+    description:
+      '시즌19 해금 챔피언 32종 전체 목록. 티버·모데카이저·내셔 남작 등 이름, 코스트, 특성으로 검색하고 해금 조건을 체크하세요. 공식 정보와 PBE를 구분합니다.',
+  },
+  '/set19/unlocks/tibbers': {
+    title: '롤토체스 시즌19 티버 해금 조건·방법 | TFT Profile',
+    description: '아이템을 장착한 2성 애니가 필요합니다. 공식 해금 조건과 유의사항을 확인하세요.',
+  },
+  '/set19/unlocks/mordekaiser': {
+    title: '롤토체스 시즌19 모데카이저 해금 조건·방법 | TFT Profile',
+    description: '펜타킬 챔피언 별 레벨 총합 10을 확인하세요. 공식 해금 조건과 계산 순서를 정리했습니다.',
+  },
+  '/set19/unlocks/baron-nashor': {
+    title: '롤토체스 시즌19 내셔 남작 해금 조건·방법 | TFT Profile',
+    description: '신비로운 악기 5종과 말자하의 누적 피해량으로 내셔 남작 해금 준비를 확인하세요.',
+  },
+  '/set19/unlocks/seraphine': {
+    title: '롤토체스 시즌19 세라핀 해금 조건·방법 | TFT Profile',
+    description: '2스테이지 공동 선택 전 상점 새로고침 4회의 PBE 해금 조건을 확인하세요.',
+  },
+  '/set19/unlocks/ashe': {
+    title: '롤토체스 시즌19 애쉬 해금 조건·방법 | TFT Profile',
+    description: '비치 팝 챔피언에게 아이템 두 개를 장착하는 애쉬 해금 조건을 확인하세요.',
+  },
+  '/set19/unlocks/kobuko': {
+    title: '롤토체스 시즌19 코부코 해금 조건·방법 | TFT Profile',
+    description: '2성 직스와 아이템 하나를 활용하는 코부코 해금 방법을 안내합니다.',
+  },
+  '/set19/unlocks/vayne': {
+    title: '롤토체스 시즌19 베인 해금 조건·방법 | TFT Profile',
+    description: '락 특성을 활성화하고 전투 3회를 진행하는 베인의 PBE 해금 조건을 확인하세요.',
+  },
+  '/set19/unlocks/rakan': {
+    title: '롤토체스 시즌19 라칸 해금 조건·방법 | TFT Profile',
+    description: '8레벨 이후 연승·연패를 포함하는 라칸의 해금 조건을 확인하세요.',
+  },
+  '/set19/unlocks/smeech': {
+    title: '롤토체스 시즌19 스미치 해금 조건·방법 | TFT Profile',
+    description: '고유 시너지를 제외한 일반 특성 8종 활성화 조건과 준비법을 확인하세요.',
+  },
+  '/set19/unlocks/sona': {
+    title: '롤토체스 시즌19 소나 해금 조건·방법 | TFT Profile',
+    description: '콜라보 영감 발동 15회와 최소 레벨 10의 PBE 해금 조건을 확인하세요.',
+  },
   '/about': {
     title: 'TFT Profile 소개 - 데이터와 분석 방식',
     description:
