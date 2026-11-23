@@ -6,7 +6,7 @@ import { SERVICE_NAME, RIOT_DISCLAIMER } from '../config/legal';
     <div class="footer-links">
       <span>{{ SERVICE_NAME }}</span>
       <nav aria-label="서비스 안내와 정책">
-        <a href="/">홈</a><a href="/meta">메타</a><a href="/set19">시즌19</a><a href="/set19/unlocks">해금 도감</a><a href="/tools/reroll-calculator">리롤 계산기</a><a href="/guide">사용 가이드</a
+        <a href="/">홈</a><a href="/meta">메타</a><a href="/set19">시즌19</a><a href="/set19/unlocks">해금 도감</a><a href="/tools/reroll-calculator">리롤 계산기</a><a href="/tools/item-calculator">아이템 조합</a><a href="/guide">사용 가이드</a
         ><a href="/about">서비스 소개</a>
         <a href="/privacy">개인정보처리방침</a>
         <a href="/terms">이용약관</a>

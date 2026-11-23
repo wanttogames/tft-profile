@@ -2,6 +2,7 @@
 import { computed, ref, onMounted } from 'vue';
 import InformationPage from './pages/InformationPage.vue';
 import RerollCalculator from './pages/RerollCalculator.vue';
+import ItemCalculator from './pages/ItemCalculator.vue';
 import Set19Overview from './pages/Set19Overview.vue';
 import Set19Unlocks from './pages/Set19Unlocks.vue';
 import Set19UnlockDetail from './pages/Set19UnlockDetail.vue';
@@ -145,6 +146,7 @@ const deckName = (key: string) =>
         >
         <a href="/meta" :aria-current="section === 'meta' ? 'page' : undefined">메타</a>
         <a href="/tools/reroll-calculator" :aria-current="path === '/tools/reroll-calculator' ? 'page' : undefined">리롤 계산기</a>
+        <a href="/tools/item-calculator" :aria-current="path === '/tools/item-calculator' ? 'page' : undefined">아이템 조합</a>
         <a href="/set19" :aria-current="path.startsWith('/set19') ? 'page' : undefined">시즌19</a>
         <a href="/guide">사용 가이드</a>
         <a href="/about">소개</a>
@@ -156,6 +158,7 @@ const deckName = (key: string) =>
       <TermsOfService v-else-if="page === 'terms'" />
       <InformationPage v-else-if="information" :kind="information" />
       <RerollCalculator v-else-if="path === '/tools/reroll-calculator'" />
+      <ItemCalculator v-else-if="path === '/tools/item-calculator'" />
       <Set19Overview v-else-if="path === '/set19'" />
       <Set19Unlocks v-else-if="path === '/set19/unlocks'" />
       <Set19UnlockDetail v-else-if="set19Slug" :slug="set19Slug" />
