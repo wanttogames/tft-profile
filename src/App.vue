@@ -5,6 +5,8 @@ import RerollCalculator from './pages/RerollCalculator.vue';
 import ItemCalculator from './pages/ItemCalculator.vue';
 import EconomyCalculator from './pages/EconomyCalculator.vue';
 import LckStove from './pages/LckStove.vue';
+import LckChanges from './pages/LckChanges.vue';
+import { LCK_COMPARE_PATH, LCK_TIMELINE_PATH } from './data/lckChanges';
 import { LCK_STOVE_PATH, findTeam } from './data/lck2027';
 import Set19Overview from './pages/Set19Overview.vue';
 import Set19Unlocks from './pages/Set19Unlocks.vue';
@@ -24,7 +26,8 @@ const path = normalizePath(
 );
 const query = props.routeSearch ?? (typeof window === 'undefined' ? '' : window.location.search);
 const page = legalPage(path);
-const isLckPage = path === LCK_STOVE_PATH || !!findTeam(path);
+const isLckChanges = path === LCK_COMPARE_PATH || path === LCK_TIMELINE_PATH;
+const isLckPage = path === LCK_STOVE_PATH || !!findTeam(path) || isLckChanges;
 const set19Slug = path.startsWith('/set19/unlocks/') ? path.slice('/set19/unlocks/'.length) : '';
 const information = path === '/guide' ? 'guide' : path === '/about' ? 'about' : null;
 const metaKind = path === '/champions' ? 'champion' : path === '/traits' ? 'trait' : 'item';
@@ -166,6 +169,7 @@ const deckName = (key: string) =>
       <RerollCalculator v-else-if="path === '/tools/reroll-calculator'" />
       <ItemCalculator v-else-if="path === '/tools/item-calculator'" />
       <EconomyCalculator v-else-if="path === '/tools/economy-calculator'" />
+      <LckChanges v-else-if="isLckChanges" :path="path" />
       <LckStove v-else-if="isLckPage" :path="path" />
       <Set19Overview v-else-if="path === '/set19'" />
       <Set19Unlocks v-else-if="path === '/set19/unlocks'" />

@@ -1,6 +1,9 @@
+import { LCK_COMPARE_PATH, LCK_TIMELINE_PATH } from '../data/lckChanges';
 import { LCK_STOVE_PATH, TEAMS, teamPath } from '../data/lck2027';
 export const SITE_URL = 'https://tft-profile.pages.dev';
 export const PUBLIC_PAGES = {
+  [LCK_COMPARE_PATH]: { title: '2026 vs 2027 LCK 로스터 비교 - 팀별 선수 교체·잔류 | TFT Profile', description: 'LCK 10개 팀의 2026 마지막 경기와 2027 발표 로스터를 비교합니다. 탑·정글·미드·원딜·서포터의 유지, 신규 구성, 발표 대기를 확인하세요.' },
+  [LCK_TIMELINE_PATH]: { title: '2027 LCK 스토브리그 이적 타임라인 - 영입·재계약·계약 종료 | TFT Profile', description: '2027 LCK 스토브리그의 날짜별 1군 선수 영입, 재계약과 계약 종료 발표를 팀과 선수별로 검색하고 출처를 확인하세요.' },
   [LCK_STOVE_PATH]: {
     title: '2027 LCK 스토브리그 - 팀별 로스터·이적 현황 | TFT Profile',
     description: '2027 LCK 10개 팀의 탑·정글·미드·원딜·서포터 로스터를 비교하고 공식 영입, 재계약, 계약 유지와 미확정 보도를 구분해 확인하세요.',

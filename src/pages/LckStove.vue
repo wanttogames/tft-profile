@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import LckChangesNav from '../components/LckChangesNav.vue';
+import { compareTeam, CHANGE_LABEL } from '../data/lckChanges';
 import { TEAMS, POSITIONS, SOURCES, STATUS_LABEL, LCK_STOVE_PATH, LCK_CHECKED, teamPath, findTeam, countConfirmed, rosterSummary, type Team } from '../data/lck2027';
 const props = defineProps<{ path: string }>();
 const team = computed(() => findTeam(props.path));
@@ -32,6 +34,7 @@ function progress(t: Team){return countConfirmed(t) * 20 + '%';}
     </div>
     <div class="hero-mark" aria-hidden="true">{{team?.code ?? 'LCK'}}<small>2027</small></div>
   </header>
+  <LckChangesNav :path="path"/>
   <div class="stove-stats" v-if="!team">
     <div><span>참가 팀</span><b>{{summary.teams}}<small>팀</small></b></div>
     <div><span>공식 발표·계약 확인</span><b>{{summary.confirmed}}<small>/ {{summary.total}}자리</small></b></div>
@@ -70,6 +73,7 @@ function progress(t: Team){return countConfirmed(t) * 20 + '%';}
           <span class="status" :class="s.status">{{STATUS_LABEL[s.status]}}</span>
         </div>
       </div>
+      <section v-if="team" class="team-note"><h3>2026 → 2027 포지션 변화</h3><p v-for="r in compareTeam(t)" :key="r.position">{{r.position}} · {{r.before}} → {{r.slot.player ?? '미정'}} ({{CHANGE_LABEL[r.change]}})</p></section>
       <p class="team-note">{{t.note}}</p>
       <a v-if="!team" class="detail" :href="teamPath(t)">팀 상세 로스터 →</a>
     </section>
