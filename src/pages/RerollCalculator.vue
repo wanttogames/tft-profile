@@ -135,7 +135,7 @@ function reset(){
     <nav class="roll-links">
       <a href="https://teamfighttactics.leagueoflegends.com/ko-kr/news/game-updates/teamfight-tactics-patch-17-1/" target="_blank" rel="noopener noreferrer">Riot 공식 패치 노트</a>
       <a href="https://www.tftraits.com/pool-sizes" target="_blank" rel="noopener noreferrer">시즌18 풀 수량표</a>
-      <a href="/">내 전적 분석</a><a href="/meta">메타 통계</a>
+      <a href="/tools/economy-calculator">골드·레벨업 계산기</a><a href="/">내 전적 분석</a><a href="/meta">메타 통계</a>
     </nav>
   </section>
 </article>

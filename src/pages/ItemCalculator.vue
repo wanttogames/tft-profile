@@ -76,7 +76,7 @@ function choose(a:number,b:number) { selected.value=findRecipe(a,b); }
     <p>일반 조합 아이템 8종은 두 개씩 결합해 36가지 완성 아이템을 만듭니다. 뒤집개와 프라이팬은 시즌별 상징 및 전략가 아이템을 만들 수 있습니다. 같은 재료 두 개도 하나의 조합으로 계산됩니다.</p>
     <h3>어떤 아이템을 먼저 만들면 좋을까요?</h3><p>물리 딜러는 공격력·공격 속도, 주문력 딜러는 주문력·마나, 탱커는 체력·방어력·마법 저항력을 우선 비교하세요. 회복 감소나 방어력 감소가 없다면 지원 역할 아이템도 고려하세요. 추천 용도는 정성적 분류이며 챔피언별 최적 장비나 승률 순위가 아닙니다.</p>
     <h3>데이터 범위</h3><p>2026년 11월 24일 확인한 시즌18 일반 조합 기준입니다. 찬란한 아이템, 유물, 지원 전용 아이템, 비조합 상징은 제외합니다. 시즌19 변경 사항은 아직 반영하지 않았습니다. 한글 이름과 아이콘은 <a href="https://raw.communitydragon.org/latest/cdragon/tft/ko_kr.json">CommunityDragon</a> 스냅샷, 조합은 <a href="https://noxutft.com/tft-cheat-sheet">시즌18 조합 데이터</a>를 참고했습니다.</p>
-    <nav><a href="/tools/reroll-calculator">리롤 확률 계산기 →</a> · <a href="/items">아이템 메타 통계 →</a> · <a href="/set19">시즌19 정보 →</a></nav>
+    <nav><a href="/tools/reroll-calculator">리롤 확률 계산기 →</a> · <a href="/tools/economy-calculator">골드·레벨업 계산기 →</a> · <a href="/items">아이템 메타 통계 →</a> · <a href="/set19">시즌19 정보 →</a></nav>
   </section>
 </article>
 </template>
