@@ -1,0 +1,12 @@
+import {describe,it,expect} from 'vitest';
+import {HISTORY_YEARS,HISTORY_ROSTERS,HISTORY_ENTRIES,HISTORY_PLAYERS,HISTORY_DETAIL_PLAYERS,historyRoster,historyRoute,historyPages,historyPlayerPath,historyTeamPath,historyYearPath,filterHistoryPlayers,filterHistoryRosters,playerHistory,LCK_HISTORY_PATH,HISTORY_PLAYERS_PATH} from '../src/data/lckHistory';
+import {PUBLIC_PAGES} from '../src/seo/pages';
+describe('LCK-HISTORY-1',()=>{
+ it('covers ten teams for each of six years and five positions',()=>{expect(HISTORY_ROSTERS).toHaveLength(60);expect(HISTORY_YEARS.every(y=>HISTORY_ROSTERS.filter(r=>r.year===y).length===10)).toBe(true);expect(HISTORY_ROSTERS.every(r=>r.roles.length===5)).toBe(true);});
+ it('preserves historical names and multiple registered players',()=>{expect(historyRoster(2022,'dk')?.name).toBe('DWG KIA');expect(historyRoster(2023,'bfx')?.name).toBe('Liiv SANDBOX');expect(historyRoster(2022,'dk')?.roles[0]).toEqual(['Burdol','Hoya']);});
+ it('does not insert unconfirmed 2027 reports',()=>{expect(historyRoster(2027,'t1')?.roles[0]).toEqual([]);expect(historyRoster(2027,'dk')?.roles[1]).toEqual(['Kanavi','Lucid']);expect(HISTORY_ENTRIES.filter(e=>e.year===2027)).toHaveLength(38);});
+ it('supports Korean and English search and season filters',()=>{expect(filterHistoryPlayers('페이커')[0].id).toBe('faker');expect(filterHistoryRosters('2024','t1','Faker')).toHaveLength(1);expect(filterHistoryRosters('2023','all','샌드박스')).toHaveLength(1);});
+ it('returns chronological snapshot history with gaps preserved',()=>{expect(playerHistory('ruler').map(e=>e.year)).toEqual([2022,2025,2026,2027]);expect(playerHistory('doran').map(e=>e.team)).toEqual(['geng','geng','hle','t1','t1','dk']);});
+ it('keeps unique player IDs and only creates details for multiple years',()=>{expect(new Set(HISTORY_PLAYERS.map(p=>p.id)).size).toBe(HISTORY_PLAYERS.length);expect(HISTORY_DETAIL_PLAYERS.every(p=>new Set(playerHistory(p.id).map(e=>e.year)).size>=2)).toBe(true);});
+ it('registers valid routes and SEO without arbitrary slugs',()=>{expect(historyRoute(LCK_HISTORY_PATH).valid).toBe(true);expect(historyRoute(HISTORY_PLAYERS_PATH).directory).toBe(true);expect(historyRoute(historyYearPath(2022)).year).toBe(2022);expect(historyRoute(historyTeamPath('dk')).team?.slug).toBe('dk');expect(historyRoute(historyPlayerPath('faker')).player?.id).toBe('faker');expect(historyRoute(historyPlayerPath('not-a-player')).valid).toBe(false);for(const path of Object.keys(historyPages()))expect(Object.hasOwn(PUBLIC_PAGES,path)).toBe(true);});
+});

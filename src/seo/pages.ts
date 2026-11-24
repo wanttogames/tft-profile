@@ -1,9 +1,11 @@
+import { historyPages } from '../data/lckHistory';
 import { LCK_DREAM_PATH } from '../data/lckDream';
 import { LCK_FA_PATH, LCK_CONTRACTS_PATH } from '../data/lckContracts';
 import { LCK_COMPARE_PATH, LCK_TIMELINE_PATH } from '../data/lckChanges';
 import { LCK_STOVE_PATH, TEAMS, teamPath } from '../data/lck2027';
 export const SITE_URL = 'https://tft-profile.pages.dev';
 export const PUBLIC_PAGES = {
+  ...historyPages(),
   [LCK_DREAM_PATH]: {title:'LCK 드림팀 만들기 - 2027 롤 선수 조합·로스터 공유 카드 | TFT Profile',description:'나만의 LCK 드림팀을 만드세요. 탑·정글·미드·원딜·서포터 선수 선택, 랜덤 조합, 카드 테마, PNG 이미지 저장 및 공유 링크를 제공합니다.'},
   [LCK_FA_PATH]: {title:'2027 LCK FA 선수 명단 - 계약 종료·미확정 이적 현황 | TFT Profile',description:'LCK 스토브리그 FA 시장의 계약 종료 선수와 거취 확인 대기 선수를 팀, 포지션, 이름으로 검색하고 공식 발표와 미확정 이적 보도를 구분하세요.'},
   [LCK_CONTRACTS_PATH]: {title:'LCK 선수 계약 만료일 - 2027·2028·2029 페이커·쵸비·팀별 계약 기간 | TFT Profile',description:'LCK 선수의 GCD 계약 만료일, 공개된 계약 연도와 시즌 정보를 검색하세요. T1, 젠지 등 팀별 선수의 계약 기간과 미확인 정보를 확인할 수 있습니다.'},

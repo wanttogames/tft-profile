@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import LckChangesNav from '../components/LckChangesNav.vue';
+import { historyTeamPath } from '../data/lckHistory';
 import { lookupTerm, termLabel, LCK_CONTRACTS_PATH } from '../data/lckContracts';
 import { compareTeam, CHANGE_LABEL } from '../data/lckChanges';
 import { TEAMS, POSITIONS, SOURCES, STATUS_LABEL, LCK_STOVE_PATH, LCK_CHECKED, teamPath, findTeam, countConfirmed, rosterSummary, type Team } from '../data/lck2027';
@@ -77,6 +78,7 @@ function progress(t: Team){return countConfirmed(t) * 20 + '%';}
       </div>
       <section v-if="team" class="team-note"><h3>2026 → 2027 포지션 변화</h3><p v-for="r in compareTeam(t)" :key="r.position">{{r.position}} · {{r.before}} → {{r.slot.player ?? '미정'}} ({{CHANGE_LABEL[r.change]}})</p></section>
       <p class="team-note">{{t.note}}</p>
+      <a v-if="team" class="detail" :href="historyTeamPath(t.slug)">역대 팀 로스터 →</a>
       <a v-if="team" class="detail" :href="LCK_CONTRACTS_PATH">계약 만료일 도감 →</a>
       <a v-if="!team" class="detail" :href="teamPath(t)">팀 상세 로스터 →</a>
     </section>
