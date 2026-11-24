@@ -38,7 +38,7 @@ function levelChanged(){if(targetLevel.value<level.value)targetLevel.value=level
         <label>라운드당 자연 경험치<div class="unit"><input v-model.number="passiveXpPerRound" type="number" min="0" max="10"><span>XP</span></div></label>
       </div>
       <div v-if="level<10" class="progress"><span>현재 레벨 진행도</span><b>{{currentXp}} / {{XP_TO_REACH_LEVEL[level+1]}} XP</b><div class="track"><i :style="{width:progress+'%'}"></i></div></div>
-      <p class="hint">자연 경험치는 기본 2XP/라운드로 설정했어. 증강체·특수 이벤트·세트 변경으로 달라지면 직접 수정해.</p>
+      <p class="hint">자연 경험치는 기본 2XP/라운드로 설정했어. 이 값은 참고용 기본값이며, 증강체·특수 이벤트·세트 변경으로 달라지면 직접 수정해.</p>
     </section>
     <section class="panel result" aria-live="polite">
       <p class="eyebrow">LEVEL-UP PLANNER</p>
@@ -54,7 +54,7 @@ function levelChanged(){if(targetLevel.value<level.value)targetLevel.value=level
       <p v-if="targetLevel<=level" class="good">이미 목표 레벨에 도달했어. 더 높은 목표 레벨을 선택해.</p>
       <p v-else-if="plan.afterWaitGoldShortfall>0" class="warn">현재 골드 기준으로 {{fmt(plan.afterWaitGoldShortfall)}}이 더 필요해.</p>
       <p v-else class="good">현재 골드로 구매할 수 있어. 구매 후 {{fmt(plan.afterWaitGoldAfter)}}이 남아.</p>
-      <p class="hint">경험치 구매는 4골드로 4XP를 얻는 단위야. 필요한 XP가 4의 배수가 아니면 초과 경험치까지 구매 비용에 포함해.</p>
+      <p class="hint">경험치 구매는 4골드로 4XP를 얻는 단위야. 필요한 XP가 4의 배수가 아니면 초과 경험치까지 구매 비용에 포함해.</p><p class="hint">레벨업 비용 비교는 현재 보유 골드를 기준으로 해. 기다리는 동안 얻는 라운드 골드 수입은 아래 수입 예측에서 별도로 확인해.</p>
     </section>
   </div>
   <section class="panel">
@@ -82,7 +82,7 @@ function levelChanged(){if(targetLevel.value<level.value)targetLevel.value=level
     <p v-if="income.interestLost>0" class="warn">예정 지출로 이자 구간이 낮아져 {{income.interestLost}}G의 이자를 잃게 돼.</p>
     <p v-else-if="income.interestEnabled&&income.interest>0" class="good">지출 후 {{income.bankForInterest}}G를 보유해 {{income.interest}}G의 이자를 받아.</p>
     <p v-if="income.nextInterestThreshold!==null" class="hint">다음 이자 {{income.interest+1}}G까지 {{income.goldToNextInterest}}G 더 필요해 ({{income.nextInterestThreshold}}G 보유 기준).</p>
-    <p class="hint">예상 전투 결과 반영: {{streakLabel}}. {{nextCombat==='pve'?'몬스터 전투는 승리 골드 보너스를 지급하지 않으며 연속 기록을 유지하는 것으로 계산해.':'플레이어 전투 승리 시 +1G, 패배 시 +0G로 계산해.'}}</p>
+    <p class="hint">예정 지출을 먼저 차감한 잔액으로 이자를 계산해. 예상 전투 결과 반영: {{streakLabel}}. {{nextCombat==='pve'?'몬스터 전투는 승리 골드 보너스를 지급하지 않으며 연속 기록을 유지하는 것으로 계산해.':'플레이어 전투 승리 시 +1G, 패배 시 +0G로 계산해.'}}</p>
   </section>
   <section class="panel">
     <h2>시즌18 레벨별 경험치표</h2><p class="small muted">각 레벨 진입에 필요한 XP와 해당 구간만 4XP 구매 단위로 채울 때의 골드 비용이야.</p>
@@ -90,8 +90,8 @@ function levelChanged(){if(targetLevel.value<level.value)targetLevel.value=level
       <tbody><tr v-for="r in rows" :key="r.level" :class="{active:r.level===targetLevel}"><th>{{r.level}}레벨</th><td>{{r.xp}} XP</td><td>{{r.total}} XP</td><td>{{r.cost}}G</td></tr></tbody></table></div>
   </section>
   <section class="panel">
-    <h2>이자 구간표</h2><p class="small muted">일반 규칙은 10골드마다 +1G, 최대 +5G야. 예정 지출 후 보유 골드 기준으로 강조해.</p>
-    <div class="bands"><div v-for="band in [0,10,20,30,40,50]" :key="band"  :class="{active:interestEnabled&&Math.min(50,Math.floor(income.bankForInterest/10)*10)===band}"><span>{{band}}G</span><b>+{{interestEnabled?Math.min(interestCap,band/10):0}}G</b></div></div>
+    <h2>이자 구간표</h2><p class="small muted">일반 이자 구간은 10골드마다 +1G, 기본 최대 +5G야. 예정 지출 후 보유 골드 기준으로 강조해. 상한 증가 증강체는 위의 상한 입력값에 반영해.</p>
+    <div class="bands"><div v-for="band in [0,10,20,30,40,50]" :key="band" :class="{active:interestEnabled&&Math.min(50,Math.floor(income.bankForInterest/10)*10)===band}"><span>{{band}}G</span><b>+{{interestEnabled?Math.min(interestCap,band/10):0}}G</b></div></div>
     <p class="hint">50G 이상은 일반 이자 상한에 도달해. 특수 증강체로 상한이 바뀌면 위의 이자 상한을 조정해.</p>
   </section>
   <section class="guide">
