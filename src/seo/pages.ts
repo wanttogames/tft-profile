@@ -1,7 +1,10 @@
+import { LCK_FA_PATH, LCK_CONTRACTS_PATH } from '../data/lckContracts';
 import { LCK_COMPARE_PATH, LCK_TIMELINE_PATH } from '../data/lckChanges';
 import { LCK_STOVE_PATH, TEAMS, teamPath } from '../data/lck2027';
 export const SITE_URL = 'https://tft-profile.pages.dev';
 export const PUBLIC_PAGES = {
+  [LCK_FA_PATH]: {title:'2027 LCK FA 선수 명단 - 계약 종료·미확정 이적 현황 | TFT Profile',description:'LCK 스토브리그 FA 시장의 계약 종료 선수와 거취 확인 대기 선수를 팀, 포지션, 이름으로 검색하고 공식 발표와 미확정 이적 보도를 구분하세요.'},
+  [LCK_CONTRACTS_PATH]: {title:'LCK 선수 계약 만료일 - 2027·2028·2029 페이커·쵸비·팀별 계약 기간 | TFT Profile',description:'LCK 선수의 GCD 계약 만료일, 공개된 계약 연도와 시즌 정보를 검색하세요. T1, 젠지 등 팀별 선수의 계약 기간과 미확인 정보를 확인할 수 있습니다.'},
   [LCK_COMPARE_PATH]: { title: '2026 vs 2027 LCK 로스터 비교 - 팀별 선수 교체·잔류 | TFT Profile', description: 'LCK 10개 팀의 2026 마지막 경기와 2027 발표 로스터를 비교합니다. 탑·정글·미드·원딜·서포터의 유지, 신규 구성, 발표 대기를 확인하세요.' },
   [LCK_TIMELINE_PATH]: { title: '2027 LCK 스토브리그 이적 타임라인 - 영입·재계약·계약 종료 | TFT Profile', description: '2027 LCK 스토브리그의 날짜별 1군 선수 영입, 재계약과 계약 종료 발표를 팀과 선수별로 검색하고 출처를 확인하세요.' },
   [LCK_STOVE_PATH]: {

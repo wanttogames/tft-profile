@@ -1,0 +1,3 @@
+# LCK-FA-1
+
+Static first-team market and contract snapshot, checked 2026-11-24 KST. No API key, DB, or new dependency. Date sources are linked in src/data/lckContracts.ts. GCD snapshot from 2026-11-16 PT is accessed through the cited secondary archive; later team announcements take precedence. Old team dates are never copied to new teams. Precision day/month/year/season and unknown are separate; dates are not invented from the season. The market is a curated 21-player subset, not a worldwide FA registry. Four destination-pending NS players are kept separate in line with the cited market source. Update confirmed TEAMS, term keys and market candidates together when new announcements arrive. Tests cover counts, old team dates, precision, Korean search, filters and SEO.
