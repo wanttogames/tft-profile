@@ -13,6 +13,7 @@ const progress=computed(()=>level.value<10?Math.min(100,currentXp.value/XP_TO_RE
 const plan=computed(()=>calculateLevelPlan({gold:gold.value,level:level.value,currentXp:currentXp.value,targetLevel:targetLevel.value,waitRounds:waitRounds.value,passiveXpPerRound:passiveXpPerRound.value}));
 const income=computed(()=>calculateRoundIncome({currentGold:gold.value,plannedSpend:plannedSpend.value,baseIncome:effectiveBaseIncome.value,streakType:streakType.value,streakLength:streakLength.value,nextCombat:nextCombat.value,interestEnabled:interestEnabled.value,interestCap:interestCap.value}));
 const rows=computed(()=>LEVELS.map(l=>({level:l,xp:XP_TO_REACH_LEVEL[l],total:TOTAL_XP_FOR_LEVEL[l],cost:Math.ceil(XP_TO_REACH_LEVEL[l]/4)*4})));
+const interestBands=computed(()=>Array.from({length:Math.floor(Math.min(10,Math.max(0,interestCap.value)))+1},(_,i)=>i*10));
 const streakLabel=computed(()=>income.value.streakType==='none'?'연속 기록 없음':(income.value.streakType==='win'?'연승 ':'연패 ')+income.value.streakLength+'회');
 const fmt=(n:number)=>Math.round(n).toLocaleString('ko-KR')+'G';
 function reset(){gold.value=50;level.value=7;currentXp.value=0;targetLevel.value=8;waitRounds.value=2;passiveXpPerRound.value=2;basePreset.value='standard';customBaseIncome.value=5;plannedSpend.value=0;streakType.value='win';streakLength.value=5;nextCombat.value='win';interestEnabled.value=true;interestCap.value=5;}
@@ -91,7 +92,7 @@ function levelChanged(){if(targetLevel.value<level.value)targetLevel.value=level
   </section>
   <section class="panel">
     <h2>이자 구간표</h2><p class="small muted">일반 이자 구간은 10골드마다 +1G, 기본 최대 +5G야. 예정 지출 후 보유 골드 기준으로 강조해. 상한 증가 증강체는 위의 상한 입력값에 반영해.</p>
-    <div class="bands"><div v-for="band in [0,10,20,30,40,50]" :key="band" :class="{active:interestEnabled&&Math.min(50,Math.floor(income.bankForInterest/10)*10)===band}"><span>{{band}}G</span><b>+{{interestEnabled?Math.min(interestCap,band/10):0}}G</b></div></div>
+    <div class="bands"><div v-for="band in interestBands" :key="band" :class="{active:interestEnabled&&Math.min(interestCap*10,Math.floor(income.bankForInterest/10)*10)===band}"><span>{{band}}G</span><b>+{{interestEnabled?Math.min(interestCap,band/10):0}}G</b></div></div>
     <p class="hint">50G 이상은 일반 이자 상한에 도달해. 특수 증강체로 상한이 바뀌면 위의 이자 상한을 조정해.</p>
   </section>
   <section class="guide">
