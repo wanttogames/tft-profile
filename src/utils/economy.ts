@@ -1,3 +1,5 @@
+// TFT Set 18, current patch 18.7 (2026-11-17). Patch 18.7 did not list XP-cost changes.
+// The XP ladder retains the values verified through patch 18.6 and the 18.2 mid-patch update.
 export const LEVELS = [2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
 export const XP_TO_REACH_LEVEL = [0, 0, 2, 2, 6, 10, 20, 36, 56, 68, 68] as const;
 export const TOTAL_XP_FOR_LEVEL = [0, 0, 2, 4, 10, 20, 40, 76, 132, 200, 268] as const;
