@@ -7,6 +7,8 @@ import EconomyCalculator from './pages/EconomyCalculator.vue';
 import LckStove from './pages/LckStove.vue';
 import LckChanges from './pages/LckChanges.vue';
 import LckContracts from './pages/LckContracts.vue';
+import LckDream from './pages/LckDream.vue';
+import { LCK_DREAM_PATH } from './data/lckDream';
 import { LCK_FA_PATH, LCK_CONTRACTS_PATH } from './data/lckContracts';
 import { LCK_COMPARE_PATH, LCK_TIMELINE_PATH } from './data/lckChanges';
 import { LCK_STOVE_PATH, findTeam } from './data/lck2027';
@@ -30,7 +32,8 @@ const query = props.routeSearch ?? (typeof window === 'undefined' ? '' : window.
 const page = legalPage(path);
 const isLckChanges = path === LCK_COMPARE_PATH || path === LCK_TIMELINE_PATH;
 const isLckContracts = path === LCK_FA_PATH || path === LCK_CONTRACTS_PATH;
-const isLckPage = path === LCK_STOVE_PATH || !!findTeam(path) || isLckChanges || isLckContracts;
+const isLckDream = path === LCK_DREAM_PATH;
+const isLckPage = path === LCK_STOVE_PATH || !!findTeam(path) || isLckChanges || isLckContracts || isLckDream;
 const set19Slug = path.startsWith('/set19/unlocks/') ? path.slice('/set19/unlocks/'.length) : '';
 const information = path === '/guide' ? 'guide' : path === '/about' ? 'about' : null;
 const metaKind = path === '/champions' ? 'champion' : path === '/traits' ? 'trait' : 'item';
@@ -172,6 +175,7 @@ const deckName = (key: string) =>
       <RerollCalculator v-else-if="path === '/tools/reroll-calculator'" />
       <ItemCalculator v-else-if="path === '/tools/item-calculator'" />
       <EconomyCalculator v-else-if="path === '/tools/economy-calculator'" />
+      <LckDream v-else-if="isLckDream" :query="query" />
       <LckContracts v-else-if="isLckContracts" :path="path" />
       <LckChanges v-else-if="isLckChanges" :path="path" />
       <LckStove v-else-if="isLckPage" :path="path" />

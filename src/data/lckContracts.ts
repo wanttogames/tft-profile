@@ -67,6 +67,7 @@ export const MARKET_ROWS: MarketRow[] = candidates.filter(([player])=>!CONTRACT_
 }));
 export const teamForContract = (slug:string)=>TEAMS.find(t=>t.slug===slug);
 const KOREAN: Record<string,string> = {faker:'페이커',keria:'케리아',oner:'오너',peyz:'페이즈',chovy:'쵸비',ruler:'룰러',duro:'듀로',zeka:'제카',gumayusi:'구마유시',lucid:'루시드',showmaker:'쇼메이커',smash:'스매쉬 스매시',perfect:'퍼펙트',bdd:'비디디',kellin:'켈린',kingen:'킹겐',calix:'칼릭스',vicla:'빅라',vincenzo:'빈첸조',dudu:'두두',deokdam:'덕담',cuzz:'커즈',ucal:'유칼',bluffing:'블러핑',casting:'캐스팅',gideon:'기드온',roamer:'로머',teddy:'테디',namgung:'남궁',setab:'세탭',doran:'도란',kanavi:'카나비',delight:'딜라이트',raptor:'랩터',pyosik:'표식',deft:'데프트',andil:'안딜',noah:'노아',kiin:'기인',zeus:'제우스',siwoo:'시우',clear:'클리어',rich:'리치',canyon:'캐니언',sharvel:'샤벨',willer:'윌러',sponge:'스폰지',daystar:'데이스타',clozer:'클로저',pungyeon:'풍연',scout:'스카웃',jiwoo:'지우',taeyoon:'태윤',aiming:'에이밍',diable:'디아블',career:'커리어',effort:'에포트',peter:'피터',lehends:'리헨즈'};
+export const playerKoreanName = (player:string):string => KOREAN[player.toLowerCase()]??'';
 function matchRow(row:{player:string;team:string;position:string},query:string,team:string,position:string) {
   const q=query.trim().toLowerCase();
   return (team==='all'||row.team===team)&&(position==='all'||row.position===position)&&(!q||[row.player,row.position,KOREAN[row.player.toLowerCase()],teamForContract(row.team)?.name,teamForContract(row.team)?.code].some(v=>v?.toLowerCase().includes(q)));
