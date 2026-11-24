@@ -18,7 +18,7 @@
         <li><b>최근 경기 분석</b> — 최근 최대 30경기에서 랭크·세트 조건에 맞는 기록을 모읍니다.</li>
         <li><b>패턴 확인과 공유</b> — 성향과 표본을 읽고 카드로 저장합니다.</li>
       </ol>
-      <nav><a href="/set19">시즌19 공략 →</a><a href="/set19/unlocks">시즌19 해금 도감 →</a><a href="/tools/reroll-calculator">리롤 확률 계산기 →</a><a href="/tools/item-calculator">아이템 조합 계산기 →</a><a href="/tools/economy-calculator">골드·레벨업 계산기 →</a><a href="/guide">지표 읽는 방법 →</a><a href="/about">서비스와 데이터 소개 →</a></nav>
+      <nav><a href="/set19">시즌19 공략 →</a><a href="/set19/unlocks">시즌19 해금 도감 →</a><a href="/tools/reroll-calculator">리롤 확률 계산기 →</a><a href="/tools/item-calculator">아이템 조합 계산기 →</a><a href="/tools/economy-calculator">골드·레벨업 계산기 →</a><a href="/esports/lck/2027/stove-league">2027 LCK 스토브리그 →</a><a href="/guide">지표 읽는 방법 →</a><a href="/about">서비스와 데이터 소개 →</a></nav>
     </div>
   </section>
 </template>

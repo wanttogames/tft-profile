@@ -4,6 +4,8 @@ import InformationPage from './pages/InformationPage.vue';
 import RerollCalculator from './pages/RerollCalculator.vue';
 import ItemCalculator from './pages/ItemCalculator.vue';
 import EconomyCalculator from './pages/EconomyCalculator.vue';
+import LckStove from './pages/LckStove.vue';
+import { LCK_STOVE_PATH, findTeam } from './data/lck2027';
 import Set19Overview from './pages/Set19Overview.vue';
 import Set19Unlocks from './pages/Set19Unlocks.vue';
 import Set19UnlockDetail from './pages/Set19UnlockDetail.vue';
@@ -22,6 +24,7 @@ const path = normalizePath(
 );
 const query = props.routeSearch ?? (typeof window === 'undefined' ? '' : window.location.search);
 const page = legalPage(path);
+const isLckPage = path === LCK_STOVE_PATH || !!findTeam(path);
 const set19Slug = path.startsWith('/set19/unlocks/') ? path.slice('/set19/unlocks/'.length) : '';
 const information = path === '/guide' ? 'guide' : path === '/about' ? 'about' : null;
 const metaKind = path === '/champions' ? 'champion' : path === '/traits' ? 'trait' : 'item';
@@ -150,6 +153,7 @@ const deckName = (key: string) =>
         <a href="/tools/item-calculator" :aria-current="path === '/tools/item-calculator' ? 'page' : undefined">아이템 조합</a>
         <a href="/tools/economy-calculator" :aria-current="path === '/tools/economy-calculator' ? 'page' : undefined">골드·레벨업</a>
         <a href="/set19" :aria-current="path.startsWith('/set19') ? 'page' : undefined">시즌19</a>
+        <a :href="LCK_STOVE_PATH" :aria-current="isLckPage ? 'page' : undefined">LCK 스토브리그</a>
         <a href="/guide">사용 가이드</a>
         <a href="/about">소개</a>
       </nav>
@@ -162,6 +166,7 @@ const deckName = (key: string) =>
       <RerollCalculator v-else-if="path === '/tools/reroll-calculator'" />
       <ItemCalculator v-else-if="path === '/tools/item-calculator'" />
       <EconomyCalculator v-else-if="path === '/tools/economy-calculator'" />
+      <LckStove v-else-if="isLckPage" :path="path" />
       <Set19Overview v-else-if="path === '/set19'" />
       <Set19Unlocks v-else-if="path === '/set19/unlocks'" />
       <Set19UnlockDetail v-else-if="set19Slug" :slug="set19Slug" />

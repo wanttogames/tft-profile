@@ -1,5 +1,14 @@
+import { LCK_STOVE_PATH, TEAMS, teamPath } from '../data/lck2027';
 export const SITE_URL = 'https://tft-profile.pages.dev';
 export const PUBLIC_PAGES = {
+  [LCK_STOVE_PATH]: {
+    title: '2027 LCK 스토브리그 - 팀별 로스터·이적 현황 | TFT Profile',
+    description: '2027 LCK 10개 팀의 탑·정글·미드·원딜·서포터 로스터를 비교하고 공식 영입, 재계약, 계약 유지와 미확정 보도를 구분해 확인하세요.',
+  },
+  ...Object.fromEntries(TEAMS.map(team => [teamPath(team), {
+    title: '2027 ' + team.name + ' 로스터 - LCK 스토브리그 이적 현황 | TFT Profile',
+    description: '2027 ' + team.name + ' (' + team.code + ') 포지션별 로스터, 영입·재계약·계약 유지 및 미확정 보도. ' + team.note,
+  }])),
   '/': {
     title: 'TFT Profile - 롤토체스 개인 플레이 분석',
     description:
