@@ -24,7 +24,7 @@ function levelChanged(){if(targetLevel.value<level.value)targetLevel.value=level
     <p class="eyebrow">TFT TOOLS · SET 18 · ECONOMY</p>
     <h1>롤토체스 골드·레벨업 계산기</h1>
     <p>현재 골드와 경험치, 연승·연패, 예정 지출을 입력해 다음 라운드 수입과 목표 레벨까지 필요한 경험치 구매 비용을 계산하세요.</p>
-    <span class="pill">시즌 18 · 18.6 기준 · 증강체·특수 보상 별도 조정</span>
+    <span class="pill">시즌 18 · 18.7 기준 · 증강체·특수 보상 별도 조정</span>
   </header>
   <div class="econ-grid">
     <section class="panel">
@@ -101,7 +101,7 @@ function levelChanged(){if(targetLevel.value<level.value)targetLevel.value=level
     <h3>언제 레벨업하는 게 좋을까요?</h3><p>레벨업 타이밍은 조합, 현재 체력, 연승 여부, 다음 상점 확률에 따라 달라져. 이 계산기는 목표 레벨까지 필요한 XP와 자연 경험치를 반영한 구매 비용을 보여주지만, 특정 라운드의 레벨업을 정답으로 단정하지 않아.</p>
     <h3>계산에 포함되지 않는 항목</h3><p>증강체의 즉시 골드·XP 지급, 위습·조우·PvE 전리품, 판매 수익, 특수 이자 효과, 라운드별 추가 보상은 자동으로 추정하지 않아. 기본 수입과 자연 경험치는 직접 수정할 수 있으니 실제 게임 화면과 다른 경우 입력값을 맞춰 사용해.</p>
     <nav class="links"><a href="/tools/reroll-calculator">리롤 확률 계산기 →</a><a href="/tools/item-calculator">아이템 조합 계산기 →</a><a href="/meta">메타 통계 →</a><a href="/set19">시즌19 정보 →</a></nav>
-    <div class="sources"><span>데이터 참고</span><a href="https://senseos.gg/guides/tft/xp-per-level/" target="_blank" rel="noopener noreferrer">레벨별 XP·18.6 기준</a><a href="https://senseos.gg/guides/tft/gold-interest-and-streaks/" target="_blank" rel="noopener noreferrer">이자·연승·연패 규칙</a><a href="https://topmeta.gg/en/tables/economy/" target="_blank" rel="noopener noreferrer">라운드 기본 수입 참고</a><a href="https://www.tftclimb.com/cheatsheet/tft-shop-odds" target="_blank" rel="noopener noreferrer">라운드당 자연 XP 참고</a><a href="https://teamfighttactics.leagueoflegends.com/en-us/news/game-updates/teamfight-tactics-patch-18-2/" target="_blank" rel="noopener noreferrer">Riot 18.2 패치 노트</a></div>
+    <div class="sources"><span>데이터 참고</span><a href="https://senseos.gg/guides/tft/xp-per-level/" target="_blank" rel="noopener noreferrer">레벨별 XP·18.7 기준</a><a href="https://senseos.gg/guides/tft/gold-interest-and-streaks/" target="_blank" rel="noopener noreferrer">이자·연승·연패 규칙</a><a href="https://topmeta.gg/en/tables/economy/" target="_blank" rel="noopener noreferrer">라운드 기본 수입 참고</a><a href="https://www.tftclimb.com/cheatsheet/tft-shop-odds" target="_blank" rel="noopener noreferrer">라운드당 자연 XP 참고</a><a href="https://teamfighttactics.leagueoflegends.com/en-us/news/game-updates/teamfight-tactics-patch-18-2/" target="_blank" rel="noopener noreferrer">Riot 18.2 패치 노트</a></div>
     <p class="disclaimer">TFT Profile은 Riot Games와 제휴하거나 후원·승인받은 공식 서비스가 아니야. 수치는 시즌18 일반 규칙을 기준으로 한 참고값이며, 패치·증강체·특수 모드에 따라 실제 게임과 다를 수 있어.</p>
   </section>
 </article>

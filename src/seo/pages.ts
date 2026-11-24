@@ -40,7 +40,7 @@ export const PUBLIC_PAGES = {
     description: '롤체 아이템 조합 계산기. 보유 재료로 제작 가능한 완성 아이템과 필요한 다음 재료를 확인하고 시즌18 아이템 조합표 55종을 검색하세요.',
   },
   '/tools/economy-calculator': {
-    title: '롤토체스 골드 계산기·레벨업 XP 계산기 - 시즌18 이자·연승·연패 | TFT Profile',
+    title: '롤토체스 골드 계산기·레벨업 XP 계산기 - 시즌18 18.7 이자·연승·연패 | TFT Profile',
     description: '롤체 골드 계산기. 보유 골드와 이자, 연승·연패 보너스, 라운드 수입을 계산하고 자연 경험치를 반영해 목표 레벨업 비용을 확인하세요.',
   },
   '/set19': {
