@@ -13,7 +13,6 @@ const progress=computed(()=>level.value<10?Math.min(100,currentXp.value/XP_TO_RE
 const plan=computed(()=>calculateLevelPlan({gold:gold.value,level:level.value,currentXp:currentXp.value,targetLevel:targetLevel.value,waitRounds:waitRounds.value,passiveXpPerRound:passiveXpPerRound.value}));
 const income=computed(()=>calculateRoundIncome({currentGold:gold.value,plannedSpend:plannedSpend.value,baseIncome:effectiveBaseIncome.value,streakType:streakType.value,streakLength:streakLength.value,nextCombat:nextCombat.value,interestEnabled:interestEnabled.value,interestCap:interestCap.value}));
 const rows=computed(()=>LEVELS.map(l=>({level:l,xp:XP_TO_REACH_LEVEL[l],total:TOTAL_XP_FOR_LEVEL[l],cost:Math.ceil(XP_TO_REACH_LEVEL[l]/4)*4})));
-const interestBands=computed(()=>Array.from({length:Math.floor(Math.min(10,Math.max(0,interestCap.value)))+1},(_,i)=>i*10));
 const streakLabel=computed(()=>income.value.streakType==='none'?'연속 기록 없음':(income.value.streakType==='win'?'연승 ':'연패 ')+income.value.streakLength+'회');
 const fmt=(n:number)=>Math.round(n).toLocaleString('ko-KR')+'G';
 function reset(){gold.value=50;level.value=7;currentXp.value=0;targetLevel.value=8;waitRounds.value=2;passiveXpPerRound.value=2;basePreset.value='standard';customBaseIncome.value=5;plannedSpend.value=0;streakType.value='win';streakLength.value=5;nextCombat.value='win';interestEnabled.value=true;interestCap.value=5;}
@@ -92,7 +91,7 @@ function levelChanged(){if(targetLevel.value<level.value)targetLevel.value=level
   </section>
   <section class="panel">
     <h2>이자 구간표</h2><p class="small muted">일반 이자 구간은 10골드마다 +1G, 기본 최대 +5G야. 예정 지출 후 보유 골드 기준으로 강조해. 상한 증가 증강체는 위의 상한 입력값에 반영해.</p>
-    <div class="bands"><div v-for="band in interestBands" :key="band" :class="{active:interestEnabled&&Math.min(interestCap*10,Math.floor(income.bankForInterest/10)*10)===band}"><span>{{band}}G</span><b>+{{interestEnabled?Math.min(interestCap,band/10):0}}G</b></div></div>
+    <div class="bands"><div v-for="band in [0,10,20,30,40,50]" :key="band" :class="{active:interestEnabled&&Math.min(50,Math.floor(income.bankForInterest/10)*10)===band}"><span>{{band}}G</span><b>+{{interestEnabled?Math.min(interestCap,band/10):0}}G</b></div></div>
     <p class="hint">50G 이상은 일반 이자 상한에 도달해. 특수 증강체로 상한이 바뀌면 위의 이자 상한을 조정해.</p>
   </section>
   <section class="guide">
@@ -100,10 +99,9 @@ function levelChanged(){if(targetLevel.value<level.value)targetLevel.value=level
     <h3>이자 50골드를 유지해야 하나요?</h3><p>일반 규칙에서 보유 골드 10·20·30·40·50G 구간마다 이자가 1G씩 늘고, 50G부터 최대 5G를 받아. 49G와 50G는 다음 라운드 이자 1G 차이가 나므로, 구매나 리롤 전에 이자 손실과 전력 강화를 비교해.</p>
     <h3>연승과 연패 보너스는 얼마인가요?</h3><p>시즌18 기준 2~4연속은 1G, 5연속은 2G, 6연속 이상은 3G야. 승리와 패배 모두 같은 연속 보너스 표를 사용해. 다만 연패 운영은 체력 손실을 동반하므로 골드만 보고 결정하면 안 돼.</p>
     <h3>언제 레벨업하는 게 좋을까요?</h3><p>레벨업 타이밍은 조합, 현재 체력, 연승 여부, 다음 상점 확률에 따라 달라져. 이 계산기는 목표 레벨까지 필요한 XP와 자연 경험치를 반영한 구매 비용을 보여주지만, 특정 라운드의 레벨업을 정답으로 단정하지 않아.</p>
-    <p class="hint">18.7은 2026년 11월 17일 적용된 시즌18 최신 패치야. 공식 패치 노트에는 XP 비용 조정이 없어, 18.6까지 확인된 레벨별 XP 표를 그대로 사용해.</p>
     <h3>계산에 포함되지 않는 항목</h3><p>증강체의 즉시 골드·XP 지급, 위습·조우·PvE 전리품, 판매 수익, 특수 이자 효과, 라운드별 추가 보상은 자동으로 추정하지 않아. 기본 수입과 자연 경험치는 직접 수정할 수 있으니 실제 게임 화면과 다른 경우 입력값을 맞춰 사용해.</p>
     <nav class="links"><a href="/tools/reroll-calculator">리롤 확률 계산기 →</a><a href="/tools/item-calculator">아이템 조합 계산기 →</a><a href="/meta">메타 통계 →</a><a href="/set19">시즌19 정보 →</a></nav>
-    <div class="sources"><span>데이터 참고</span><a href="https://senseos.gg/guides/tft/xp-per-level/" target="_blank" rel="noopener noreferrer">레벨별 XP 기준</a><a href="https://senseos.gg/guides/tft/gold-interest-and-streaks/" target="_blank" rel="noopener noreferrer">이자·연승·연패 규칙</a><a href="https://topmeta.gg/en/tables/economy/" target="_blank" rel="noopener noreferrer">라운드 기본 수입 참고</a><a href="https://www.tftclimb.com/cheatsheet/tft-shop-odds" target="_blank" rel="noopener noreferrer">라운드당 자연 XP 참고</a><a href="https://teamfighttactics.leagueoflegends.com/en-sg/news/game-updates/teamfight-tactics-patch-18-7/" target="_blank" rel="noopener noreferrer">Riot 18.7 공식 패치 노트</a><a href="https://teamfighttactics.leagueoflegends.com/en-us/news/game-updates/teamfight-tactics-patch-18-2/" target="_blank" rel="noopener noreferrer">Riot 18.2 패치 노트</a></div>
+    <div class="sources"><span>데이터 참고</span><a href="https://senseos.gg/guides/tft/xp-per-level/" target="_blank" rel="noopener noreferrer">레벨별 XP·18.7 기준</a><a href="https://senseos.gg/guides/tft/gold-interest-and-streaks/" target="_blank" rel="noopener noreferrer">이자·연승·연패 규칙</a><a href="https://topmeta.gg/en/tables/economy/" target="_blank" rel="noopener noreferrer">라운드 기본 수입 참고</a><a href="https://www.tftclimb.com/cheatsheet/tft-shop-odds" target="_blank" rel="noopener noreferrer">라운드당 자연 XP 참고</a><a href="https://teamfighttactics.leagueoflegends.com/en-us/news/game-updates/teamfight-tactics-patch-18-2/" target="_blank" rel="noopener noreferrer">Riot 18.2 패치 노트</a></div>
     <p class="disclaimer">TFT Profile은 Riot Games와 제휴하거나 후원·승인받은 공식 서비스가 아니야. 수치는 시즌18 일반 규칙을 기준으로 한 참고값이며, 패치·증강체·특수 모드에 따라 실제 게임과 다를 수 있어.</p>
   </section>
 </article>
