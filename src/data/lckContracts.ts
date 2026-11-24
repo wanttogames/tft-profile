@@ -1,9 +1,10 @@
+import { GCD, syncedExpiry } from './lckGcd';
 import { LCK_BASE, TEAMS, POSITIONS, type Report, type Status } from './lck2027';
 
 export const LCK_FA_PATH = LCK_BASE + '/free-agents';
 export const LCK_CONTRACTS_PATH = LCK_BASE + '/contracts';
 export const CONTRACTS_CHECKED = '2026-11-24';
-export const GCD_SNAPSHOT = '2026-11-16 PT';
+export const GCD_SNAPSHOT = GCD.sourceDate ?? '2026-11-16 PT (수동 기준)';
 export const CONTRACT_SOURCES = {
   gcd: {label:'Riot 공식 계약 명부 (GCD)',url:'https://docs.google.com/spreadsheets/d/1Y7k5kQ2AegbuyiGwEPsa62e883FYVtHqr6UVut9RC4o/pubhtml'},
   archive: {label:'GCD 11/16 스냅샷 및 구단 발표 대조 · LoL2LLM',url:'https://lol2llm.com/ko/esports/lck-2027-roster-changes'},
@@ -33,6 +34,8 @@ const TERMS: Record<string,ContractTerm> = {
   'bro:casting': day('2028-11-20'), 'bro:gideon': day('2027-11-15'), 'bro:roamer': day('2027-11-15'), 'bro:teddy': day('2027-11-15'), 'bro:namgung': day('2027-11-15'), 'bro:setab': month('2027-11'),
 };
 export function lookupTerm(team:string,player:string|null): ContractTerm|null {
+  const synced = syncedExpiry(team,player);
+  if(synced)return {value:synced,precision:'day',source:'gcd'};
   return player ? TERMS[team+':'+player.toLowerCase()]??null : null;
 }
 export function termLabel(term:ContractTerm|null):string {

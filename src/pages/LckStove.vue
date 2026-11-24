@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import LckChangesNav from '../components/LckChangesNav.vue';
+import LckGcdPanel from '../components/LckGcdPanel.vue';
 import { historyTeamPath } from '../data/lckHistory';
 import { lookupTerm, termLabel, LCK_CONTRACTS_PATH } from '../data/lckContracts';
 import { compareTeam, CHANGE_LABEL } from '../data/lckChanges';
@@ -37,6 +38,7 @@ function progress(t: Team){return countConfirmed(t) * 20 + '%';}
     <div class="hero-mark" aria-hidden="true">{{team?.code ?? 'LCK'}}<small>2027</small></div>
   </header>
   <LckChangesNav :path="path"/>
+  <LckGcdPanel :compact="true"/>
   <div class="stove-stats" v-if="!team">
     <div><span>참가 팀</span><b>{{summary.teams}}<small>팀</small></b></div>
     <div><span>공식 발표·계약 확인</span><b>{{summary.confirmed}}<small>/ {{summary.total}}자리</small></b></div>

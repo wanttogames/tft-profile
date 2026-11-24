@@ -19,7 +19,9 @@
     "predev": "node --import tsx scripts/profile-art-manifest.ts",
     "prebuild": "node --import tsx scripts/profile-art-manifest.ts",
     "pretest": "node --import tsx scripts/profile-art-manifest.ts",
-    "refresh:meta": "node --import tsx scripts/collector/refreshMetaOnly.ts"
+    "refresh:meta": "node --import tsx scripts/collector/refreshMetaOnly.ts",
+    "sync:lck": "node scripts/lck/sync-gcd.mjs",
+    "test:lck-sync": "node --test scripts/lck/gcd.test.mjs"
   },
   "dependencies": {
     "vue": "^3.5.0"

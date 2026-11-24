@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import LckGcdPanel from '../components/LckGcdPanel.vue';
 import { TEAMS, POSITIONS, LCK_STOVE_PATH, teamPath, STATUS_LABEL } from '../data/lck2027';
 import { LCK_FA_PATH, LCK_CONTRACTS_PATH, CONTRACTS_CHECKED, GCD_SNAPSHOT, CONTRACT_SOURCES, PRECISION_LABEL, CONTRACT_YEARS, MARKET_ROWS, filterContracts, filterMarket, contractSummary, termLabel, teamForContract } from '../data/lckContracts';
 import LckChangesNav from '../components/LckChangesNav.vue';
@@ -23,9 +24,10 @@ function reset(){query.value='';team.value='all';position.value='all';period.val
     <p class="eyebrow">LCK · OFFSEASON 2027</p>
     <h1>{{isMarket?'2027 LCK FA 선수 현황':'LCK 선수 계약 만료일 도감'}}</h1>
     <p>{{isMarket?'결별을 발표한 선수와 차기 소속이 확인되지 않은 선수의 포지션, 이전 팀, 미확정 이적 보도를 확인하세요.':'현재 확인된 1군 선수의 계약 기간을 2027·2028·2029년 및 미확인으로 검색하세요.'}}</p>
-    <span class="small muted">{{CONTRACTS_CHECKED}} KST 확인 · 수동 갱신</span>
+    <span class="small muted">{{CONTRACTS_CHECKED}} KST 수동 명단 기준 · GCD 별도 동기화</span>
   </header>
   <LckChangesNav :path="path"/>
+  <LckGcdPanel :compact="isMarket"/>
   <div class="overview" v-if="isMarket">
     <div><span>추적 대상</span><b>{{MARKET_ROWS.length}}명</b></div>
     <div><span>결별 발표 확인</span><b>{{departures}}명</b></div>
@@ -37,7 +39,7 @@ function reset(){query.value='';team.value='all';position.value='all';period.val
     <div><span>연도·월·시즌 확인</span><b>{{summary.partial}}명</b></div>
     <div><span>기간 미확인</span><b>{{summary.unknown}}명</b></div>
   </div>
-  <p class="small muted note">{{isMarket?'이 명단은 확인한 LCK 1군 시장 자료의 일부입니다. 결별 발표는 전 소속과의 계약 종료를 뜻하며 다른 리그·팀과 미계약 상태임을 보장하지 않습니다. 보도는 영입 확정이 아닙니다.':'계약 종료일은 GCD '+GCD_SNAPSHOT+' 스냅샷의 확인 가능한 날짜를 사용합니다. 이후 공식 발표가 있는 경우 해당 소속의 최신 확인 정보를 우선하며 기간 미공개 시 임의의 날짜를 만들지 않습니다. 시즌 계약도 정확한 종료일과 구분합니다.'}}</p>
+  <p class="small muted note">{{isMarket?'이 명단은 확인한 LCK 1군 시장 자료의 일부입니다. 결별 발표는 전 소속과의 계약 종료를 뜻하며 다른 리그·팀과 미계약 상태임을 보장하지 않습니다. 보도는 영입 확정이 아닙니다.':'계약 종료일은 GCD '+GCD_SNAPSHOT+' 및 기존 수동 자료를 사용합니다. 수동 기준보다 오래된 GCD는 기존 계약 정보를 덮어쓰지 않으며, 동일 소속·선수의 유효한 종료일만 자동 반영합니다. 시즌 계약도 정확한 종료일과 구분합니다.'}}</p>
   <section v-if="!isMarket" class="panel years" aria-label="계약 연도별 조회">
     <h2>연도별 확인 현황</h2>
     <div class="year-buttons">
