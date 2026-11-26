@@ -119,6 +119,37 @@ try{
   assert.equal(await page.locator('#global-nav-panel-'+group+' a[aria-current]').getAttribute('href'),link);
  }
  pass('representative detail routes and active links');
+ await page.goto(origin+'/esports/lck/2027/stove-league');
+ await page.locator('.lck-section-nav .section-categories').waitFor({state:'visible'});
+ assert.equal(await page.locator('.section-categories a').count(),3);
+ assert.equal(await page.locator('.section-children a').count(),3);
+ const picker=page.locator('.team-picker-row .route-picker');
+ await picker.locator('summary').click();
+ assert.equal(await picker.locator('nav a').count(),11);
+ await picker.locator('a[href="/esports/lck/2027/t1"]').click();
+ await page.waitForURL('**/esports/lck/2027/t1');
+ assert((await page.locator('.team-picker-row summary strong').innerText()).startsWith('T1 ·'));
+ await page.locator('.section-categories a[href="/esports/lck/2027/free-agents"]').click();
+ await page.waitForURL('**/esports/lck/2027/free-agents');
+ assert.equal(await page.locator('.section-children a').count(),2);
+ await page.locator('.section-children a[href="/esports/lck/2027/contracts"]').click();
+ await page.waitForURL('**/esports/lck/2027/contracts');
+ await page.goto(origin+'/esports/lck/history');
+ await page.locator('.archive-pickers .route-picker').first().locator('summary').click();
+ assert(await page.locator('.archive-pickers .route-picker').first().locator('nav a').count()>10);
+ await page.keyboard.press('Escape');
+ await page.setViewportSize({width:375,height:900});await page.goto(origin+'/esports/lck/2027/stove-league');
+ await page.locator('.mobile-toggle').click();
+ const mega=page.locator('#global-nav-panel-lck');
+ await mega.waitFor({state:'visible'});
+ assert.equal(await mega.locator('.mega-links:visible').count(),1);
+ await mega.locator('.mobile-sub-trigger',{hasText:'FA·계약 정보'}).click();
+ await mega.locator('#global-sub-contracts').waitFor({state:'visible'});
+ assert.equal(await mega.locator('.mega-links:visible').count(),1);
+ await mega.locator('a[href="/esports/lck/2027/contracts"]').click();
+ await page.waitForURL('**/esports/lck/2027/contracts');
+ assert.equal(await page.locator('.section-categories .category-active').innerText(),'FA·계약');
+ pass('hierarchical LCK menus, team/year pickers and mobile nested disclosure');
  assert.deepEqual(errors,[],'uncaught browser errors');
  pass('no uncaught browser errors');
 }finally{await browser?.close();await new Promise(resolve=>server.httpServer.close(resolve));}
