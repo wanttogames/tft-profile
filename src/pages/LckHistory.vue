@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import { TEAMS, POSITIONS, LCK_STOVE_PATH, teamPath } from '../data/lck2027';
 import { LCK_HISTORY_PATH, HISTORY_PLAYERS_PATH, HISTORY_YEARS, HISTORY_TEAMS, HISTORY_PERIODS, HISTORY_ROSTERS, HISTORY_PLAYERS, HISTORY_ENTRIES, historyRoute, historyYearPath, historyTeamPath, historyPlayerPath, hasHistoryDetail, playerHistory, historyPlayerId, historyKoreanName, filterHistoryRosters, filterHistoryPlayers } from '../data/lckHistory';
 import LckChangesNav from '../components/LckChangesNav.vue';
+import { LCK_RESULTS_PATH, teamResults, finalsAwards, resultPath, resultTitle, rankLabel, filterResults } from '../data/lckResults';
 const props=defineProps<{path:string}>();
 const route=computed(()=>historyRoute(props.path));
 const year=ref(route.value.year?String(route.value.year):route.value.team?'all':'2027');
@@ -13,6 +14,9 @@ const query=ref(''),position=ref('all');
 const rosters=computed(()=>filterHistoryRosters(year.value,team.value,query.value).sort((a,b)=>b.year-a.year));
 const players=computed(()=>filterHistoryPlayers(query.value,position.value));
 const entries=computed(()=>route.value.player?playerHistory(route.value.player.id):[]);
+const awards=computed(()=>route.value.player?finalsAwards(route.value.player.id):[]);
+const teamPlacements=computed(()=>route.value.team?teamResults(route.value.team.slug):[]);
+const yearEvents=computed(()=>route.value.year?filterResults(String(route.value.year)):[]);
 const playerYears=computed(()=>new Set(entries.value.map(e=>e.year)).size);
 const playerTeams=computed(()=>new Set(entries.value.map(e=>e.team)).size);
 const heading=computed(()=>route.value.player?route.value.player.name+' 선수 소속팀 기록':route.value.directory?'LCK 선수 이력 도감':route.value.team?route.value.team.name+' 역대 로스터':route.value.year?route.value.year+' LCK 로스터':'역대 LCK 로스터 아카이브');
@@ -27,6 +31,7 @@ function currentTeamLink(slug:string){const t=TEAMS.find(t=>t.slug===slug);retur
   <header class="hero"><p class="eyebrow">LCK · ROSTER ARCHIVE</p><h1>{{heading}}</h1><p>2015~2027년 LCK 팀 구성과 선수의 소속팀 기록을 시즌별로 탐색하세요. 자료마다 확인 시점이 다르며 전체 계약 이력을 뜻하지 않습니다.</p></header>
   <LckChangesNav :path="path"/>
   <nav class="history-tabs" aria-label="아카이브 메뉴"><a :href="LCK_HISTORY_PATH" :aria-current="path===LCK_HISTORY_PATH?'page':undefined">전체 아카이브</a><a :href="HISTORY_PLAYERS_PATH" :aria-current="route.directory||route.player?'page':undefined">선수 이력</a><a v-for="y in HISTORY_YEARS" :key="y" :href="historyYearPath(y)" :aria-current="route.year===y?'page':undefined">{{y}}</a></nav>
+  <section class="panel" v-if="route.team||route.year||route.player"><h2>{{route.player?'파이널 MVP 수상 기록':'대회 최종 성적'}}</h2><template v-if="route.player"><p class="small muted">개인 수상 확인 기록만 표시합니다. 로스터 소속만으로 개인 우승을 추정하지 않습니다.</p><div v-for="r in awards" :key="r.id" class="entry"><a :href="resultPath(r.id)">{{resultTitle(r)}}</a><strong>파이널 MVP</strong></div><p v-if="!awards.length" class="small muted">수록 범위에서 확인된 파이널 MVP 기록 없음</p></template><template v-else-if="route.team"><div v-for="item in teamPlacements" :key="item.result.id" class="entry"><a :href="resultPath(item.result.id)">{{resultTitle(item.result)}}</a><strong>{{rankLabel(item.placement)}}</strong></div><p v-if="!teamPlacements.length" class="small muted">수록 대회 성적 없음</p></template><template v-else><p v-for="r in yearEvents" :key="r.id"><a :href="resultPath(r.id)">{{resultTitle(r)}} 최종 순위 →</a></p><p v-if="!yearEvents.length" class="small muted">종료된 수록 대회 없음</p></template><a class="detail" :href="LCK_RESULTS_PATH">역대 우승팀·최종 순위 →</a></section>
   <div class="overview" v-if="!route.player"><div><span>수록 연도</span><b>{{HISTORY_YEARS.length}}</b></div><div><span>팀·시즌 기록</span><b>{{HISTORY_ROSTERS.length}}</b></div><div><span>선수 ID</span><b>{{HISTORY_PLAYERS.length}}</b></div><div><span>선수·포지션 기록</span><b>{{HISTORY_ENTRIES.length}}</b></div></div>
   <template v-if="route.player">
     <div class="overview"><div><span>수록 연도 수</span><b>{{playerYears}}</b></div><div><span>수록 소속팀 수</span><b>{{playerTeams}}</b></div></div>

@@ -1,0 +1,11 @@
+import {describe,it,expect} from 'vitest';
+import {LCK_RESULTS,RESULT_TEAMS,filterResults,titleTable,teamResults,finalsAwards,resultsPages,isResultPath,resultPath,resultTeamName,rankLabel} from '../src/data/lckResults';
+import {PUBLIC_PAGES} from '../src/seo/pages';
+describe('LCK-HISTORY-3',()=>{
+ it('covers 24 completed events without duplicates',()=>{expect(LCK_RESULTS).toHaveLength(24);expect(new Set(LCK_RESULTS.map(r=>r.id)).size).toBe(24);expect(filterResults('all','league')).toHaveLength(22);expect(filterResults('all','cup')).toHaveLength(2);});
+ it('covers the actual participants and valid rank groups',()=>{for(const r of LCK_RESULTS){expect(r.placements).toHaveLength(r.id==='2015-spring'?8:10);expect(new Set(r.placements.map(p=>p.team)).size).toBe(r.placements.length);expect(r.placements.every(p=>RESULT_TEAMS.some(t=>t.slug===p.team))).toBe(true);expect(r.placements[0].rank).toBe(1);expect(r.placements[1].rank).toBe(2);expect(r.placements.at(-1)?.lastRank).toBe(r.placements.length);expect(r.score).toMatch(/^3–[012]$/);}});
+ it('separates cup and league titles',()=>{const league=titleTable();expect(league.find(t=>t.team==='t1')?.wins).toBe(8);expect(league.find(t=>t.team==='geng')?.wins).toBe(6);expect(league.reduce((s,t)=>s+t.wins,0)).toBe(22);expect(titleTable('cup').reduce((s,t)=>s+t.wins,0)).toBe(2);});
+ it('preserves joint cup ranks and historical names',()=>{const cup=LCK_RESULTS.find(r=>r.id==='2026-cup')!;expect(rankLabel(cup.placements.find(p=>p.team==='kt')!)).toBe('8–9위');expect(resultTeamName(LCK_RESULTS.find(r=>r.id==='2015-summer')!,'hle')).toBe('KOO Tigers');expect(resultTeamName(LCK_RESULTS.find(r=>r.id==='2020-summer')!,'ns')).toBe('Team Dynamics');});
+ it('links team standings and verified individual awards',()=>{expect(teamResults('ever8')).toHaveLength(1);expect(finalsAwards('Faker').map(r=>r.id)).toContain('2015-summer');expect(teamResults('geng',2026).map(x=>x.placement.rank)).toEqual([1,1]);});
+ it('registers every result route and rejects unknown events',()=>{expect(isResultPath('/esports/lck/history/results/2027-season')).toBe(false);for(const r of LCK_RESULTS)expect(isResultPath(resultPath(r.id))).toBe(true);for(const p of Object.keys(resultsPages()))expect(Object.hasOwn(PUBLIC_PAGES,p)).toBe(true);});
+});
