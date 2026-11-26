@@ -1,3 +1,6 @@
+<script setup lang="ts">
+import { NAV_GROUPS,SERVICE_LINKS } from "../config/navigation";
+</script>
 <template>
   <section class="home-content" aria-label="분석 기능과 사용 방법">
     <div>
@@ -18,8 +21,9 @@
         <li><b>최근 경기 분석</b> — 최근 최대 30경기에서 랭크·세트 조건에 맞는 기록을 모읍니다.</li>
         <li><b>패턴 확인과 공유</b> — 성향과 표본을 읽고 카드로 저장합니다.</li>
       </ol>
-      <nav><a href="/set19">시즌19 공략 →</a><a href="/set19/unlocks">시즌19 해금 도감 →</a><a href="/tools/reroll-calculator">리롤 확률 계산기 →</a><a href="/tools/item-calculator">아이템 조합 계산기 →</a><a href="/tools/economy-calculator">골드·레벨업 계산기 →</a><a href="/esports/lck/2027/stove-league">2027 LCK 스토브리그 →</a><a href="/esports/lck/2027/compare">LCK 로스터 비교</a><a href="/esports/lck/2027/timeline">LCK 이적 타임라인</a><a href="/esports/lck/2027/free-agents">LCK FA 선수</a><a href="/esports/lck/2027/contracts">LCK 계약 만료일</a><a href="/esports/lck/dream-team">LCK 드림팀 만들기</a><a href="/esports/lck/history">역대 LCK 로스터</a><a href="/esports/lck/history/results">LCK 역대 우승·순위</a><a href="/guide">지표 읽는 방법 →</a><a href="/about">서비스와 데이터 소개 →</a></nav>
+      <nav class="help-links" aria-label="서비스 안내"><a v-for="item in SERVICE_LINKS.slice(0,2)" :key="item.href" :href="item.href">{{item.label}} →</a></nav>
     </div>
+    <nav class="content-links" aria-label="콘텐츠 바로가기"><section v-for="group in NAV_GROUPS" :key="group.id"><h3>{{group.label}}</h3><a v-for="item in group.items" :key="item.href" :href="item.href">{{item.label}}</a></section></nav>
   </section>
 </template>
 <style scoped>
@@ -56,4 +60,7 @@
     gap: 12px;
   }
 }
+.home-content .content-links{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;padding-top:12px;border-top:1px solid var(--border)}
+.content-links section{min-width:0}.content-links h3{margin:6px 0 10px;color:#d2deec;font-size:13px}.content-links a{display:block;padding:5px 0;font-size:12px;line-height:1.5}.content-links a:hover{text-decoration:underline}
+@media(max-width:760px){.home-content .content-links{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>

@@ -25,6 +25,7 @@ import { normalizePath, updatePageMetadata } from './seo/pages';
 import { profileFromQuery, profileLink } from './utils/profileLink';
 import MetaDashboard from './components/MetaDashboard.vue';
 import SiteFooter from './components/SiteFooter.vue';
+import SiteHeader from './components/SiteHeader.vue';
 import PrivacyPolicy from './pages/PrivacyPolicy.vue';
 import TermsOfService from './pages/TermsOfService.vue';
 import { legalPage } from './config/legal';
@@ -50,9 +51,6 @@ const section = ref<'profile' | 'meta'>(
     : 'profile',
 );
 if (typeof document !== 'undefined') updatePageMetadata(path);
-function navigateSection(next: 'profile' | 'meta') {
-  window.location.assign(next === 'meta' ? '/meta' : '/');
-}
 import { parseRiotId } from './utils/riotId';
 import type { PlayerData } from './types/riot';
 import { fetchPlayer, recentSearches, saveSearch } from './api/player';
@@ -150,30 +148,7 @@ const deckName = (key: string) =>
 </script>
 <template>
   <div class="app-shell">
-    <header class="topbar">
-      <a
-        class="brand"
-        href="#"
-        aria-label="TFT Profile 홈"
-        @click.prevent="navigateSection('profile')"
-      >
-        <span class="brand-mark">P</span>TFT<span>PROFILE</span>
-      </a>
-      <nav class="primary-nav" aria-label="주 메뉴">
-        <a href="/" :aria-current="path === '/' || path === '/profile' ? 'page' : undefined"
-          >개인 분석</a
-        >
-        <a href="/meta" :aria-current="section === 'meta' ? 'page' : undefined">메타</a>
-        <a href="/tools/reroll-calculator" :aria-current="path === '/tools/reroll-calculator' ? 'page' : undefined">리롤 계산기</a>
-        <a href="/tools/item-calculator" :aria-current="path === '/tools/item-calculator' ? 'page' : undefined">아이템 조합</a>
-        <a href="/tools/economy-calculator" :aria-current="path === '/tools/economy-calculator' ? 'page' : undefined">골드·레벨업</a>
-        <a href="/set19" :aria-current="path.startsWith('/set19') ? 'page' : undefined">시즌19</a>
-        <a :href="LCK_STOVE_PATH" :aria-current="isLckPage ? 'page' : undefined">LCK 스토브리그</a>
-        <a href="/guide">사용 가이드</a>
-        <a href="/about">소개</a>
-      </nav>
-      <span class="region">KR <span class="muted">한국 서버</span></span>
-    </header>
+    <SiteHeader :path="path" :section="section" />
     <main>
       <PrivacyPolicy v-if="page === 'privacy'" />
       <TermsOfService v-else-if="page === 'terms'" />
