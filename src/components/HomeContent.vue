@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NAV_GROUPS,SERVICE_LINKS } from "../config/navigation";
+import { SERVICE_LINKS } from "../config/navigation";
 </script>
 <template>
   <section class="home-content" aria-label="분석 기능과 사용 방법">
@@ -23,7 +23,6 @@ import { NAV_GROUPS,SERVICE_LINKS } from "../config/navigation";
       </ol>
       <nav class="help-links" aria-label="서비스 안내"><a v-for="item in SERVICE_LINKS.slice(0,2)" :key="item.href" :href="item.href">{{item.label}} →</a></nav>
     </div>
-    <nav class="content-links" aria-label="콘텐츠 바로가기"><section v-for="group in NAV_GROUPS" :key="group.id"><h3>{{group.label}}</h3><a v-for="item in group.items" :key="item.href" :href="item.href">{{item.label}}</a></section></nav>
   </section>
 </template>
 <style scoped>
@@ -60,7 +59,4 @@ import { NAV_GROUPS,SERVICE_LINKS } from "../config/navigation";
     gap: 12px;
   }
 }
-.home-content .content-links{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;padding-top:12px;border-top:1px solid var(--border)}
-.content-links section{min-width:0}.content-links h3{margin:6px 0 10px;color:#d2deec;font-size:13px}.content-links a{display:block;padding:5px 0;font-size:12px;line-height:1.5}.content-links a:hover{text-decoration:underline}
-@media(max-width:760px){.home-content .content-links{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>

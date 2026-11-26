@@ -20,6 +20,8 @@ import Set19Overview from './pages/Set19Overview.vue';
 import Set19Unlocks from './pages/Set19Unlocks.vue';
 import Set19UnlockDetail from './pages/Set19UnlockDetail.vue';
 import HomeContent from './components/HomeContent.vue';
+import HomeHub from './components/HomeHub.vue';
+import { showHomeHub } from './data/homeHub';
 import MetaPreview from './components/MetaPreview.vue';
 import { normalizePath, updatePageMetadata } from './seo/pages';
 import { profileFromQuery, profileLink } from './utils/profileLink';
@@ -74,6 +76,8 @@ const name = ref(''),
   error = ref(''),
   data = ref<PlayerData | null>(null),
   history = ref(recentSearches());
+const profileMode=ref(path==='/profile');
+const homeLanding=computed(()=>showHomeHub(path,profileMode.value,!!data.value,busy.value));
 const stats = computed(() => statistics(data.value?.games || [])),
   form = computed(() => formAnalysis(data.value?.games || [])),
   styles = computed(() => playStyle(data.value?.games || [])),
@@ -115,6 +119,7 @@ async function search(n = name.value, t = tag.value) {
     data.value = await fetchPlayer(n, t);
     const url = new URL(profileLink(n, t));
     window.history.replaceState(null, '', url.pathname + url.search);
+    profileMode.value=true;
     updatePageMetadata('/profile');
     history.value = saveSearch({ gameName: n.trim(), tagLine: t.replace(/^#/, '').trim() });
   } catch (e) {
@@ -168,16 +173,21 @@ const deckName = (key: string) =>
       <template v-else>
         <KeepAlive><MetaDashboard v-if="section === 'meta'" :initial-kind="metaKind" /></KeepAlive>
         <div v-if="section === 'profile'">
-          <section class="search-area">
+          <section class="search-area" :class="{'portal-search':path==='/'&&!profileMode&&!data}">
             <div>
-              <p class="eyebrow">YOUR GAME. YOUR PATTERN.</p>
-              <h1>나의 플레이를 읽다<span>.</span></h1>
-              <p class="muted">
-                최근 30경기로 읽는 나의 TFT 플레이 습관. 평균 등수와 TOP4, 선호 챔피언·아이템·특성을
-                살펴보고 플레이 스타일을 카드로 공유하세요.
-              </p>
+              <template v-if="path==='/'&&!profileMode&&!data">
+                <p class="eyebrow">TFT · TOOLS · LCK</p>
+                <h1>게임을 분석하고,<br class="portal-break"/> e스포츠를 탐색하다<span>.</span></h1>
+                <p class="muted">롤토체스 전적과 메타, 실전 계산기부터 LCK 로스터·이적 소식·역대 대회 기록까지 한곳에서.</p>
+              </template>
+              <template v-else>
+                <p class="eyebrow">YOUR GAME. YOUR PATTERN.</p>
+                <h1>나의 플레이를 읽다<span>.</span></h1>
+                <p class="muted">최근 30경기로 읽는 나의 TFT 플레이 습관. 평균 등수와 TOP4, 선호 챔피언·아이템·특성을 살펴보고 플레이 스타일을 카드로 공유하세요.</p>
+              </template>
             </div>
             <form class="search-form" @submit.prevent="search()">
+              <div v-if="path==='/'&&!profileMode&&!data" class="portal-search-intro"><h2>내 TFT 전적 분석</h2><p>최근 최대 30경기 · Riot ID로 검색</p></div>
               <div class="search-fields">
                 <label class="name-field"
                   ><span>Riot ID</span
@@ -218,6 +228,7 @@ const deckName = (key: string) =>
                   {{ h.gameName }} <span>#{{ h.tagLine }}</span></button
                 ><span v-if="!history.length" class="muted">검색 기록이 없습니다</span>
               </div>
+              <div v-if="homeLanding" class="portal-search-actions"><button type="button" class="sample-link" @click="demo">샘플 분석 보기 →</button><a href="/guide">분석 가이드</a><span>샘플은 가상 데이터</span></div>
             </form>
           </section>
           <div v-if="error" class="notice error" role="alert">{{ error }}</div>
@@ -228,7 +239,7 @@ const deckName = (key: string) =>
               경기 기록을 모아 플레이 패턴을 계산합니다. 첫 조회는 조금 더 걸릴 수 있습니다.
             </p>
           </div>
-          <section v-if="!data && !busy" class="panel public-welcome">
+          <section v-if="!data && !busy && !homeLanding" class="panel public-welcome">
             <div>
               <h2>어떤 분석인지 먼저 살펴보세요</h2>
               <p class="small muted">
@@ -481,11 +492,23 @@ const deckName = (key: string) =>
             <PreferencePanel :data="data" kind="trait" />
             <MatchList :data="data" />
           </template>
-          <MetaPreview v-if="!data && !busy" />
-          <HomeContent />
+          <template v-if="homeLanding">
+            <HomeHub />
+            <MetaPreview />
+            <HomeContent />
+          </template>
         </div>
       </template>
       <SiteFooter />
     </main>
   </div>
 </template>
+
+<style scoped>
+.portal-search{margin:0 0 26px;padding:clamp(20px,3vw,34px);border:1px solid #344a51;border-radius:16px;background:radial-gradient(ellipse at 0 0,#203e3c 0,transparent 58%),linear-gradient(120deg,#172a35,#131c29 75%);gap:clamp(20px,3vw,36px);grid-template-columns:minmax(0,1fr) minmax(0,1.1fr)}
+.portal-search h1{font-size:clamp(25px,3vw,37px);line-height:1.35;letter-spacing:-.065em;margin:8px 0 12px}.portal-search .eyebrow{color:#9ddfc8;letter-spacing:.14em}.portal-search>div>p.muted{color:#b9c9d5;max-width:470px;line-height:1.8;margin-bottom:0}
+.portal-search .search-form{min-width:0;padding:17px;border:1px solid #3a4b59;background:#101a27b8;border-radius:12px}.portal-search-intro h2{font-size:17px;margin:0 0 5px}.portal-search-intro p{color:#a5b5c7;font-size:12px;margin:0 0 13px}
+.portal-search-actions{display:flex;align-items:center;flex-wrap:wrap;gap:6px 13px;font-size:12px;margin-top:8px}.portal-search-actions a,.sample-link{color:var(--mint);font-size:12px}.sample-link{border:0;padding:8px 0;background:transparent;font-weight:600}.portal-search-actions span{color:var(--muted);font-size:10px}.portal-search .primary{min-height:44px;min-width:108px;padding:0 12px}.portal-search .primary span{margin-left:6px}.portal-search .search-fields label{padding:6px 9px}.portal-search .tag-field{width:76px}.portal-search .recent{gap:6px}
+@media(max-width:1000px){.portal-search{grid-template-columns:1fr;gap:18px}.portal-break{display:none}}
+@media(max-width:540px){.portal-search{padding:17px;margin-bottom:20px}.portal-search h1{font-size:26px}.portal-search .search-form{padding:12px}.portal-search .search-fields{flex-wrap:wrap}.portal-search .primary{width:100%;margin-top:8px}.portal-search .name-field{flex:1;min-width:0}.portal-search .tag-field{width:78px}.portal-search .search-fields input{font-size:16px}}
+</style>

@@ -22,9 +22,9 @@ export const PUBLIC_PAGES = {
     description: '2027 ' + team.name + ' (' + team.code + ') 포지션별 로스터, 영입·재계약·계약 유지 및 미확정 보도. ' + team.note,
   }])),
   '/': {
-    title: 'TFT Profile - 롤토체스 개인 플레이 분석',
+    title: 'TFT Profile - 롤토체스 전적·메타·계산기 | LCK 스토브리그·역사',
     description:
-      '최근 30경기로 살펴보는 평균 등수, TOP4, 선호 유닛과 플레이 스타일. 내 TFT 기록을 분석하고 프로필 카드로 공유하세요.',
+      '롤토체스 전적 분석, 메타 통계, 리롤·아이템·골드 계산기와 시즌 정보. LCK 스토브리그 이적 현황, 역대 로스터와 우승팀 기록을 한곳에서 확인하세요.',
   },
   '/guide': {
     title: 'TFT Profile 사용 가이드 - 롤토체스 전적 분석 지표 설명',
