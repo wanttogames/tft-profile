@@ -30,3 +30,8 @@ export function homeHubData(){
 export function showHomeHub(path:string,profileMode:boolean,hasData:boolean,busy:boolean){
  return path==='/'&&!profileMode&&!hasData&&!busy;
 }
+
+// The historic section=meta URL is supported on home only.
+export function initialSection(path:string,query:string):'profile'|'meta'{
+ return ['/meta','/champions','/items','/traits'].includes(path)||(path==='/'&&new URLSearchParams(query).get('section')==='meta')?'meta':'profile';
+}

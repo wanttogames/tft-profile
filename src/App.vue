@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, nextTick } from 'vue';
 import InformationPage from './pages/InformationPage.vue';
 import RerollCalculator from './pages/RerollCalculator.vue';
 import ItemCalculator from './pages/ItemCalculator.vue';
@@ -21,7 +21,7 @@ import Set19Unlocks from './pages/Set19Unlocks.vue';
 import Set19UnlockDetail from './pages/Set19UnlockDetail.vue';
 import HomeContent from './components/HomeContent.vue';
 import HomeHub from './components/HomeHub.vue';
-import { showHomeHub } from './data/homeHub';
+import { showHomeHub, initialSection } from './data/homeHub';
 import MetaPreview from './components/MetaPreview.vue';
 import { normalizePath, updatePageMetadata } from './seo/pages';
 import { profileFromQuery, profileLink } from './utils/profileLink';
@@ -46,12 +46,7 @@ const isLckPage = path === LCK_STOVE_PATH || !!findTeam(path) || isLckChanges ||
 const set19Slug = path.startsWith('/set19/unlocks/') ? path.slice('/set19/unlocks/'.length) : '';
 const information = path === '/guide' ? 'guide' : path === '/about' ? 'about' : null;
 const metaKind = path === '/champions' ? 'champion' : path === '/traits' ? 'trait' : 'item';
-const section = ref<'profile' | 'meta'>(
-  ['/meta', '/champions', '/items', '/traits'].includes(path) ||
-    new URLSearchParams(query).get('section') === 'meta'
-    ? 'meta'
-    : 'profile',
-);
+const section = ref<'profile' | 'meta'>(initialSection(path,query));
 if (typeof document !== 'undefined') updatePageMetadata(path);
 import { parseRiotId } from './utils/riotId';
 import type { PlayerData } from './types/riot';
@@ -78,6 +73,11 @@ const name = ref(''),
   history = ref(recentSearches());
 const profileMode=ref(path==='/profile');
 const homeLanding=computed(()=>showHomeHub(path,profileMode.value,!!data.value,busy.value));
+const riotInput=ref<HTMLInputElement|null>(null);
+const resultAnchor=ref<HTMLElement|null>(null);
+const embeddedTag=computed(()=>name.value.includes('#'));
+function focusResult(){void nextTick(()=>resultAnchor.value?.focus());}
+function closeDemo(){data.value=null;void nextTick(()=>riotInput.value?.focus());}
 const stats = computed(() => statistics(data.value?.games || [])),
   form = computed(() => formAnalysis(data.value?.games || [])),
   styles = computed(() => playStyle(data.value?.games || [])),
@@ -100,7 +100,7 @@ const formLabel = computed(() =>
 const tier = computed(() =>
   data.value?.rank ? `${data.value.rank.tier || ''} ${data.value.rank.rank || ''}` : 'UNRANKED',
 );
-async function search(n = name.value, t = tag.value) {
+async function search(n = name.value, t = tag.value, focus = true) {
   if (busy.value) return;
   try {
     const id = parseRiotId(n, t);
@@ -126,21 +126,23 @@ async function search(n = name.value, t = tag.value) {
     error.value = e instanceof Error ? e.message : '조회 실패';
   } finally {
     busy.value = false;
+    if(data.value&&focus)focusResult();
   }
 }
-function demo() {
+function demo(focus=true) {
   error.value = '';
   data.value = demoPlayer();
+  if(focus)focusResult();
 }
 onMounted(() => {
   if (path === '/profile') {
     try {
       const id = profileFromQuery(query);
-      void search(id.gameName, id.tagLine);
+      void search(id.gameName, id.tagLine, false);
     } catch (e) {
       error.value = e instanceof Error ? e.message : '공유 링크를 확인해 주세요.';
     }
-  } else if (path === '/' && new URLSearchParams(query).get('demo') === '1') demo();
+  } else if (path === '/' && new URLSearchParams(query).get('demo') === '1') demo(false);
 });
 const assetName = (id: string | null) =>
   id && data.value ? displayName(data.value.assets, 'trait', id, data.value.games[0]?.set) : '—';
@@ -192,13 +194,14 @@ const deckName = (key: string) =>
                 <label class="name-field"
                   ><span>Riot ID</span
                   ><input
+                    ref="riotInput"
                     v-model="name"
                     placeholder="게임 이름 또는 게임이름#KR1"
                     required
                     maxlength="50"
                     autocomplete="off"
                     :disabled="busy" /></label
-                ><label class="tag-field"
+                ><label v-if="!embeddedTag" class="tag-field"
                   ><span>태그</span>
                   <div>
                     <b>#</b
@@ -206,7 +209,7 @@ const deckName = (key: string) =>
                       v-model="tag"
                       aria-label="태그"
                       placeholder="KR1"
-                      :required="!name.includes('#')"
+                      required
                       maxlength="16"
                       autocomplete="off"
                       :disabled="busy"
@@ -216,6 +219,7 @@ const deckName = (key: string) =>
                   }}<span v-if="!busy" aria-hidden="true">↗</span>
                 </button>
               </div>
+              <p v-if="embeddedTag" class="embedded-tag-note">입력한 Riot ID의 # 뒤 태그를 사용합니다.</p>
               <div class="recent">
                 <span>최근 검색</span
                 ><button
@@ -228,7 +232,7 @@ const deckName = (key: string) =>
                   {{ h.gameName }} <span>#{{ h.tagLine }}</span></button
                 ><span v-if="!history.length" class="muted">검색 기록이 없습니다</span>
               </div>
-              <div v-if="homeLanding" class="portal-search-actions"><button type="button" class="sample-link" @click="demo">샘플 분석 보기 →</button><a href="/guide">분석 가이드</a><span>샘플은 가상 데이터</span></div>
+              <div v-if="homeLanding" class="portal-search-actions"><button type="button" class="sample-link" @click="demo()">샘플 분석 보기 →</button><a href="/guide">분석 가이드</a><span>샘플은 가상 데이터</span></div>
             </form>
           </section>
           <div v-if="error" class="notice error" role="alert">{{ error }}</div>
@@ -246,12 +250,13 @@ const deckName = (key: string) =>
                 샘플은 UI 확인용 가상 데이터입니다. 실제 플레이어 전적이 아닙니다.
               </p>
             </div>
-            <button class="secondary" @click="demo">샘플 분석 둘러보기 →</button>
+            <button class="secondary" @click="demo()">샘플 분석 둘러보기 →</button>
           </section>
-          <template v-if="data"
-            ><div v-if="data.demo" class="notice demo">
+          <template v-if="data">
+            <div ref="resultAnchor" class="result-anchor" tabindex="-1" aria-label="플레이 분석 결과"><a v-if="profileMode" href="/" class="back-home">← 콘텐츠 홈</a><span class="result-caption">플레이 분석 결과</span></div>
+            <div v-if="data.demo" class="notice demo">
               <span><b>샘플 분석</b> · 가상 경기 데이터입니다. 실제 플레이어 전적이 아닙니다.</span
-              ><button @click="data = null">닫기 ×</button>
+              ><button @click="closeDemo">닫기 ×</button>
             </div>
             <div v-for="w in data.warnings" :key="w" class="notice">{{ w }}</div>
             <PlayerCard :data="data" />
@@ -508,7 +513,8 @@ const deckName = (key: string) =>
 .portal-search{margin:0 0 26px;padding:clamp(20px,3vw,34px);border:1px solid #344a51;border-radius:16px;background:radial-gradient(ellipse at 0 0,#203e3c 0,transparent 58%),linear-gradient(120deg,#172a35,#131c29 75%);gap:clamp(20px,3vw,36px);grid-template-columns:minmax(0,1fr) minmax(0,1.1fr)}
 .portal-search h1{font-size:clamp(25px,3vw,37px);line-height:1.35;letter-spacing:-.065em;margin:8px 0 12px}.portal-search .eyebrow{color:#9ddfc8;letter-spacing:.14em}.portal-search>div>p.muted{color:#b9c9d5;max-width:470px;line-height:1.8;margin-bottom:0}
 .portal-search .search-form{min-width:0;padding:17px;border:1px solid #3a4b59;background:#101a27b8;border-radius:12px}.portal-search-intro h2{font-size:17px;margin:0 0 5px}.portal-search-intro p{color:#a5b5c7;font-size:12px;margin:0 0 13px}
-.portal-search-actions{display:flex;align-items:center;flex-wrap:wrap;gap:6px 13px;font-size:12px;margin-top:8px}.portal-search-actions a,.sample-link{color:var(--mint);font-size:12px}.sample-link{border:0;padding:8px 0;background:transparent;font-weight:600}.portal-search-actions span{color:var(--muted);font-size:10px}.portal-search .primary{min-height:44px;min-width:108px;padding:0 12px}.portal-search .primary span{margin-left:6px}.portal-search .search-fields label{padding:6px 9px}.portal-search .tag-field{width:76px}.portal-search .recent{gap:6px}
+.embedded-tag-note{font-size:11px;color:var(--muted);margin:6px 0 0}.result-anchor{scroll-margin-top:90px;display:flex;align-items:center;gap:15px;margin:0 0 12px;min-height:30px}.result-anchor:focus-visible{outline:2px solid var(--mint);outline-offset:4px}.back-home{color:var(--mint);font-size:13px}.result-caption{font-size:12px;color:var(--muted)}
+.portal-search-actions{display:flex;align-items:center;flex-wrap:wrap;gap:6px 13px;font-size:12px;margin-top:8px}.portal-search-actions a,.sample-link{color:var(--mint);font-size:12px}.sample-link{border:0;padding:8px 0;background:transparent;font-weight:600}.portal-search-actions span{color:var(--muted);font-size:10px}.portal-search .primary{min-height:44px;min-width:108px;padding:0 12px}.portal-search .primary span{margin-left:6px}.portal-search .search-fields label{padding:6px 9px}.portal-search .tag-field{width:76px}.portal-search .recent{gap:6px}.search-form .recent button{max-width:100%;overflow-wrap:anywhere;text-align:left;min-height:30px}.search-form .recent{min-width:0}.search-fields .name-field{min-width:0}
 @media(max-width:1000px){.portal-search{grid-template-columns:1fr;gap:18px}.portal-break{display:none}}
-@media(max-width:540px){.portal-search{padding:17px;margin-bottom:20px}.portal-search h1{font-size:26px}.portal-search .search-form{padding:12px}.portal-search .search-fields{flex-wrap:wrap}.portal-search .primary{width:100%;margin-top:8px}.portal-search .name-field{flex:1;min-width:0}.portal-search .tag-field{width:78px}.portal-search .search-fields input{font-size:16px}}
+@media(max-width:540px){.search-form .search-fields{flex-wrap:wrap}.search-form .search-fields .primary{width:100%;min-height:44px;margin-top:8px}.search-form .search-fields input{font-size:16px}.portal-search{padding:17px;margin-bottom:20px}.portal-search h1{font-size:26px}.portal-search .search-form{padding:12px}.portal-search .search-fields{flex-wrap:wrap}.portal-search .primary{width:100%;margin-top:8px}.portal-search .name-field{flex:1;min-width:0}.portal-search .tag-field{width:78px}.portal-search .search-fields input{font-size:16px}}
 </style>

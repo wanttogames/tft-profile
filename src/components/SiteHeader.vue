@@ -10,14 +10,23 @@ const mobileOpen=ref(false);
 let media:MediaQueryList|undefined;
 function trigger(id:NavGroupId){return root.value?.querySelector<HTMLButtonElement>('#global-nav-trigger-'+id);}
 function close(){expanded.value=null;mobileOpen.value=false;}
+function closeAndRestore(){const mobile=mobileOpen.value;const id=expanded.value;close();void nextTick(()=>mobile?mobileButton.value?.focus():id?trigger(id)?.focus():undefined);}
 function toggleGroup(id:NavGroupId){expanded.value=expanded.value===id?null:id;}
 function toggleMobile(){
  if(mobileOpen.value){close();return;}
  mobileOpen.value=true;expanded.value=active.value?.group??null;
 }
 function outside(e:PointerEvent){if(e.target instanceof Node&&!root.value?.contains(e.target))close();}
-function focusOutside(e:FocusEvent){if(e.target instanceof Node&&!root.value?.contains(e.target))close();}
+function focusOutside(e:FocusEvent){
+ if(!(e.target instanceof Node))return;
+ if(!root.value?.contains(e.target)){close();return;}
+ if(!mobileOpen.value&&expanded.value){
+  const group=trigger(expanded.value)?.parentElement;
+  if(group&&!group.contains(e.target))expanded.value=null;
+ }
+}
 function onKey(e:KeyboardEvent){
+ if(e.key==='Escape'&&e.target===mobileButton.value&&mobileOpen.value){e.preventDefault();closeAndRestore();return;}
  if(e.key!=='Escape'||(!expanded.value&&!mobileOpen.value))return;
  e.preventDefault();
  if(expanded.value){const id=expanded.value;expanded.value=null;void nextTick(()=>trigger(id)?.focus());}
@@ -53,7 +62,7 @@ onBeforeUnmount(()=>{
     </button>
     <div v-show="expanded===group.id" :id="'global-nav-panel-'+group.id" class="nav-panel" :aria-labelledby="'global-nav-trigger-'+group.id">
      <div class="panel-label">{{group.label}}</div>
-     <a v-for="item in group.items" :key="item.href" :href="item.href" :aria-current="active?.href===item.href?(path===item.href?'page':'location'):undefined" @click="close">
+     <a v-for="item in group.items" :key="item.href" :href="item.href" :aria-current="active?.href===item.href?(path===item.href?'page':'location'):undefined" >
       <span class="link-copy"><strong>{{item.label}}</strong><small>{{item.description}}</small></span>
       <span class="link-arrow" aria-hidden="true">↗</span>
      </a>
@@ -82,7 +91,7 @@ onBeforeUnmount(()=>{
 .nav-group:nth-last-child(2) .nav-panel,.nav-group:nth-last-child(3) .nav-panel{left:auto;right:0}
 .panel-label{font-size:11px;letter-spacing:.06em;color:#98a6ba;font-weight:700;padding:9px 10px}
 .nav-panel a{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:54px;padding:10px 12px;border:1px solid transparent;border-radius:7px}
-.nav-panel a:hover,.nav-panel a:focus-visible{background:#213043}
+.nav-panel a:hover,.nav-panel a:focus-visible{background:#213043}.nav-panel a:focus-visible{outline-offset:-2px}
 .nav-panel a[aria-current]{background:#1a342f;border-color:#38594f;color:var(--mint)}
 .link-copy{display:grid;gap:4px}.link-copy strong{font-size:14px;font-weight:600}.link-copy small{font-size:11px;color:#9fadc0}.link-arrow{color:#8497ac;font-size:12px}
 .server-label{font-size:12px;color:#b9c6d7;white-space:nowrap;margin-left:auto;flex:none}.server-label span{margin-left:5px;color:var(--muted)}
@@ -94,7 +103,7 @@ onBeforeUnmount(()=>{
  .mobile-toggle{order:2;display:flex;align-items:center;justify-content:center;gap:5px;min-height:44px;padding:8px 10px;background:#151e2b;border:1px solid #35465a;border-radius:8px;font-size:12px}
  .mobile-toggle svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round}
  .global-nav{display:none;position:absolute;top:100%;left:0;right:0;max-height:calc(100dvh - 65px);overflow:auto;overscroll-behavior:contain;padding:12px 16px 20px;background:#0f1824;border-bottom:1px solid #35465a;box-shadow:0 12px 25px #0007}
- .global-nav.mobile-open{display:grid;gap:8px}
+ .global-nav.mobile-open{display:grid;gap:8px}.global-nav a:focus-visible,.global-nav button:focus-visible{outline-offset:-2px}
  .nav-group{min-width:0}.nav-trigger{width:100%;min-height:48px;padding:12px;font-size:14px;background:#162232;border-color:#28384b}
  .nav-panel,.nav-group:nth-last-child(2) .nav-panel,.nav-group:nth-last-child(3) .nav-panel{position:static;width:auto;max-width:none;min-width:0;max-height:none;overflow:visible;border:0;box-shadow:none;background:transparent;padding:4px 0 0 8px}
  .panel-label{display:none}.nav-panel a{min-height:48px}

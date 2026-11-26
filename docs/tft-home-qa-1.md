@@ -1,0 +1,4 @@
+# TFT-HOME-QA-1
+Source review: scope legacy section=meta to home, hide redundant tag field for embedded Riot ID, restore focus after sample/result, improve desktop Tab dismissal and mobile ESC, preserve modified-click links, wrap narrow transfer lists, defer meta requests until near viewport and retry failed groups only. No data, API contract, sitemap, AdSense or dependency manifest changes.
+
+TFT Home QA workflow runs npm ci, npm test, build/prerender, isolated Chromium smoke on built output with mocked APIs. Checks 19 static destinations, seven widths (320/375/768/900/901/1024/1280), menus, demo, search failure/success and shared profile, meta retry, representative detail routes. Browser dependency temporary CI-only. No real Riot/Supabase requests; no deploy action. Live access unavailable from review environment; actual CI and production verification still required.

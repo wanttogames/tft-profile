@@ -11,40 +11,56 @@ const groups: { kind: MetaKind; title: string; href: string }[] = [
 ];
 const results = ref<Partial<Record<MetaKind, MetaData>>>({});
 const errors = ref<Partial<Record<MetaKind, string>>>({});
+const root=ref<HTMLElement|null>(null);
+const started=ref(false);
+const loading=ref(false);
 const controller = new AbortController();
-onMounted(() =>
-  Promise.allSettled(
-    groups.map(async (g) => {
+let observer:IntersectionObserver|undefined;
+async function load(){
+ if(loading.value||controller.signal.aborted)return;
+ started.value=true;loading.value=true;
+ try{await Promise.allSettled(
+    groups.filter(g=>!results.value[g.kind]).map(async (g) => {
+      delete errors.value[g.kind];
       try {
-        results.value[g.kind] = await fetchMeta(g.kind, 'sample_count', 0, controller.signal);
+        const data=await fetchMeta(g.kind, 'sample_count', 0, controller.signal);
+        if(!Array.isArray(data?.rows)||!Number.isFinite(data?.summary?.match_count)||!data.assets)throw Error('메타 데이터 형식 오류');
+        if(!controller.signal.aborted)results.value[g.kind]=data;
       } catch {
         if (!controller.signal.aborted)
           errors.value[g.kind] =
             '통계를 불러오지 못했습니다. 잠시 후 메타 페이지에서 다시 확인해 주세요.';
       }
     }),
-  ),
-);
-onBeforeUnmount(() => controller.abort());
+  );}finally{loading.value=false;}
+}
+onMounted(()=>{
+ if(typeof IntersectionObserver==='undefined'||!root.value){void load();return;}
+ observer=new IntersectionObserver(entries=>{
+  if(entries.some(e=>e.isIntersecting)){observer?.disconnect();void load();}
+ },{rootMargin:'320px'});
+ observer.observe(root.value);
+});
+onBeforeUnmount(()=>{observer?.disconnect();controller.abort();});
 const id = (r: MetaData['rows'][number]) => r.character_id ?? r.item_name ?? r.trait_name ?? '';
 </script>
 <template>
-  <section class="meta-preview">
+  <section ref="root" class="meta-preview" aria-labelledby="home-meta-preview-title">
     <div class="section-head">
-      <h2>수집 기록에서 보는 메타</h2>
+      <h2 id="home-meta-preview-title">수집 기록에서 보는 메타</h2>
       <a href="/meta">전체 통계 →</a>
     </div>
     <p class="small muted">
       KR Challenger·Grandmaster 래더에서 찾은 경기의 전체 참가자 기준. 패치 구분 없이 집계하며, 사용
       표본이 많은 순서입니다.
     </p>
-    <div class="preview-grid">
+    <div class="preview-grid" :aria-busy="loading">
       <article v-for="g in groups" :key="g.kind">
         <h3>
           <a :href="g.href">{{ g.title }} ↗</a>
         </h3>
         <p v-if="errors[g.kind]" class="small muted">{{ errors[g.kind] }}</p>
-        <p v-else-if="!results[g.kind]" class="small muted">통계를 불러오는 중입니다.</p>
+        <p v-else-if="!results[g.kind]" class="small muted">{{started?'통계를 불러오는 중입니다.':'통계 영역에 접근하면 수집 결과를 불러옵니다.'}}</p>
         <template v-else
           ><p class="small muted">
             최소 표본 {{ results[g.kind]!.minSampleSize }} ·
@@ -67,12 +83,14 @@ const id = (r: MetaData['rows'][number]) => r.character_id ?? r.item_name ?? r.t
         </template>
       </article>
     </div>
+    <button v-if="Object.keys(errors).length&&!loading" type="button" class="secondary meta-retry" @click="load">실패한 통계 다시 불러오기</button>
   </section>
 </template>
 <style scoped>
 .meta-preview {
   margin: 25px 0;
 }
+.meta-retry{margin-top:12px;min-height:44px;font-size:12px}
 .meta-preview a {
   color: var(--mint);
   font-size: 13px;
