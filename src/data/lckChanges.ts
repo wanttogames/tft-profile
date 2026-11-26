@@ -2,7 +2,7 @@
 import { LCK_BASE, TEAMS, POSITIONS, type Team } from './lck2027';
 export const LCK_COMPARE_PATH = LCK_BASE + '/compare';
 export const LCK_TIMELINE_PATH = LCK_BASE + '/timeline';
-export const CHANGES_CHECKED = '2026-11-24';
+export const CHANGES_CHECKED = '2026-11-26';
 export const BASELINE_SOURCE = 'https://lol2llm.com/en/esports/lck-2027-roster-changes';
 export const TIMELINE_SOURCE = 'https://lol-stove.ps-esports.kr/lck/timeline';
 // Last official series, final game (LCK or Worlds 2026), not the season-opening roster.
@@ -36,6 +36,14 @@ export type MoveKind = 'signed' | 'renewed' | 'departed';
 export const MOVE_LABEL: Record<MoveKind,string> = {signed:'영입',renewed:'재계약',departed:'결별·계약 종료'};
 export interface Move { id:string; date:string; player:string; position:string; team:string; kind:MoveKind; previousTeam?:string; source:string }
 const rows: [string,string,string,string,MoveKind,string?][] = [
+  ['11-25','Zeus','탑','t1','signed','hle'],
+  ['11-25','Taeyoon','원딜','kt','signed','bfx'],
+  ['11-25','Thanatos','탑','bfx','signed'],
+  ['11-24','Cloud','서포터','geng','signed'],
+  ['11-24','Sharvel','정글','geng','signed','dns'],
+  ['11-24','Siwoo','탑','geng','signed','dk'],
+  ['11-24','Canyon','정글','hle','signed','geng'],
+  ['11-24','Duro','서포터','geng','departed'],
   ['11-23','Delight','서포터','dk','signed','hle'],
   ['11-23','Career','서포터','dk','departed'],
   ['11-23','Delight','서포터','hle','departed'],

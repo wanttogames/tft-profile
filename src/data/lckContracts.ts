@@ -3,14 +3,16 @@ import { LCK_BASE, TEAMS, POSITIONS, type Report, type Status } from './lck2027'
 
 export const LCK_FA_PATH = LCK_BASE + '/free-agents';
 export const LCK_CONTRACTS_PATH = LCK_BASE + '/contracts';
-export const CONTRACTS_CHECKED = '2026-11-24';
+export const CONTRACTS_CHECKED = '2026-11-26';
 export const GCD_SNAPSHOT = GCD.sourceDate ?? '2026-11-16 PT (수동 기준)';
 export const CONTRACT_SOURCES = {
   gcd: {label:'Riot 공식 계약 명부 (GCD)',url:'https://docs.google.com/spreadsheets/d/1Y7k5kQ2AegbuyiGwEPsa62e883FYVtHqr6UVut9RC4o/pubhtml'},
   archive: {label:'GCD 11/16 스냅샷 및 구단 발표 대조 · LoL2LLM',url:'https://lol2llm.com/ko/esports/lck-2027-roster-changes'},
-  market: {label:'1군 FA·발표 대기 명단 · LoL 스토브 (11/23)',url:'https://lol-stove.ps-esports.kr/lck/fa'},
+  market: {label:'1군 FA·발표 대기 명단 · LoL 스토브 (11/26)',url:'https://lol-stove.ps-esports.kr/lck/fa'},
   roster: {label:'구단 발표 취합 · LoL 스토브',url:'https://lol-stove.ps-esports.kr/lck'},
-  secondary: {label:'계약 기간 보조 확인 · JJANG.GG (11/24)',url:'https://jjang.gg/stove-league'},
+  genAnnouncement: {label:'국민일보 · 젠지 관계자 계약 기간 확인 (11/24)',url:'https://www.kmib.co.kr/article/20261124502119'},
+  officialTimeline: {label:'구단 발표 취합 · 11/25 계약 기간',url:'https://lol-stove.ps-esports.kr/lck/timeline'},
+  secondary: {label:'계약 기간 보조 확인 · JJANG.GG (11/26)',url:'https://jjang.gg/stove-league'},
 };
 export type SourceKey = keyof typeof CONTRACT_SOURCES;
 export type Precision = 'day' | 'month' | 'year' | 'season' | 'unknown';
@@ -23,8 +25,11 @@ const season = (value:string): ContractTerm => ({value,precision:'season',source
 const month = (value:string): ContractTerm => ({value,precision:'month',source:'secondary'});
 // Team + player keys prevent applying an OLD team's GCD expiry to a new signing.
 const TERMS: Record<string,ContractTerm> = {
+  't1:zeus': {value:'2029',precision:'year',source:'officialTimeline'},
+  'geng:siwoo': {value:'2027',precision:'season',source:'genAnnouncement'}, 'geng:sharvel': {value:'2027',precision:'season',source:'genAnnouncement'}, 'geng:cloud': {value:'2027',precision:'season',source:'genAnnouncement'},
+  'bfx:thanatos': {value:'2028',precision:'year',source:'officialTimeline'},
   't1:oner': day('2028-11-20'), 't1:faker': day('2029-11-19'), 't1:peyz': day('2028-11-20'), 't1:keria': day('2029-11-19'),
-  'geng:chovy': day('2027-11-15'), 'geng:ruler': day('2027-11-15'), 'geng:duro': day('2027-11-15'),
+  'geng:chovy': day('2027-11-15'), 'geng:ruler': day('2027-11-15'),
   'hle:zeka': day('2027-11-15'), 'hle:gumayusi': day('2027-11-15'),
   'dk:lucid': day('2027-11-15'), 'dk:showmaker': season('2027'), 'dk:smash': season('2027'),
   'kt:perfect': day('2028-11-20'), 'kt:bdd': day('2028-11-20'), 'kt:kellin': month('2028-11'),
@@ -59,7 +64,7 @@ const candidates: [string,string,string,'departed'|'awaiting'][] = [
   ['Canyon','geng','정글','departed'], ['Sharvel','dns','정글','departed'], ['Willer','krx','정글','departed'], ['Sponge','ns','정글','awaiting'],
   ['Daystar','bfx','미드','departed'], ['Clozer','dns','미드','departed'], ['Pungyeon','bro','미드','departed'], ['Scout','ns','미드','awaiting'],
   ['Jiwoo','kt','원딜','departed'], ['Taeyoon','bfx','원딜','departed'], ['Aiming','krx','원딜','departed'], ['Diable','ns','원딜','awaiting'],
-  ['Career','dk','서포터','departed'], ['Effort','kt','서포터','departed'], ['Peter','dns','서포터','departed'], ['Lehends','ns','서포터','awaiting'],
+  ['Duro','geng','서포터','departed'], ['Career','dk','서포터','departed'], ['Effort','kt','서포터','departed'], ['Peter','dns','서포터','departed'], ['Lehends','ns','서포터','awaiting'],
 ];
 // Announced exits without a confirmed next team in the curated 1st-team snapshot.
 // Four NS departures are listed separately as destination-pending by the market source.
@@ -69,7 +74,7 @@ export const MARKET_ROWS: MarketRow[] = candidates.filter(([player])=>!CONTRACT_
   reports:TEAMS.flatMap(t=>t.slots.flatMap(s=>s.report?.player.toLowerCase()===player.toLowerCase() ? [{team:t.slug,report:s.report}] : [])),
 }));
 export const teamForContract = (slug:string)=>TEAMS.find(t=>t.slug===slug);
-const KOREAN: Record<string,string> = {faker:'페이커',keria:'케리아',oner:'오너',peyz:'페이즈',chovy:'쵸비',ruler:'룰러',duro:'듀로',zeka:'제카',gumayusi:'구마유시',lucid:'루시드',showmaker:'쇼메이커',smash:'스매쉬 스매시',perfect:'퍼펙트',bdd:'비디디',kellin:'켈린',kingen:'킹겐',calix:'칼릭스',vicla:'빅라',vincenzo:'빈첸조',dudu:'두두',deokdam:'덕담',cuzz:'커즈',ucal:'유칼',bluffing:'블러핑',casting:'캐스팅',gideon:'기드온',roamer:'로머',teddy:'테디',namgung:'남궁',setab:'세탭',doran:'도란',kanavi:'카나비',delight:'딜라이트',raptor:'랩터',pyosik:'표식',deft:'데프트',andil:'안딜',noah:'노아',kiin:'기인',zeus:'제우스',siwoo:'시우',clear:'클리어',rich:'리치',canyon:'캐니언',sharvel:'샤벨',willer:'윌러',sponge:'스폰지',daystar:'데이스타',clozer:'클로저',pungyeon:'풍연',scout:'스카웃',jiwoo:'지우',taeyoon:'태윤',aiming:'에이밍',diable:'디아블',career:'커리어',effort:'에포트',peter:'피터',lehends:'리헨즈'};
+const KOREAN: Record<string,string> = {cloud:'클라우드',thanatos:'타나토스',haetae:'해태',viper:'바이퍼',faker:'페이커',keria:'케리아',oner:'오너',peyz:'페이즈',chovy:'쵸비',ruler:'룰러',duro:'듀로',zeka:'제카',gumayusi:'구마유시',lucid:'루시드',showmaker:'쇼메이커',smash:'스매쉬 스매시',perfect:'퍼펙트',bdd:'비디디',kellin:'켈린',kingen:'킹겐',calix:'칼릭스',vicla:'빅라',vincenzo:'빈첸조',dudu:'두두',deokdam:'덕담',cuzz:'커즈',ucal:'유칼',bluffing:'블러핑',casting:'캐스팅',gideon:'기드온',roamer:'로머',teddy:'테디',namgung:'남궁',setab:'세탭',doran:'도란',kanavi:'카나비',delight:'딜라이트',raptor:'랩터',pyosik:'표식',deft:'데프트',andil:'안딜',noah:'노아',kiin:'기인',zeus:'제우스',siwoo:'시우',clear:'클리어',rich:'리치',canyon:'캐니언',sharvel:'샤벨',willer:'윌러',sponge:'스폰지',daystar:'데이스타',clozer:'클로저',pungyeon:'풍연',scout:'스카웃',jiwoo:'지우',taeyoon:'태윤',aiming:'에이밍',diable:'디아블',career:'커리어',effort:'에포트',peter:'피터',lehends:'리헨즈'};
 export const playerKoreanName = (player:string):string => KOREAN[player.toLowerCase()]??'';
 function matchRow(row:{player:string;team:string;position:string},query:string,team:string,position:string) {
   const q=query.trim().toLowerCase();

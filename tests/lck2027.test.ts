@@ -9,7 +9,7 @@ describe('LCK-STOVE-1', () => {
     expect(TEAMS.every(t=>t.slots.length===5)).toBe(true);
   });
   it('does not count pending reports as confirmed slots', () => {
-    expect(rosterSummary()).toEqual({teams:10,confirmed:36,total:50,complete:4});
+    expect(rosterSummary()).toEqual({teams:10,confirmed:42,total:50,complete:7});
     expect(countConfirmed(TEAMS.find(t=>t.slug==='krx')!)).toBe(0);
     for(const t of TEAMS) for(const s of t.slots) {
       expect(s.status==='pending').toBe(s.player===null);
