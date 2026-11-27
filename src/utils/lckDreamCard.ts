@@ -5,7 +5,9 @@ export const DREAM_CARD_HEIGHT=900;
 export function drawDreamCard(canvas:HTMLCanvasElement,value:Dream){
   const d=normalizeDream(value),theme=DREAM_THEMES[d.theme];
   canvas.width=DREAM_CARD_WIDTH;canvas.height=DREAM_CARD_HEIGHT;
-  const ctx=canvas.getContext('2d');if(!ctx)throw new Error('카드 그리기를 지원하지 않는 브라우저입니다.');
+  const context=canvas.getContext('2d');
+  if(!context)throw new Error('카드 그리기를 지원하지 않는 브라우저입니다.');
+  const ctx:CanvasRenderingContext2D=context;
   ctx.fillStyle=theme.background;ctx.fillRect(0,0,1200,900);
   ctx.fillStyle=theme.accent;ctx.fillRect(0,0,1200,10);
   const font='system-ui, "Noto Sans KR", "Malgun Gothic", sans-serif';
