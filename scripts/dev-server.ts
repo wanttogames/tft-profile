@@ -7,6 +7,9 @@ import { onRequest as champions } from '../functions/api/meta/champions';
 import { onRequest as traits } from '../functions/api/meta/traits';
 import { onRequest as summary } from '../functions/api/meta/summary';
 import { onRequest as tierList } from '../functions/api/meta/tier-list';
+import { onRequest as trends } from '../functions/api/meta/trends';
+import { onRequest as history } from '../functions/api/meta/patch-history';
+import { onRequest as entity } from '../functions/api/meta/trends/entity';
 const env = { ...process.env, ...loadEnv('development', process.cwd(), '') };
 const routes: Record<string, typeof profile> = {
   '/api/tft/profile': profile,
@@ -15,6 +18,9 @@ const routes: Record<string, typeof profile> = {
   '/api/meta/traits': traits,
   '/api/meta/summary': summary,
   '/api/meta/tier-list': tierList,
+  '/api/meta/trends': trends,
+  '/api/meta/patch-history': history,
+  '/api/meta/trends/entity': entity,
 };
 createServer(async (req, res) => {
   try {

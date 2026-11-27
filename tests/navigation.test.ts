@@ -3,10 +3,10 @@ import {NAV_GROUPS,SERVICE_LINKS,activeNavigation,navItems} from '../src/config/
 import {PUBLIC_PAGES} from '../src/seo/pages';
 import {readFileSync} from 'node:fs';
 describe('TFT-NAV-1',()=>{
- it('has five ordered categories and 21 unique content destinations',()=>{
+ it('has five ordered categories and 22 unique content destinations',()=>{
   expect(NAV_GROUPS.map(g=>g.id)).toEqual(['analysis','tools','season','lck','history']);
   const links=NAV_GROUPS.flatMap(g=>g.items.map(i=>i.href));
-  expect(links).toHaveLength(21);expect(new Set(links).size).toBe(21);
+  expect(links).toHaveLength(22);expect(new Set(links).size).toBe(22);
  });
  it('keeps all menu links on public pages and in sitemap',()=>{
   const sitemap=readFileSync(new URL('../public/sitemap.xml',import.meta.url),'utf8');

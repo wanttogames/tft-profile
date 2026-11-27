@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { TREND_PAGES } from '../meta/trends';
 import { computed, onMounted, ref } from 'vue';
 import AssetBadge from '../components/AssetBadge.vue';
 import MetaCompanions from '../components/MetaCompanions.vue';
@@ -84,6 +85,7 @@ onMounted(load);
         >{{ tab.name }}</a
       >
       <a class="stat-link" :href="kindPage.stats">{{ kindPage.name }} 상세 통계 ↗</a>
+      <a :href="TREND_PAGES[kind].path">패치 변화 →</a>
     </nav>
 
     <div v-if="summary" class="tier-summary">

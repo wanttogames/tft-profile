@@ -1,8 +1,10 @@
 import type { Store } from './supabase';
+import { archiveSnapshotCatalog } from './trendSnapshot';
 import { prepareOfficialPatch } from './officialPatch';
 export interface MetaRefreshResult {
   status: 'refreshed' | 'busy';
   generation?: number;
+  snapshotId?: number | null;
   current?: string | null;
   candidate?: string | null;
   sampleSize?: number;
@@ -11,8 +13,11 @@ export interface MetaRefreshResult {
   confirmed?: boolean;
   elapsed_ms?: number;
 }
-/** One RPC per successful batch, without retries: a timed-out refresh may still run. */
-export async function refreshMetaStats(store: Pick<Store, 'request'>, preparePatch = true): Promise<MetaRefreshResult> {
+/** Refresh is not retried: a timed-out transaction may still run. */
+export async function refreshMetaStats(
+  store: Pick<Store, 'request'>,
+  preparePatch = true,
+): Promise<MetaRefreshResult> {
   const started = Date.now();
   if (preparePatch) await prepareOfficialPatch(store);
   const result = (await store.request(
@@ -24,5 +29,7 @@ export async function refreshMetaStats(store: Pick<Store, 'request'>, preparePat
   if (!result || !['refreshed', 'busy'].includes(result.status))
     throw Error('Unexpected meta refresh response');
   console.log('[meta-refresh]', { ...result, elapsed: Date.now() - started });
+  if (result.status === 'refreshed' && result.snapshotId && result.generation)
+    await archiveSnapshotCatalog(store, result.snapshotId, result.generation);
   return result;
 }

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { TREND_PAGES } from '../meta/trends';
 import { TIER_PAGES } from '../meta/tierPages';
 import { ref, watch, onBeforeUnmount, onMounted } from 'vue';
 import { fetchMeta } from '../api/meta';
@@ -78,6 +79,7 @@ const percent = (v: number) => (v * 100).toFixed(1) + '%';
         {{ tab.name }}
       </a>
       <a :href="TIER_PAGES[kind].path">{{ TIER_PAGES[kind].name }} 티어리스트 →</a>
+      <a :href="TREND_PAGES[kind].path">패치 변화 →</a>
     </nav>
     <p v-if="data?.summary.preview_set_number" class="notice" role="status">
       {{ data.summary.preview_patch ? '공식 패치 적용 기준과 세트 번호에 따른 전환 대기 참고 통계입니다. 실제 경기 버전은 확인되지 않았습니다.' : '패치 미확정 참고 통계입니다. 동일 세트의 최근 7일 경기이며 여러 패치가 포함될 수 있습니다.' }}

@@ -275,4 +275,9 @@
   <url><loc>https://tft-profile.pages.dev/tier-list/champions</loc></url>
   <url><loc>https://tft-profile.pages.dev/tier-list/items</loc></url>
   <url><loc>https://tft-profile.pages.dev/tier-list/traits</loc></url>
+  <url><loc>https://tft-profile.pages.dev/meta/trends</loc></url>
+  <url><loc>https://tft-profile.pages.dev/meta/trends/champions</loc></url>
+  <url><loc>https://tft-profile.pages.dev/meta/trends/items</loc></url>
+  <url><loc>https://tft-profile.pages.dev/meta/trends/traits</loc></url>
+  <url><loc>https://tft-profile.pages.dev/meta/patch-history</loc></url>
 </urlset>

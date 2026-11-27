@@ -1,3 +1,4 @@
+import { TREND_PATH, HISTORY_PATH, TREND_PAGES } from '../meta/trends';
 import { TIER_LIST_PATH, TIER_PAGES } from '../meta/tierPages';
 import { LCK_INTERNATIONAL_PATH } from '../data/lckInternational';
 import { resultsPages } from '../data/lckResults';
@@ -15,6 +16,12 @@ export const PUBLIC_PAGES = {
   ...Object.fromEntries(Object.values(TIER_PAGES).map(({ name, path }) => [path, {
     title: `롤토체스 ${name} 티어리스트 - TFT 최신 패치 메타 | TFT Profile`,
     description: `롤토체스 ${name}의 평균 등수, TOP4 비율, 1위율과 표본 신뢰도를 반영한 최근 7일 티어리스트입니다.`,
+  }])),
+  [TREND_PATH]: { title: '롤토체스 패치별 메타 변화 - 챔피언·아이템·특성 | TFT Profile', description: 'TFT 패치별 성적과 사용률을 동일 세트의 최근 7일 관측 집계로 비교하세요.' },
+  [HISTORY_PATH]: { title: 'TFT 패치별 통계 이력 | TFT Profile', description: '롤토체스 패치의 일별 관측 및 종료 직전 관측, 표본 수와 패치 확인 방식을 확인하세요.' },
+  ...Object.fromEntries(Object.values(TREND_PAGES).map(({label,path})=>[path,{
+    title: `롤토체스 패치별 ${label} 메타 변화 | TFT Profile`,
+    description: `동일 세트에서 ${label} 평균 등수, TOP4, 사용률과 상대 티어 변화를 비교하세요.`,
   }])),
   ...historyPages(),
   ...resultsPages(),

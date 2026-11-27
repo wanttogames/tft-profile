@@ -18,6 +18,7 @@ beforeAll(async () => {
     '012_tft_meta_recovery',
     '013_tft_meta_patch_sync',
     '014_tft_meta_tier_scope',
+    '015_tft_meta_trend',
   ])
     await db.exec(readFileSync(`supabase/migrations/${name}.sql`, 'utf8'));
 }, 30000);
@@ -141,4 +142,62 @@ it('records the committed single set and suppresses the set for mixed or missing
   await db.exec("UPDATE public.tft_matches SET set_number=NULL WHERE match_id='test1'");
   await refresh();
   expect(await value('SELECT aggregate_set_number AS value FROM public.v_tft_meta_current_summary')).toBeNull();
+});
+
+it('keeps one daily snapshot per set and patch and rejects a failed generation atomically', async () => {
+  await seed('19.1', 30);
+  await db.exec('UPDATE public.tft_matches SET set_number=19');
+  await refresh();
+  const first = await value('SELECT snapshot_id AS value FROM public.tft_meta_snapshot');
+  const result = await refresh();
+  expect(await value('SELECT count(*)::int AS value FROM public.tft_meta_snapshot')).toBe(1);
+  expect(await value('SELECT snapshot_id AS value FROM public.tft_meta_snapshot')).toEqual(first);
+  expect(await value('SELECT aggregation_generation AS value FROM public.tft_meta_snapshot')).toEqual(result.generation);
+  await db.exec("SAVEPOINT snapshot_failure; ALTER TABLE public.tft_meta_snapshot_entity ADD CHECK (kind <> 'trait') NOT VALID; UPDATE public.tft_traits SET tier_current=2");
+  await expect(refresh()).rejects.toThrow();
+  await db.exec('ROLLBACK TO SAVEPOINT snapshot_failure');
+  expect(await value('SELECT generation AS value FROM public.tft_meta_state')).toEqual(result.generation);
+  expect(await value('SELECT count(*)::int AS value FROM public.tft_meta_snapshot')).toBe(1);
+});
+it('preserves a final observation before patch overwrite and expires only old daily snapshots', async () => {
+  await seed('18.7', 30, 0, 'old');
+  await db.exec('UPDATE public.tft_matches SET set_number=18');
+  await refresh();
+  const old = await value('SELECT snapshot_id AS value FROM public.tft_meta_snapshot');
+  await db.exec("UPDATE public.tft_matches SET game_datetime=game_datetime-700000000");
+  await seed('19.1', 90, 0, 'next');
+  await db.exec("UPDATE public.tft_matches SET set_number=19 WHERE match_id LIKE 'next%'; UPDATE public.tft_meta_state SET observations='[]'");
+  await refresh();
+  expect(await value("SELECT snapshot_type AS value FROM public.tft_meta_snapshot WHERE patch='18.7'")).toBe('final');
+  expect(await value("SELECT count(*)::int AS value FROM public.tft_meta_snapshot_entity WHERE snapshot_id=$1",[old])).toBeGreaterThan(0);
+  expect(await value("SELECT set_number AS value FROM public.tft_meta_snapshot WHERE patch='19.1'")).toBe(19);
+  await db.exec("UPDATE public.tft_meta_snapshot SET snapshot_date=snapshot_date-91");
+  await refresh();
+  expect(await value("SELECT count(*)::int AS value FROM public.tft_meta_snapshot WHERE snapshot_date<current_date-90 AND snapshot_type='daily'")).toBe(0);
+  expect(await value("SELECT snapshot_id AS value FROM public.tft_meta_snapshot WHERE patch='18.7' AND snapshot_type='final'")).toEqual(old);
+});
+it('stores official estimates only after promotion beyond a preview', async () => {
+  await seed(null, 10);
+  await db.exec('UPDATE public.tft_matches SET set_number=18');
+  await sync();
+  await refresh();
+  expect(await value('SELECT count(*)::int AS value FROM public.tft_meta_snapshot')).toBe(0);
+  await seed(null, 20, 0, 'more');
+  await db.exec('UPDATE public.tft_matches SET set_number=18');
+  await refresh();
+  expect(await value('SELECT confidence_status AS value FROM public.tft_meta_snapshot')).toBe('schedule-estimate');
+});
+
+it('seals catalog metadata once for the exact active snapshot generation', async () => {
+  await seed('19.1', 30);
+  await db.exec('UPDATE public.tft_matches SET set_number=19');
+  const result = await refresh();
+  const params = [result.snapshotId, result.generation, '1.0', JSON.stringify([{
+    kind: 'item', entity_id: 'item', catalog: { asset: { name: '아이템' }, group: 'completed', tier: 'A', score: 74, minimum: 50 },
+  }])];
+  const seal = "SELECT public.seal_tft_meta_snapshot_metadata($1,$2,$3,$4::jsonb) AS value";
+  expect(await value(seal,[params[0],result.generation-1,...params.slice(2)])).toBe(false);
+  expect(await value(seal,params)).toBe(true);
+  expect(await value(seal,params)).toBe(false);
+  expect(await value("SELECT catalog->>'score' AS value FROM public.tft_meta_snapshot_entity WHERE kind='item'")).toBe('74');
 });

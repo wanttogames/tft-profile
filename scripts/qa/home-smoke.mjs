@@ -22,6 +22,23 @@ try{
  await context.route('**/*',async route=>{
   const url=new URL(route.request().url());
   if(url.origin!==origin){await route.abort();return;}
+  if(['/api/meta/trends','/api/meta/trends/entity','/api/meta/patch-history'].includes(url.pathname)){
+   const before={snapshot_id:1,set_number:19,patch:'19.1',snapshot_type:'final',snapshot_date:'2026-11-20',snapshot_at:'2026-11-20T08:00:00Z',window_start:'2026-11-13T08:00:00Z',window_end:'2026-11-20T08:00:00Z',aggregation_generation:1,match_count:100,participant_count:800,confidence_status:'confirmed'};
+   const after={...before,snapshot_id:2,patch:'19.2',snapshot_type:'daily',snapshot_date:'2026-11-27',aggregation_generation:2,match_count:200,participant_count:1600,confidence_status:'schedule-estimate'};
+   const prior={snapshot_id:1,kind:'champion',entity_id:'test',sample_count:80,avg_placement:4,top4_rate:.5,win_rate:.2};
+   const current={...prior,snapshot_id:2,sample_count:240,avg_placement:3.5,top4_rate:.6};
+   const row={id:'test',kind:'champion',group:'1',previous:prior,current,previousUsage:.1,currentUsage:.15,placement:.5,top4:10,win:0,usage:5,popularity:'사용률 급증',status:'급상승'};
+   const patches=[after,before];
+   if(url.pathname.endsWith('/entity')){
+    await route.fulfill({json:{patches:[before,after],rows:[prior,current],minimum:50}});return;
+   }
+   if(url.pathname.endsWith('/patch-history')){
+    await route.fulfill({json:{patches,snapshots:patches,total:2}});return;
+   }
+   await route.fulfill({json:{status:'ready',patches,from:before,to:after,minimum:50,total:1,rows:[row],
+    highlights:[{kind:'champion',group:'1',up:[row],down:[]}],assets:{'unit:*:test':{name:'QA 추이 항목'}}}});
+   return;
+  }
   if(url.pathname==='/api/meta/tier-list'){
    if(tierFixture==='error'){
     await route.fulfill({status:503,json:{message:'티어 테스트 오류'}});return;
@@ -76,7 +93,7 @@ try{
   await access(item.href==='/'?'dist/index.html':'dist'+item.href+'/index.html');
   assert(rootHtml.includes('href="'+item.href+'"'),'SSR link '+item.href);
  }
- pass('static home and 21 menu destinations');
+ pass('static home and 22 menu destinations');
  const firstPaint=await context.newPage();
  try{
   await firstPaint.route('**/*',route=>
@@ -284,6 +301,23 @@ try{
  assert.equal(await page.locator('.tier-cards').count(),0);
  tierFixture='confirmed';
  pass('tier pages, responsive cards, filters, loading fallback and SEO');
+ for(const path of ['/meta/trends','/meta/trends/champions','/meta/trends/items','/meta/trends/traits','/meta/patch-history']){
+  const html=await readFile('dist'+path+'/index.html','utf8');
+  assert(html.includes('패치 변화 읽는 법'));
+  assert(html.includes('rel="canonical" href="https://tft-profile.pages.dev'+path+'"'));
+ }
+ for(const width of [320,390,768,1440]){
+  await page.setViewportSize({width,height:900});
+  await page.goto(origin+'/meta/trends/champions');
+  await page.getByText('QA 추이 항목',{exact:true}).waitFor();
+  await page.getByText('+5.00%p',{exact:true}).waitFor();
+  await page.getByRole('button',{name:'추이 비교',exact:true}).click();
+  await page.getByRole('img',{name:'TOP4 비율 패치별 추이'}).waitFor();
+  await overflow();
+ }
+ await page.goto(origin+'/meta/patch-history');
+ await page.getByText('2026-11-20 · 종료 직전 관측',{exact:true}).waitFor();
+ pass('snapshot comparison, patch history, charts, responsive layout and SEO');
  await page.goto(origin+'/esports/lck/dream-team');
  const save=page.getByRole('button',{name:'PNG 카드 저장'});
  assert(await save.isDisabled());

@@ -1,5 +1,6 @@
 import { LCK_INTERNATIONAL_PATH } from '../data/lckInternational';
 
+import { TREND_PATH, HISTORY_PATH } from '../meta/trends';
 import { TIER_LIST_PATH } from '../meta/tierPages';
 
 export type NavGroupId = 'analysis' | 'tools' | 'season' | 'lck' | 'history';
@@ -12,6 +13,7 @@ export const NAV_GROUPS:readonly NavGroup[] = [
   {label:'개인 플레이 분석',href:'/',description:'전적과 플레이 성향',aliases:['/profile']},
   {label:'메타 통계',href:'/meta',description:'상위 랭커 경기 분석'},
   {label:'메타 티어리스트',href:TIER_LIST_PATH,description:'챔피언·아이템·특성 S~D 등급',match:'prefix'},
+  {label:'패치 메타 변화',href:TREND_PATH,description:'동일 세트의 패치별 요약 통계',match:'prefix',aliases:[HISTORY_PATH]},
   {label:'챔피언 통계',href:'/champions',description:'챔피언별 평균 등수와 TOP4'},
   {label:'아이템 통계',href:'/items',description:'아이템별 성적'},
   {label:'특성 통계',href:'/traits',description:'시너지별 성적'},

@@ -21,3 +21,5 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          MIN_SAMPLE_SIZE: ${{ vars.MIN_SAMPLE_SIZE || '50' }}
+          TFT_STATIC_VERSION: ${{ vars.TFT_STATIC_VERSION || 'latest' }}

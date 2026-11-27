@@ -24,6 +24,9 @@ import Set19UnlockDetail from './pages/Set19UnlockDetail.vue';
 import HomeContent from './components/HomeContent.vue';
 import HomeHub from './components/HomeHub.vue';
 import { showHomeHub, initialSection } from './data/homeHub';
+import MetaTrends from './pages/MetaTrends.vue';
+import HomeTrendLink from './components/HomeTrendLink.vue';
+import { TREND_PATH, HISTORY_PATH, trendKind } from './meta/trends';
 import TierList from './pages/TierList.vue';
 import HomeTierPreview from './components/HomeTierPreview.vue';
 import { TIER_LIST_PATH, tierPageKind } from './meta/tierPages';
@@ -40,6 +43,7 @@ const props = defineProps<{ routePath?: string; routeSearch?: string }>();
 const path = normalizePath(
   props.routePath ?? (typeof window === 'undefined' ? '/' : window.location.pathname),
 );
+const trend = trendKind(path);
 const tierKind = tierPageKind(path);
 const query = props.routeSearch ?? (typeof window === 'undefined' ? '' : window.location.search);
 const page = legalPage(path);
@@ -181,6 +185,7 @@ const deckName = (key: string) =>
       <RerollCalculator v-else-if="path === '/tools/reroll-calculator'" />
       <ItemCalculator v-else-if="path === '/tools/item-calculator'" />
       <EconomyCalculator v-else-if="path === '/tools/economy-calculator'" />
+      <MetaTrends v-else-if="path === TREND_PATH || path === HISTORY_PATH || trend" :kind="trend" :history="path === HISTORY_PATH" />
       <TierList v-else-if="path === TIER_LIST_PATH || tierKind" :kind="tierKind ?? 'champion'" :overview="!tierKind" />
       <LckInternational v-else-if="path === LCK_INTERNATIONAL_PATH" />
       <LckResults v-else-if="isLckResults" :path="path" />
@@ -474,6 +479,7 @@ const deckName = (key: string) =>
             <HomeHub />
             <MetaPreview />
             <HomeTierPreview />
+            <HomeTrendLink />
             <HomeContent />
           </template>
         </div>

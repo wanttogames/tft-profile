@@ -31,6 +31,8 @@ jobs:
           RIOT_API_KEY: ${{ secrets.RIOT_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          MIN_SAMPLE_SIZE: ${{ vars.MIN_SAMPLE_SIZE || '50' }}
+          TFT_STATIC_VERSION: ${{ vars.TFT_STATIC_VERSION || 'latest' }}
           PLAYERS_LIMIT: ${{ inputs.players_limit || vars.PLAYERS_LIMIT || '20' }}
           MATCHES_PER_PLAYER: ${{ inputs.matches_per_player || vars.MATCHES_PER_PLAYER || '10' }}
           RIOT_REQUEST_DELAY_MS: ${{ vars.RIOT_REQUEST_DELAY_MS || '1400' }}
