@@ -10,7 +10,7 @@ describe('TFT-NAV-2',()=>{
    expect(sections.flatMap(s=>s.items.map(i=>i.href)).sort()).toEqual(navItems(id).map(i=>i.href).sort());
    expect(sections.every(s=>s.href===s.items[0].href&&Object.hasOwn(PUBLIC_PAGES,s.href))).toBe(true);
   }
-  expect(NAV_GROUPS.flatMap(g=>g.items)).toHaveLength(20);
+  expect(NAV_GROUPS.flatMap(g=>g.items)).toHaveLength(21);
  });
  it('uses correct hierarchy on nested team, player and result pages',()=>{
   for(const [path,id] of [

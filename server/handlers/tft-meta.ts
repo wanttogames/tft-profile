@@ -1,3 +1,4 @@
+import { rankTiers, tierScope, TIER_VERSION, type TierData } from '../../src/meta/tierList';
 import { metaErrorBody, metaErrorCategory } from '../lib/metaDiagnostics';
 import type { ApiEnv } from '../env';
 import { loadMetaAssets } from '../lib/staticData';
@@ -19,10 +20,11 @@ export default async function handler(
   request: Request,
   env: ApiEnv,
   summaryOnly = false,
+  tierList = false,
 ): Promise<Response> {
   if (request.method !== 'GET') return reply({ message: 'GET 요청만 지원합니다.' }, 405);
   const q = new URL(request.url).searchParams;
-  const kind = (q.get('kind') ?? 'item') as MetaKind,
+  const kind = (q.get('kind') ?? (tierList ? 'champion' : 'item')) as MetaKind,
     sort = (q.get('sort') ?? 'sample_count') as MetaSort;
   const page = Number(q.get('page') ?? '0');
   if (
@@ -54,7 +56,7 @@ export default async function handler(
   } catch {
     return reply({ message: 'Supabase URL 설정을 확인해 주세요.' }, 503);
   }
-  const key = `${base}|${min}|${kind}|${sort}|${page}|${summaryOnly}|${env.TFT_STATIC_VERSION}`;
+  const key = `${base}|${min}|${kind}|${sort}|${page}|${summaryOnly}|${tierList}|${env.TFT_STATIC_VERSION}`;
   const hit = cache.get(key);
   if (hit && hit.expires > Date.now()) {
     console.info(`[meta] ${kind} cache-hit`);
@@ -106,6 +108,16 @@ export default async function handler(
       console.info(`[meta] ${kind} ${stage} ${Date.now() - started}ms`);
     }
   }
+  async function readSummary() {
+    const [summary] = await query('v_tft_meta_current_summary?select=*', 'summary-query');
+    if (!summary) throw Error('메타 요약 View를 확인해 주세요.');
+    return summary as MetaData['summary'];
+  }
+  function save<T extends MetaData>(data: T) {
+    if (cache.size >= 64) cache.delete(cache.keys().next().value!);
+    cache.set(key, { expires: Date.now() + 60000, data });
+    return data;
+  }
   if (!pending.has(key)) {
     const started = Date.now();
     const job = (async (): Promise<MetaData> => {
@@ -116,15 +128,51 @@ export default async function handler(
         offset: String(page * 50),
         limit: '51',
       });
-      const [raw, summary] = await Promise.all([
-        summaryOnly ? Promise.resolve([]) : query(`${views[kind]}?${params}`, 'db-query'),
-        query('v_tft_meta_current_summary?select=*', 'summary-query'),
-      ]);
-      if (!summary[0]) throw Error('메타 요약 View를 확인해 주세요.');
-      // SQL pairs and item totals both count distinct participant boards.
-      // Preserve the response contract using the same materialized distinct-board totals.
-      const scopedRaw = (summary[0] as MetaData['summary']).scope_ready === false ? [] : raw;
-      const rows = (scopedRaw.slice(0, 50) as MetaRow[]).map((row) => ({
+      let raw: unknown[];
+      let summary: MetaData['summary'];
+      if (tierList) {
+        summary = await readSummary();
+        const status = tierScope(summary);
+        if (status !== 'confirmed' && status !== 'estimated')
+          return save({
+            rows: [],
+            summary,
+            minSampleSize: min,
+            hasMore: false,
+            page: 0,
+            assets: {},
+            status,
+            tierVersion: TIER_VERSION,
+          } satisfies TierData);
+
+        // Read a complete ordering from the same published refresh generation.
+        params.set('sample_count', 'gte.1');
+        params.set('order', ids[kind] + '.asc');
+        params.set('limit', '50');
+        raw = [];
+        for (let offset = 0; ; offset += 50) {
+          if (offset >= 10000) throw Error('메타 티어리스트 집계 범위를 초과했습니다.');
+          params.set('offset', String(offset));
+          const batch = await query(`${views[kind]}?${params}`, 'tier-db-query');
+          raw.push(...batch);
+          if (batch.length < 50) break;
+        }
+        const latest = await readSummary();
+        if (
+          latest.generation !== summary.generation ||
+          latest.current_patch !== summary.current_patch ||
+          latest.aggregate_set_number !== summary.aggregate_set_number ||
+          tierScope(latest) !== status
+        )
+          throw Error('메타 집계가 갱신 중입니다. 잠시 후 다시 시도해 주세요.');
+      } else {
+        [raw, summary] = await Promise.all([
+          summaryOnly ? Promise.resolve([]) : query(`${views[kind]}?${params}`, 'db-query'),
+          readSummary(),
+        ]);
+      }
+      const scopedRaw = summary.scope_ready === false ? [] : raw;
+      const rows = (scopedRaw.slice(0, tierList ? undefined : 50) as MetaRow[]).map((row) => ({
         ...row,
         ...(row.common_champions
           ? {
@@ -143,24 +191,37 @@ export default async function handler(
         ...(row.common_champions ?? []).map((c) => ({ kind: 'unit' as const, id: c.id })),
         ...(row.common_items ?? []).map((c) => ({ kind: 'item' as const, id: c.id })),
       ]);
+      const scopedRequests = tierList
+        ? requests.map((request) => ({
+            ...request,
+            set: request.kind === 'item' ? undefined : (summary.aggregate_set_number ?? undefined),
+          }))
+        : requests;
       const assetStarted = Date.now();
       let assets: MetaData['assets'];
       try {
-        assets = requests.length ? await loadMetaAssets(requests, env.TFT_STATIC_VERSION) : {};
+        assets = requests.length
+          ? await loadMetaAssets(scopedRequests, env.TFT_STATIC_VERSION, tierList)
+          : {};
       } finally {
         console.info(`[meta] ${kind} asset-load ${Date.now() - assetStarted}ms`);
       }
       const data: MetaData = {
         rows,
-        summary: summary[0] as MetaData['summary'],
+        summary,
         minSampleSize: min,
-        hasMore: scopedRaw.length > 50,
-        page,
+        hasMore: !tierList && scopedRaw.length > 50,
+        page: tierList ? 0 : page,
         assets,
       };
-      if (cache.size >= 64) cache.delete(cache.keys().next().value!);
-      cache.set(key, { expires: Date.now() + 60000, data });
-      return data;
+      if (!tierList) return save(data);
+      const ranked = rankTiers(kind, rows, assets, min);
+      return save({
+        ...data,
+        rows: ranked,
+        tierVersion: TIER_VERSION,
+        status: ranked.some((row) => row.tier) ? tierScope(summary) : 'insufficient',
+      } satisfies TierData);
     })().finally(() => {
       pending.delete(key);
       console.info(`[meta] ${kind} total ${Date.now() - started}ms`);

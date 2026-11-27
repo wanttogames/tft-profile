@@ -24,6 +24,9 @@ import Set19UnlockDetail from './pages/Set19UnlockDetail.vue';
 import HomeContent from './components/HomeContent.vue';
 import HomeHub from './components/HomeHub.vue';
 import { showHomeHub, initialSection } from './data/homeHub';
+import TierList from './pages/TierList.vue';
+import HomeTierPreview from './components/HomeTierPreview.vue';
+import { TIER_LIST_PATH, tierPageKind } from './meta/tierPages';
 import MetaPreview from './components/MetaPreview.vue';
 import { normalizePath, updatePageMetadata } from './seo/pages';
 import { profileFromQuery, profileLink } from './utils/profileLink';
@@ -37,6 +40,7 @@ const props = defineProps<{ routePath?: string; routeSearch?: string }>();
 const path = normalizePath(
   props.routePath ?? (typeof window === 'undefined' ? '/' : window.location.pathname),
 );
+const tierKind = tierPageKind(path);
 const query = props.routeSearch ?? (typeof window === 'undefined' ? '' : window.location.search);
 const page = legalPage(path);
 const isLckChanges = path === LCK_COMPARE_PATH || path === LCK_TIMELINE_PATH;
@@ -177,6 +181,7 @@ const deckName = (key: string) =>
       <RerollCalculator v-else-if="path === '/tools/reroll-calculator'" />
       <ItemCalculator v-else-if="path === '/tools/item-calculator'" />
       <EconomyCalculator v-else-if="path === '/tools/economy-calculator'" />
+      <TierList v-else-if="path === TIER_LIST_PATH || tierKind" :kind="tierKind ?? 'champion'" :overview="!tierKind" />
       <LckInternational v-else-if="path === LCK_INTERNATIONAL_PATH" />
       <LckResults v-else-if="isLckResults" :path="path" />
       <LckHistory v-else-if="isLckHistory" :path="path" />
@@ -468,6 +473,7 @@ const deckName = (key: string) =>
           <template v-if="homeLanding">
             <HomeHub />
             <MetaPreview />
+            <HomeTierPreview />
             <HomeContent />
           </template>
         </div>

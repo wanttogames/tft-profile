@@ -38,6 +38,29 @@ export function communityImage(path: unknown, version: string): string | undefin
     .map(encodeURIComponent)
     .join('/')}`;
 }
+// Category tags observed in CommunityDragon's TFT item catalog.
+function tierItemType(tags: unknown): Asset['tierItemType'] {
+  const values = new Set(Array.isArray(tags) ? tags : []);
+  if (values.has('Consumable')) return 'special';
+  if (values.has('component')) return 'component';
+  if (values.has('{ebcd1bac}')) return 'emblem';
+  if (values.has('{6ef5c598}')) return 'radiant';
+  if (values.has('{44ace175}')) return 'artifact';
+  if (values.has('{27557a09}')) return 'support';
+  if (values.has('{7ea41d13}')) return 'completed';
+  return 'special';
+}
+
+function itemDescription(desc: unknown) {
+  return typeof desc === 'string'
+    ? desc
+        .replace(/<br\s*\/?\s*>/gi, ' ')
+        .replace(/<[^>]*>|@[^@]*@|%i:[^%]*%/g, '')
+        .replace(/\s+/g, ' ')
+        .trim() || undefined
+    : undefined;
+}
+
 /** Parse observed CDragon ko_kr data. Names/aliases are read only from fields, never inferred from ID prefixes. */
 export function indexCommunityDragon(
   raw: unknown,
@@ -60,6 +83,8 @@ export function indexCommunityDragon(
       name: value.name,
       image: communityImage(value.squareIcon ?? value.icon, version),
       cost: kind === 'unit' && typeof value.cost === 'number' ? value.cost : undefined,
+      tierItemType: kind === 'item' ? tierItemType(value.tags) : undefined,
+      description: kind === 'item' ? itemDescription(value.desc) : undefined,
       itemType:
         kind === 'item'
           ? Array.isArray(value.tags) && value.tags.includes('component')

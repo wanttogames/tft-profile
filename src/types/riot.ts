@@ -70,6 +70,8 @@ export interface Asset {
   image?: string;
   cost?: number;
   itemType?: 'component' | 'completed';
+  tierItemType?: 'component' | 'completed' | 'radiant' | 'artifact' | 'support' | 'emblem' | 'special';
+  description?: string;
 }
 export interface PlayerData {
   account: Account;

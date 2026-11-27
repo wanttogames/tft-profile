@@ -6,6 +6,7 @@ import { onRequest as items } from '../functions/api/meta/items';
 import { onRequest as champions } from '../functions/api/meta/champions';
 import { onRequest as traits } from '../functions/api/meta/traits';
 import { onRequest as summary } from '../functions/api/meta/summary';
+import { onRequest as tierList } from '../functions/api/meta/tier-list';
 const env = { ...process.env, ...loadEnv('development', process.cwd(), '') };
 const routes: Record<string, typeof profile> = {
   '/api/tft/profile': profile,
@@ -13,6 +14,7 @@ const routes: Record<string, typeof profile> = {
   '/api/meta/champions': champions,
   '/api/meta/traits': traits,
   '/api/meta/summary': summary,
+  '/api/meta/tier-list': tierList,
 };
 createServer(async (req, res) => {
   try {

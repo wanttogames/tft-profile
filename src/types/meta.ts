@@ -18,6 +18,8 @@ export interface MetaRow {
 export interface MetaData {
   rows: MetaRow[];
   summary: {
+    generation?: number;
+    aggregate_set_number?: number | null;
     match_count: number;
     participant_count: number;
     player_count: number;

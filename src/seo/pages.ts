@@ -1,3 +1,4 @@
+import { TIER_LIST_PATH, TIER_PAGES } from '../meta/tierPages';
 import { LCK_INTERNATIONAL_PATH } from '../data/lckInternational';
 import { resultsPages } from '../data/lckResults';
 import { historyPages } from '../data/lckHistory';
@@ -7,6 +8,14 @@ import { LCK_COMPARE_PATH, LCK_TIMELINE_PATH } from '../data/lckChanges';
 import { LCK_STOVE_PATH, TEAMS, teamPath } from '../data/lck2027';
 export const SITE_URL = 'https://tft-profile.pages.dev';
 export const PUBLIC_PAGES = {
+  [TIER_LIST_PATH]: {
+    title: 'TFT 티어리스트 - 최신 롤토체스 챔피언·아이템·특성 메타 | TFT Profile',
+    description: '롤토체스 최근 7일 랭크 집계와 표본 보정을 바탕으로 챔피언, 아이템, 특성의 S~D 티어를 확인하세요.',
+  },
+  ...Object.fromEntries(Object.values(TIER_PAGES).map(({ name, path }) => [path, {
+    title: `롤토체스 ${name} 티어리스트 - TFT 최신 패치 메타 | TFT Profile`,
+    description: `롤토체스 ${name}의 평균 등수, TOP4 비율, 1위율과 표본 신뢰도를 반영한 최근 7일 티어리스트입니다.`,
+  }])),
   ...historyPages(),
   ...resultsPages(),
   [LCK_INTERNATIONAL_PATH]: {

@@ -17,6 +17,7 @@ beforeAll(async () => {
     '011_tft_meta_keep_external_boundary',
     '012_tft_meta_recovery',
     '013_tft_meta_patch_sync',
+    '014_tft_meta_tier_scope',
   ])
     await db.exec(readFileSync(`supabase/migrations/${name}.sql`, 'utf8'));
 }, 30000);
@@ -126,4 +127,18 @@ it('retention removes expired unknown boards but keeps recent pre-boundary board
   await enable();
   expect(await clean(r.generation)).toMatchObject({deletedMatches:2,expiredMatches:2});
   expect(await value('SELECT count(*) AS value FROM public.tft_matches')).toBe(10);
+});
+
+it('records the committed single set and suppresses the set for mixed or missing values', async () => {
+  await seed('19.1', 30);
+  await db.exec('UPDATE public.tft_matches SET set_number=19');
+  const first = await refresh();
+  expect(await value('SELECT aggregate_set_number AS value FROM public.v_tft_meta_current_summary')).toBe(19);
+  expect(await value('SELECT generation AS value FROM public.v_tft_meta_current_summary')).toEqual(first.generation);
+  await db.exec("UPDATE public.tft_matches SET set_number=18 WHERE match_id='test1'");
+  await refresh();
+  expect(await value('SELECT aggregate_set_number AS value FROM public.v_tft_meta_current_summary')).toBeNull();
+  await db.exec("UPDATE public.tft_matches SET set_number=NULL WHERE match_id='test1'");
+  await refresh();
+  expect(await value('SELECT aggregate_set_number AS value FROM public.v_tft_meta_current_summary')).toBeNull();
 });

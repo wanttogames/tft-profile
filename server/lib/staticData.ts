@@ -142,15 +142,18 @@ export async function loadGameAssets(
 export async function loadMetaAssets(
   requests: AssetRequest[],
   version = 'latest',
+  strictSet = false,
 ): Promise<AssetMap> {
   const source = await catalog(version);
   const assets: AssetMap = {};
   for (const request of requests) {
     const asset =
-      lookupAsset(source.assets, request.kind, request.id) ??
-      Object.entries(source.assets).find(
-        ([key]) => key.startsWith(request.kind + ':') && key.endsWith(':' + request.id),
-      )?.[1];
+      strictSet
+        ? source.assets[assetKey(request.kind, request.id, request.set)]
+        : (lookupAsset(source.assets, request.kind, request.id) ??
+          Object.entries(source.assets).find(
+            ([key]) => key.startsWith(request.kind + ':') && key.endsWith(':' + request.id),
+          )?.[1]);
     if (asset) assets[assetKey(request.kind, request.id)] = asset;
   }
   return assets;

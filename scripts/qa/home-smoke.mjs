@@ -17,10 +17,28 @@ try{
  page.setDefaultTimeout(12000);
  const errors=[];
  page.on('pageerror',e=>errors.push(e.message));
+ let tierFixture = 'confirmed';
  let failMeta=true,metaCalls=0,failProfile=false,profileCalls=0;
  await context.route('**/*',async route=>{
   const url=new URL(route.request().url());
   if(url.origin!==origin){await route.abort();return;}
+  if(url.pathname==='/api/meta/tier-list'){
+   if(tierFixture==='error'){
+    await route.fulfill({status:503,json:{message:'티어 테스트 오류'}});return;
+   }
+   const kind=url.searchParams.get('kind');
+   const key=kind==='champion'?'unit':kind;
+   const group={champion:'1',item:'completed',trait:'trait'}[kind];
+   const rows=tierFixture==='confirmed'?[
+    {id:'test',group,tier:'S',score:90.1,confidence:'high',sample_count:320,avg_placement:2,top4_rate:.8,win_rate:.3,avg_star_level:2,tier_samples:[{tier_current:2,sample_count:320}]},
+    {id:'untiered',group,tier:null,score:null,confidence:'insufficient',sample_count:25,avg_placement:3,top4_rate:.5,win_rate:.2}
+   ]:[];
+   await route.fulfill({json:{rows,status:tierFixture,tierVersion:'1.0',summary:{
+    match_count:100,participant_count:800,player_count:35,scope_ready:true,generation:1,current_patch:'19.1',
+    patch_source:'match',aggregate_set_number:19,refreshed_at:'2026-11-27T06:00:00Z'
+   },minSampleSize:50,hasMore:false,page:0,assets:{[key+':*:test']:{name:'QA 메타 항목'}}}});
+   return;
+  }
   if(url.pathname.startsWith('/api/meta/')){
    metaCalls++;
    if(failMeta){await route.fulfill({status:503,json:{message:'QA fixture unavailable'}});return;}
@@ -58,7 +76,7 @@ try{
   await access(item.href==='/'?'dist/index.html':'dist'+item.href+'/index.html');
   assert(rootHtml.includes('href="'+item.href+'"'),'SSR link '+item.href);
  }
- pass('static home and 20 menu destinations');
+ pass('static home and 21 menu destinations');
  const firstPaint=await context.newPage();
  try{
   await firstPaint.route('**/*',route=>
@@ -234,6 +252,38 @@ try{
   await page.locator('[id="2026-msi-hle"]').waitFor();
  }
  pass('international results, filters and season roster links on desktop and mobile');
+ for(const route of ['/tier-list','/tier-list/champions','/tier-list/items','/tier-list/traits']){
+  const html=await readFile('dist'+route+'/index.html','utf8');
+  assert(html.includes('티어 산정 기준'));
+  assert(html.includes('rel="canonical" href="https://tft-profile.pages.dev'+route+'"'));
+ }
+ for(const width of [320,390,768,1440]){
+  await page.setViewportSize({width,height:900});
+  await page.goto(origin+'/tier-list/champions');
+  await page.getByRole('heading',{name:'롤토체스 챔피언 티어리스트'}).waitFor();
+  const card=page.locator('.tier-cards details summary').first();
+  await card.waitFor();
+  await overflow();
+  await card.click();
+  await page.getByText('평균 별 등급 2.00').waitFor();
+  await page.getByLabel('챔피언 비용').selectOption('2');
+  await page.getByText('이 분류에는 집계된 항목이 없습니다.').waitFor();
+  await page.getByLabel('챔피언 비용').selectOption('1');
+  await card.waitFor();
+  assert((await card.innerText()).includes('90.1점'));
+ }
+ tierFixture='error';
+ await page.goto(origin+'/tier-list/items');
+ await page.getByRole('alert').filter({hasText:'티어 테스트 오류'}).waitFor();
+ tierFixture='insufficient';
+ await page.getByRole('button',{name:'다시 시도'}).click();
+ await page.getByText('표시할 티어가 없습니다.',{exact:false}).waitFor();
+ tierFixture='transition';
+ await page.goto(origin+'/tier-list/traits');
+ await page.getByRole('status').filter({hasText:'패치 전환 대기'}).waitFor();
+ assert.equal(await page.locator('.tier-cards').count(),0);
+ tierFixture='confirmed';
+ pass('tier pages, responsive cards, filters, loading fallback and SEO');
  await page.goto(origin+'/esports/lck/dream-team');
  const save=page.getByRole('button',{name:'PNG 카드 저장'});
  assert(await save.isDisabled());
