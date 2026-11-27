@@ -38,6 +38,12 @@ export interface MetaData {
     detected_patch?: string | null;
     external_patch?: string | null;
     preview_set_number?: number | null;
+    preview_patch?: string | null;
+    boundary_basis?: 'verified' | 'schedule-estimate' | 'first-observed' | null;
+    scheduled_date?: string | null;
+    next_scheduled_date?: string | null;
+    next_cutoff_at?: string | null;
+    verification_url?: string | null;
     latest_stored_at?: string | null;
   };
   minSampleSize: number;

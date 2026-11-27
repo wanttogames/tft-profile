@@ -12,9 +12,9 @@ export interface MetaRefreshResult {
   elapsed_ms?: number;
 }
 /** One RPC per successful batch, without retries: a timed-out refresh may still run. */
-export async function refreshMetaStats(store: Pick<Store, 'request'>): Promise<MetaRefreshResult> {
+export async function refreshMetaStats(store: Pick<Store, 'request'>, preparePatch = true): Promise<MetaRefreshResult> {
   const started = Date.now();
-  await prepareOfficialPatch(store);
+  if (preparePatch) await prepareOfficialPatch(store);
   const result = (await store.request(
     'rpc/refresh_tft_meta_stats',
     'POST',

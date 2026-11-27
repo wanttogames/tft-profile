@@ -64,8 +64,9 @@ const id = (r: MetaData['rows'][number]) => r.character_id ?? r.item_name ?? r.t
           ><p class="small muted">
             최소 표본 {{ results[g.kind]!.minSampleSize }} ·
             {{ results[g.kind]!.summary.match_count.toLocaleString() }}경기 집계
-            <template v-if="results[g.kind]!.summary.preview_set_number"> · 패치 미확정 (세트 {{ results[g.kind]!.summary.preview_set_number }}, 여러 패치 포함 가능)</template>
-            <template v-else-if="results[g.kind]!.summary.current_patch"> · 패치 {{ results[g.kind]!.summary.current_patch }}</template>
+            <template v-if="results[g.kind]!.summary.preview_patch"> · 참고 패치 {{ results[g.kind]!.summary.preview_patch }} (추정·전환 대기)</template>
+            <template v-else-if="results[g.kind]!.summary.preview_set_number"> · 패치 미확정 (세트 {{ results[g.kind]!.summary.preview_set_number }}, 여러 패치 포함 가능)</template>
+            <template v-else-if="results[g.kind]!.summary.current_patch"> · 패치 {{ results[g.kind]!.summary.current_patch }}{{ results[g.kind]!.summary.patch_source === 'official' && results[g.kind]!.summary.boundary_basis === 'schedule-estimate' ? ' (일정 기반 추정)' : '' }}</template>
           </p>
           <div v-for="r in results[g.kind]!.rows.slice(0, 3)" :key="id(r)" class="preview-row">
             <AssetBadge

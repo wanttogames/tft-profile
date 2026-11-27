@@ -19,7 +19,8 @@
     "pretest": "node --import tsx scripts/profile-art-manifest.ts",
     "refresh:meta": "node --import tsx scripts/collector/refreshMetaOnly.ts",
     "sync:lck": "node scripts/lck/sync-gcd.mjs",
-    "test:lck-sync": "node --test scripts/lck/gcd.test.mjs"
+    "test:lck-sync": "node --test scripts/lck/gcd.test.mjs",
+    "sync:tft-patch": "node --import tsx scripts/collector/syncPatchOnly.ts"
   },
   "dependencies": {
     "vue": "^3.5.0"
