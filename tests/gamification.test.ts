@@ -124,13 +124,7 @@ describe('game profile calculations', () => {
     const data = demoPlayer();
     data.games = fixture([4]);
     const html = await renderToString(createSSRApp(PlayerGameProfile, { data }));
-    const labels = [
-      'PLAYER PROFILE',
-      'PLAY DNA',
-      'YOU VS PAST YOU',
-      'PERSONAL CHALLENGE',
-      'ACHIEVEMENTS',
-    ];
+    const labels = ['PLAYER SCORE', 'YOU VS PAST YOU', 'PERSONAL CHALLENGE', 'ACHIEVEMENTS'];
     for (let i = 1; i < labels.length; i++)
       expect(html.indexOf(labels[i]!)).toBeGreaterThan(html.indexOf(labels[i - 1]!));
     expect(html).toContain('????');

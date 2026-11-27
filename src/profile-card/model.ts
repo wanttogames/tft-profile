@@ -7,16 +7,8 @@ import { playerScores } from '../analytics/playerScores';
 import { playerProfile } from '../analytics/profileAnalysis';
 import { displayName, lookupAsset } from '../static-data/catalog';
 
-export const scoreLabels = {
-  ceiling: '고점력',
-  stability: '안정성',
-  survival: '순방력',
-  lateGame: '후반 운영력',
-  flexibility: '유연성',
-  diversity: '덱 다양성',
-  completion: '보드 완성도',
-  form: '최근 폼',
-} as const;
+export { scoreLabels } from '../analytics/playerScores';
+
 // Presentation only: rank changes the frame, never a player's analysis scores.
 const palettes: Record<string, [string, string]> = {
   IRON: ['#b2a9a4', '#77788b'],

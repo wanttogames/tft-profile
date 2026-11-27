@@ -210,6 +210,17 @@ export function playerStyle(input: Game[], assets: AssetMap = {}) {
   };
 }
 
+export const scoreLabels = {
+  ceiling: '고점력',
+  stability: '안정성',
+  survival: '순방력',
+  lateGame: '후반 운영력',
+  flexibility: '유연성',
+  diversity: '덱 다양성',
+  completion: '보드 완성도',
+  form: '최근 폼',
+} as const;
+
 export const scoreHelp = {
   ceiling: '고점력 = 1등률 40% + 1~2위 비율 40% + 평균 등수 품질 20%.',
   stability: '안정성 = TOP4 50% + 7~8위 회피 25% + 낮은 등수 표준편차 25%.',

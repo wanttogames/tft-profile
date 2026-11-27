@@ -10,8 +10,9 @@ const server=await preview({preview:{host:'127.0.0.1',port:4173,strictPort:true}
 let browser;
 const pass=name=>console.log('PASS '+name);
 try{
- browser=await chromium.launch({headless:true});
+ browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE});
  const context=await browser.newContext({viewport:{width:1280,height:900}});
+ await context.grantPermissions(['clipboard-read','clipboard-write']);
  const page=await context.newPage();
  page.setDefaultTimeout(12000);
  const errors=[];
@@ -29,13 +30,28 @@ try{
    profileCalls++;
    if(failProfile){await route.fulfill({status:404,json:{message:'QA 테스트: 플레이어 없음'}});return;}
    const sample=demoPlayer();
+   const gameName=url.searchParams.get('gameName');
+   if(gameName==='QA Empty'){
+    sample.games=[];
+    sample.rank=null;
+   }
+   if(gameName==='QA Missing Icons'){
+    sample.assets={DEMO_Unit0:{name:'아이콘 누락 챔피언',image:origin+'/broken-qa-icon.png'}};
+   }
    await route.fulfill({json:{...sample,demo:false,account:{...sample.account,gameName:url.searchParams.get('gameName'),tagLine:url.searchParams.get('tagLine')}}});return;
   }
+  if(url.pathname==='/broken-qa-icon.png'){await route.fulfill({status:404});return;}
   await route.continue();
  });
  const home=async()=>{await page.goto(origin+'/');await page.locator('.home-hub').waitFor({state:'visible'});};
  const focusIs=async selector=>{await page.waitForFunction(s=>document.querySelector(s)===document.activeElement,selector);};
  const overflow=async()=>assert(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1),'horizontal overflow at '+page.viewportSize().width);
+ const dashboard=async()=>{
+  await page.locator('.player-summary h1').waitFor({state:'visible'});
+  assert.equal(await page.locator('.stats-grid .stat').count(),5);
+  assert.equal(await page.locator('.search-area h1, .profile-collection, .share-panel, .rank-emblem').count(),0);
+  await page.getByRole('heading',{name:'플레이 스타일과 PLAY DNA'}).waitFor({state:'visible'});
+ };
  const rootHtml=await readFile('dist/index.html','utf8');
  assert(rootHtml.includes('home-hub')&&rootHtml.includes('게임 중 바로 쓰는 계산기'),'homepage SSR');
  for(const item of NAV_GROUPS.flatMap(g=>g.items)){
@@ -76,6 +92,10 @@ try{
  await page.getByRole('button',{name:'샘플 분석 보기 →'}).click();
  await page.locator('.notice.demo').waitFor({state:'visible'});await focusIs('.result-anchor');
  await page.locator('.home-hub').waitFor({state:'hidden'});
+ await dashboard();
+ assert.equal(await page.locator('.dna-bars progress').count(),8);
+ await page.getByRole('button',{name:'전적 공유 링크 복사'}).click();
+ assert.equal(await page.evaluate(()=>navigator.clipboard.readText()),'https://tft-profile.pages.dev/?demo=1');
  await page.locator('.notice.demo button').click();await page.locator('.home-hub').waitFor({state:'visible'});
  await focusIs('.name-field input');
  pass('sample analysis open/close and focus restoration');
@@ -88,6 +108,11 @@ try{
  failProfile=false;await page.locator('.name-field input').fill('QA Tester#PASS');
  await page.locator('.search-form button.primary').click();
  await page.locator('.result-anchor').waitFor({state:'visible'});await focusIs('.result-anchor');
+ await dashboard();
+ await page.getByRole('button',{name:'전적 공유 링크 복사'}).click();
+ const copied=new URL(await page.evaluate(()=>navigator.clipboard.readText()));
+ assert.equal(copied.pathname,'/profile');assert.equal(copied.searchParams.get('gameName'),'QA Tester');
+ await page.getByRole('button',{name:'QA Tester #PASS'}).waitFor({state:'visible'});
  const shared=new URL(page.url());assert.equal(shared.pathname,'/profile');assert.equal(shared.searchParams.get('tagLine'),'PASS');
  assert.equal(await page.locator('meta[name=robots]').getAttribute('content'),'noindex,follow');
  assert.equal(await page.locator('.home-hub').count(),0);
@@ -96,6 +121,30 @@ try{
  await page.locator('.result-anchor').waitFor({state:'visible'});
  assert.equal(await page.locator('.home-hub').count(),0);assert(profileCalls>=3);
  pass('profile failure, success, shared URL and legacy query');
+ await page.goto(origin+copied.pathname+copied.search);
+ await dashboard();
+ assert.match(await page.locator('.player-summary h1').innerText(),/QA Tester #PASS/);
+ await page.locator('#matches details summary').first().click();
+ await page.locator('#matches details[open] .match-detail').waitFor({state:'visible'});
+ for(const width of [1280,768,375,320]){
+  await page.setViewportSize({width,height:900});await overflow();
+  const columns=await page.locator('.stats-grid').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length);
+  assert.equal(columns,width<=760?2:5);
+ }
+ await page.goto(origin+'/profile?gameName=QA+Empty&tagLine=KR1');await dashboard();
+ await page.getByText('분석할 경기 없음',{exact:true}).waitFor({state:'visible'});
+ await page.getByText('언랭크',{exact:true}).waitFor({state:'visible'});
+ assert.equal(await page.locator('.stat strong').first().innerText(),'—');
+ assert.equal(await page.locator('.dna-bars progress, .form-panel svg').count(),0);
+ await overflow();
+ await page.locator('.name-field input').fill('QA Missing Icons#KR1');
+ await page.locator('.search-form button.primary').click();await dashboard();
+ const champion=page.locator('#matches .asset').filter({hasText:'아이콘 누락 챔피언'}).first();
+ await champion.scrollIntoViewIfNeeded();await champion.locator('.asset-letter').waitFor({state:'visible'});
+ assert.match(await champion.innerText(),/아이콘 누락 챔피언/);
+ await overflow();
+ pass('dashboard metrics, clipboard, empty data, failed icons and mobile match details');
+ await page.setViewportSize({width:1280,height:900});
  await home();
  const before=metaCalls;
  await page.waitForTimeout(250);
@@ -150,6 +199,17 @@ try{
  await page.waitForURL('**/esports/lck/2027/contracts');
  assert.equal(await page.locator('.section-categories .category-active').innerText(),'FA·계약');
  pass('hierarchical LCK menus, team/year pickers and mobile nested disclosure');
+ await page.goto(origin+'/esports/lck/dream-team');
+ const save=page.getByRole('button',{name:'PNG 카드 저장'});
+ assert(await save.isDisabled());
+ await page.getByRole('button',{name:'랜덤 팀 구성'}).click();
+ const downloadPromise=page.waitForEvent('download');
+ await save.click();
+ const download=await downloadPromise;
+ assert.equal(download.suggestedFilename(),'lck-dream-team.png');
+ const png=await readFile(await download.path());
+ assert.equal(png.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
+ pass('LCK Dream Team PNG download');
  assert.deepEqual(errors,[],'uncaught browser errors');
  pass('no uncaught browser errors');
 }finally{await browser?.close();await new Promise(resolve=>server.httpServer.close(resolve));}

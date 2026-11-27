@@ -136,7 +136,7 @@ export function pageMetadata(path: string) {
   return (
     PUBLIC_PAGES[normalizePath(path) as keyof typeof PUBLIC_PAGES] ?? {
       title: '플레이어 프로필 | TFT Profile',
-      description: 'Riot ID로 최근 경기의 플레이 스타일과 프로필 카드를 확인하세요.',
+      description: 'Riot ID로 최근 경기의 성적과 플레이 스타일을 확인하세요.',
     }
   );
 }

@@ -16,14 +16,14 @@ it.each(['/', '/privacy', '/terms'])(
     expect(html).toContain('href="/#riot-disclaimer"');
     for (const paragraph of RIOT_DISCLAIMER)
       expect(html.replaceAll('&#39;', "'")).toContain(paragraph);
-    if (pathname === '/') expect(html).toContain('나의 플레이를 읽다');
+    if (pathname === '/') expect(html).toContain('내 TFT 전적 분석');
     else {
       expect(html).toContain(
         pathname === '/privacy' ? '<h1>개인정보처리방침</h1>' : '<h1>이용약관</h1>',
       );
       expect(html).toContain('mailto:' + CONTACT_EMAIL);
       expect(html).toContain('2026-09-12');
-      expect(html).not.toContain('나의 플레이를 읽다');
+      expect(html).not.toContain('내 TFT 전적 분석');
     }
   },
 );

@@ -47,8 +47,10 @@ const points = computed(() =>
           <title>{{ i + 1 }}번째 경기 · {{ g.player.placement }}위</title>
         </circle>
       </g>
-      <text x="40" y="214" fill="#98a6bc" font-size="14">{{ games.length }}경기 전</text>
-      <text x="671" y="214" fill="#98a6bc" font-size="14">최근</text>
+      <text x="40" y="214" fill="#98a6bc" font-size="14">
+        {{ games.length === 1 ? '' : '가장 오래된 경기' }}
+      </text>
+      <text x="698" y="214" text-anchor="end" fill="#98a6bc" font-size="14">최근</text>
     </svg>
   </div>
 </template>

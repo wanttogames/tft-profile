@@ -60,7 +60,8 @@ import { patterns } from './analytics/patterns';
 import FormChart from './components/FormChart.vue';
 import BoardInsights from './components/BoardInsights.vue';
 import PlayerGameProfile from './components/PlayerGameProfile.vue';
-import PlayerCard from './components/PlayerCard.vue';
+import PlayerSummary from './components/PlayerSummary.vue';
+import PlayerStyleAnalysis from './components/PlayerStyleAnalysis.vue';
 import RecordHighlights from './components/RecordHighlights.vue';
 import MatchList from './components/MatchList.vue';
 import PreferencePanel from './components/PreferencePanel.vue';
@@ -72,12 +73,13 @@ const name = ref(''),
   data = ref<PlayerData | null>(null),
   history = ref(recentSearches());
 const profileMode=ref(path==='/profile');
+const compactSearch = ref(false);
 const homeLanding=computed(()=>showHomeHub(path,profileMode.value,!!data.value,busy.value));
 const riotInput=ref<HTMLInputElement|null>(null);
 const resultAnchor=ref<HTMLElement|null>(null);
 const embeddedTag=computed(()=>name.value.includes('#'));
 function focusResult(){void nextTick(()=>resultAnchor.value?.focus());}
-function closeDemo(){data.value=null;void nextTick(()=>riotInput.value?.focus());}
+function closeDemo(){data.value=null;compactSearch.value=false;void nextTick(()=>riotInput.value?.focus());}
 const stats = computed(() => statistics(data.value?.games || [])),
   form = computed(() => formAnalysis(data.value?.games || [])),
   styles = computed(() => playStyle(data.value?.games || [])),
@@ -90,6 +92,10 @@ const high = computed(() =>
   miss = computed(() => patterns(data.value?.games.filter((g) => g.player.placement >= 5) || []));
 const decimal = (v: number | null | undefined) => (v == null ? '—' : v.toFixed(2));
 const percent = (v: number | null) => (v === null ? '—' : Math.round(v * 100) + '%');
+const boardGroups = computed(() => [
+  { label: '순방 1–4위', board: patterns(data.value?.games.filter((g) => g.player.placement <= 4) || []) },
+  { label: '하위권 5–8위', board: miss.value },
+]);
 const formLabel = computed(() =>
   form.value.delta === null
     ? '30경기 필요'
@@ -97,9 +103,13 @@ const formLabel = computed(() =>
       ? '변화 없음'
       : `${form.value.delta > 0 ? '▲' : '▼'} ${Math.abs(form.value.delta).toFixed(2)} ${form.value.delta > 0 ? '개선' : '하락'}`,
 );
-const tier = computed(() =>
-  data.value?.rank ? `${data.value.rank.tier || ''} ${data.value.rank.rank || ''}` : 'UNRANKED',
-);
+const previousMatchChange = computed(() => {
+  const [latest, previous] = data.value?.games ?? [];
+  if (!latest || !previous) return '2경기 필요';
+  const change = previous.player.placement - latest.player.placement;
+  if (!change) return '변화 없음';
+  return `${Math.abs(change)}계단 ${change > 0 ? '상승' : '하락'}`;
+});
 async function search(n = name.value, t = tag.value, focus = true) {
   if (busy.value) return;
   try {
@@ -117,6 +127,7 @@ async function search(n = name.value, t = tag.value, focus = true) {
   data.value = null;
   try {
     data.value = await fetchPlayer(n, t);
+    compactSearch.value = true;
     const url = new URL(profileLink(n, t));
     window.history.replaceState(null, '', url.pathname + url.search);
     profileMode.value=true;
@@ -132,6 +143,7 @@ async function search(n = name.value, t = tag.value, focus = true) {
 function demo(focus=true) {
   error.value = '';
   data.value = demoPlayer();
+  compactSearch.value = true;
   if(focus)focusResult();
 }
 onMounted(() => {
@@ -175,8 +187,8 @@ const deckName = (key: string) =>
       <template v-else>
         <KeepAlive><MetaDashboard v-if="section === 'meta'" :initial-kind="metaKind" /></KeepAlive>
         <div v-if="section === 'profile'">
-          <section class="search-area" :class="{'portal-search':path==='/'&&!profileMode&&!data}">
-            <div>
+          <section class="search-area" :class="{ 'portal-search': path === '/' && !profileMode && !compactSearch, 'compact-search': compactSearch }">
+            <div v-if="!compactSearch">
               <template v-if="path==='/'&&!profileMode&&!data">
                 <p class="eyebrow">TFT · TOOLS · LCK</p>
                 <h1>게임을 분석하고,<br class="portal-break"/> e스포츠를 탐색하다<span>.</span></h1>
@@ -185,7 +197,7 @@ const deckName = (key: string) =>
               <template v-else>
                 <p class="eyebrow">YOUR GAME. YOUR PATTERN.</p>
                 <h1>나의 플레이를 읽다<span>.</span></h1>
-                <p class="muted">최근 30경기로 읽는 나의 TFT 플레이 습관. 평균 등수와 TOP4, 선호 챔피언·아이템·특성을 살펴보고 플레이 스타일을 카드로 공유하세요.</p>
+                <p class="muted">최근 30경기로 읽는 나의 TFT 플레이 습관. 평균 등수와 TOP4, 선호 챔피언·아이템·특성을 살펴보고 전적을 링크로 공유하세요.</p>
               </template>
             </div>
             <form class="search-form" @submit.prevent="search()">
@@ -253,60 +265,23 @@ const deckName = (key: string) =>
             <button class="secondary" @click="demo()">샘플 분석 둘러보기 →</button>
           </section>
           <template v-if="data">
-            <div ref="resultAnchor" class="result-anchor" tabindex="-1" aria-label="플레이 분석 결과"><a v-if="profileMode" href="/" class="back-home">← 콘텐츠 홈</a><span class="result-caption">플레이 분석 결과</span></div>
-            <div v-if="data.demo" class="notice demo">
-              <span><b>샘플 분석</b> · 가상 경기 데이터입니다. 실제 플레이어 전적이 아닙니다.</span
-              ><button @click="closeDemo">닫기 ×</button>
+            <div ref="resultAnchor" class="result-anchor" tabindex="-1" aria-label="플레이 분석 결과">
+              <PlayerSummary :data="data" />
             </div>
-            <div v-for="w in data.warnings" :key="w" class="notice">{{ w }}</div>
-            <PlayerCard :data="data" />
-            <RecordHighlights v-if="!busy && !error" :data="data" />
-            <details class="panel">
-              <summary>성장 기록 · 연속 기록 · 업적 더 보기</summary>
-              <PlayerGameProfile :data="data" />
-            </details>
-            <section class="profile">
-              <div class="profile-identity">
-                <div class="rank-emblem">{{ data.rank?.tier?.slice(0, 1) || 'U' }}</div>
-                <div>
-                  <div class="eyebrow">
-                    {{ data.demo ? 'DEMO PROFILE' : `SET ${data.games[0]?.set ?? '—'} · RANKED` }}
-                  </div>
-                  <h2>
-                    {{ data.account.gameName
-                    }}<span class="muted"> #{{ data.account.tagLine }}</span>
-                  </h2>
-                  <p>
-                    <span class="tier">{{ tier }}</span>
-                    <span v-if="data.rank">· {{ data.rank.leaguePoints ?? '—' }} LP</span>
-                  </p>
-                  <small class="muted" v-if="data.rank"
-                    >시즌 랭크 W {{ data.rank.wins }} / L {{ data.rank.losses }}</small
-                  >
-                </div>
-              </div>
-              <div class="profile-period">
-                <span class="pill">최근 30경기 기준 · {{ stats.count }}경기 분석</span>
-                <p class="small muted">
-                  {{ new Date(data.fetchedAt).toLocaleString('ko-KR') }} 기준
-                </p>
-              </div>
-            </section>
             <div class="stats-grid">
               <section class="stat">
-                <span>평균 등수</span><strong>{{ decimal(stats.average) }}<small>위</small></strong>
-                <p>최근 {{ stats.count }}경기</p>
+                <span>평균 등수</span><strong>{{ decimal(stats.average) }}<small v-if="stats.average !== null">위</small></strong>
               </section>
               <section class="stat">
                 <span>TOP4 비율</span><strong class="mint">{{ percent(stats.top4) }}</strong>
                 <p>4위 이내 진입</p>
               </section>
               <section class="stat">
-                <span>1등 비율</span><strong>{{ percent(stats.win) }}</strong>
+                <span>1위 비율</span><strong>{{ percent(stats.win) }}</strong>
                 <p>최종 1위 경기</p>
               </section>
               <section class="stat">
-                <span>최근 폼 변화</span
+                <span>최근 경기 흐름</span
                 ><strong
                   class="form-number"
                   :class="{
@@ -317,45 +292,78 @@ const deckName = (key: string) =>
                 >
                 <p>이전 15경기 → 최근 15경기</p>
               </section>
+              <section class="stat">
+                <span>분석 경기 수</span><strong>{{ stats.count }}<small>경기</small></strong>
+                <p>{{ stats.count ? '최근 최대 30경기' : '분석할 경기 없음' }}</p>
+              </section>
             </div>
-            <div class="analysis-note">
-              <span>INSIGHT</span>
-              <p>{{ insights.comment }}</p>
-              <span class="small muted">자체 분석</span>
+            <div v-if="data.demo" class="notice demo">
+              <span><b>샘플 분석</b> · 가상 경기 데이터입니다. 실제 플레이어 전적이 아닙니다.</span>
+              <button @click="closeDemo">닫기 ×</button>
             </div>
+            <div v-for="w in data.warnings" :key="w" class="notice">{{ w }}</div>
             <div>
               <section class="panel form-panel">
                 <div class="section-head">
                   <div>
-                    <span class="eyebrow">RECENT PERFORMANCE</span>
-                    <h2>흐름이 보이는 전적</h2>
+                    <h2>최근 경기 등수</h2>
                   </div>
-                  <span class="pill">1위가 위쪽</span>
+                  <span class="small muted">민트 1–4위 · 주황 5–8위</span>
                 </div>
                 <FormChart v-if="data.games.length" :games="data.games" />
                 <p v-else class="empty-note">경기가 없습니다.</p>
                 <div class="form-averages">
                   <div>
-                    최근 5경기<strong>{{ decimal(form.five) }}<small>위</small></strong>
+                    최근 5경기<strong>{{ decimal(form.five) }}<small v-if="form.five !== null">위</small></strong>
                   </div>
                   <div>
-                    최근 15경기<strong>{{ decimal(form.recent) }}<small>위</small></strong>
+                    최근 15경기<strong>{{ decimal(form.recent) }}<small v-if="form.recent !== null">위</small></strong>
                   </div>
                   <div>
-                    이전 15경기<strong>{{ decimal(form.previous) }}<small>위</small></strong>
+                    이전 15경기<strong>{{ decimal(form.previous) }}<small v-if="form.previous !== null">위</small></strong>
                   </div>
                 </div>
+                <p v-if="stats.count" class="small muted">직전 경기 대비 · {{ previousMatchChange }}</p>
                 <p class="small muted">
                   5·15경기 미만은 확보된 경기 평균입니다. 폼 변화는 30경기부터 표시합니다.
                 </p>
               </section>
             </div>
-            <div class="two-grid">
-              <section class="panel">
-                <div class="section-head">
-                  <h2>어떻게 플레이했을까?</h2>
-                  <span class="pill">휴리스틱</span>
+            <PlayerStyleAnalysis :data="data" />
+            <section class="panel">
+              <h2>강점과 개선 포인트</h2>
+              <p class="small muted">{{ insights.comment }}</p>
+              <div class="two-grid insight-columns">
+                <div>
+                  <h3 class="mint">강점</h3>
+                  <p v-for="s in insights.strengths" :key="s" class="insight-line">{{ s }}</p>
+                  <p v-if="stats.count >= 10 && !insights.strengths.length" class="muted small">현재 규칙으로 확인되는 강점이 없습니다.</p>
                 </div>
+                <div>
+                  <h3 class="peach">살펴볼 점</h3>
+                  <p v-for="s in insights.weaknesses" :key="s" class="insight-line">{{ s }}</p>
+                  <p v-if="stats.count >= 10 && !insights.weaknesses.length" class="muted small">현재 규칙으로 확인되는 개선 패턴이 없습니다.</p>
+                </div>
+              </div>
+              <div class="two-grid insight-columns">
+                <div v-for="group in boardGroups" :key="group.label">
+                  <h3>{{ group.label }} · {{ group.board.count }}경기</h3>
+                  <p v-if="group.board.count" class="small">
+                    평균 최종 레벨 {{ decimal(group.board.level) }} · 평균 유닛 별 등급 {{ decimal(group.board.stars) }} ·
+                    최다 활성 특성 {{ assetName(group.board.trait) }}
+                  </p>
+                  <p v-else class="small muted">해당 등수의 경기가 없습니다.</p>
+                </div>
+              </div>
+              <p class="small muted">강점과 개선 패턴은 10경기부터 분석합니다. 최종 보드 기준으로 경기 운영 과정은 관측할 수 없습니다.</p>
+            </section>
+            <details class="panel">
+              <summary>성장 기록 · 연속 기록 · 업적</summary>
+              <PlayerGameProfile :data="data" />
+            </details>
+            <RecordHighlights :data="data" />
+            <details class="panel">
+              <summary>최종 레벨·3성 유닛 기준 보드 성향 분포</summary>
                 <div v-if="styles.length" class="style-list">
                   <div v-for="(style, i) in styles" :key="style.label">
                     <div class="style-label">
@@ -376,28 +384,7 @@ const deckName = (key: string) =>
                     추정입니다. 연승·연패 운영과 경기 중 전환은 판정하지 않습니다.
                   </p>
                 </details>
-              </section>
-              <section class="panel">
-                <div class="section-head">
-                  <h2>강점과 살펴볼 패턴</h2>
-                  <span class="pill">규칙 기반</span>
-                </div>
-                <h3 class="mint">강점</h3>
-                <p v-for="s in insights.strengths" :key="s" class="insight-line">✓ {{ s }}</p>
-                <p v-if="!insights.strengths.length" class="muted small">
-                  뚜렷한 강점 패턴을 확인할 표본이 부족합니다.
-                </p>
-                <h3 class="peach">살펴볼 점</h3>
-                <p v-for="s in insights.weaknesses" :key="s" class="insight-line">↘ {{ s }}</p>
-                <p v-if="!insights.weaknesses.length" class="muted small">
-                  현재 규칙으로 확인되는 약점 패턴이 없습니다.
-                </p>
-                <p class="small muted">
-                  최소 10경기 · 부분 집단 비교는 각 3경기 이상. 관찰된 관계이며 원인 분석은
-                  아닙니다.
-                </p>
-              </section>
-            </div>
+            </details>
             <div class="two-grid">
               <section class="panel">
                 <div class="section-head">
@@ -469,28 +456,6 @@ const deckName = (key: string) =>
                 </p>
               </section>
             </div>
-            <section class="panel miss-panel">
-              <div>
-                <span class="eyebrow">LOOK BACK, LEARN MORE</span>
-                <h2>내가 순방을 놓치는 패턴</h2>
-                <p class="muted small">5–8위 {{ miss.count }}경기의 최종 보드</p>
-              </div>
-              <div class="miss-values">
-                <div>
-                  <span>평균 최종 레벨</span><strong>{{ decimal(miss.level) }}</strong>
-                </div>
-                <div>
-                  <span>평균 유닛 별 등급</span><strong>{{ decimal(miss.stars) }}</strong>
-                </div>
-                <div>
-                  <span>가장 잦은 활성 특성</span
-                  ><strong class="trait-name">{{ assetName(miss.trait) }}</strong>
-                </div>
-              </div>
-              <p class="small muted">
-                최종 보드에서 관측한 기록이며 운영 과정이나 실패 원인을 단정하지 않습니다.
-              </p>
-            </section>
             <BoardInsights :data="data" />
             <PreferencePanel :data="data" kind="unit" />
             <PreferencePanel :data="data" kind="item" />
@@ -513,7 +478,24 @@ const deckName = (key: string) =>
 .portal-search{margin:0 0 26px;padding:clamp(20px,3vw,34px);border:1px solid #344a51;border-radius:16px;background:radial-gradient(ellipse at 0 0,#203e3c 0,transparent 58%),linear-gradient(120deg,#172a35,#131c29 75%);gap:clamp(20px,3vw,36px);grid-template-columns:minmax(0,1fr) minmax(0,1.1fr)}
 .portal-search h1{font-size:clamp(25px,3vw,37px);line-height:1.35;letter-spacing:-.065em;margin:8px 0 12px}.portal-search .eyebrow{color:#9ddfc8;letter-spacing:.14em}.portal-search>div>p.muted{color:#b9c9d5;max-width:470px;line-height:1.8;margin-bottom:0}
 .portal-search .search-form{min-width:0;padding:17px;border:1px solid #3a4b59;background:#101a27b8;border-radius:12px}.portal-search-intro h2{font-size:17px;margin:0 0 5px}.portal-search-intro p{color:#a5b5c7;font-size:12px;margin:0 0 13px}
-.embedded-tag-note{font-size:11px;color:var(--muted);margin:6px 0 0}.result-anchor{scroll-margin-top:90px;display:flex;align-items:center;gap:15px;margin:0 0 12px;min-height:30px}.result-anchor:focus-visible{outline:2px solid var(--mint);outline-offset:4px}.back-home{color:var(--mint);font-size:13px}.result-caption{font-size:12px;color:var(--muted)}
+.compact-search { grid-template-columns: minmax(0, 1fr); margin-bottom: 12px; }
+.compact-search .search-form { padding: 10px 12px; }
+.compact-search .recent { margin-bottom: 0; }
+.result-anchor { scroll-margin-top: 80px; }
+.result-anchor:focus-visible { outline: 2px solid var(--mint); outline-offset: 4px; }
+.stats-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 0; }
+.stat { padding: 12px 16px; min-width: 0; }
+.stat > strong { font-size: clamp(18px, 3vw, 29px); margin: 4px 0; }
+.stat .form-number { font-size: 16px; padding: 0; }
+.insight-columns { margin-top: 12px; }
+.insight-columns h3 { margin: 0 0 6px; }
+@media (max-width: 760px) {
+  .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat { border-bottom: 1px solid var(--border); }
+  .stat:nth-child(even) { border-right: 0; }
+  .stat:last-child { grid-column: 1 / -1; }
+}
+.embedded-tag-note{font-size:11px;color:var(--muted);margin:6px 0 0}
 .portal-search-actions{display:flex;align-items:center;flex-wrap:wrap;gap:6px 13px;font-size:12px;margin-top:8px}.portal-search-actions a,.sample-link{color:var(--mint);font-size:12px}.sample-link{border:0;padding:8px 0;background:transparent;font-weight:600}.portal-search-actions span{color:var(--muted);font-size:10px}.portal-search .primary{min-height:44px;min-width:108px;padding:0 12px}.portal-search .primary span{margin-left:6px}.portal-search .search-fields label{padding:6px 9px}.portal-search .tag-field{width:76px}.portal-search .recent{gap:6px}.search-form .recent button{max-width:100%;overflow-wrap:anywhere;text-align:left;min-height:30px}.search-form .recent{min-width:0}.search-fields .name-field{min-width:0}
 @media(max-width:1000px){.portal-search{grid-template-columns:1fr;gap:18px}.portal-break{display:none}}
 @media(max-width:540px){.search-form .search-fields{flex-wrap:wrap}.search-form .search-fields .primary{width:100%;min-height:44px;margin-top:8px}.search-form .search-fields input{font-size:16px}.portal-search{padding:17px;margin-bottom:20px}.portal-search h1{font-size:26px}.portal-search .search-form{padding:12px}.portal-search .search-fields{flex-wrap:wrap}.portal-search .primary{width:100%;margin-top:8px}.portal-search .name-field{flex:1;min-width:0}.portal-search .tag-field{width:78px}.portal-search .search-fields input{font-size:16px}}

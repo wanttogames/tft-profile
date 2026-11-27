@@ -300,53 +300,6 @@ main {
   background: #352620;
   border-color: #7d5747;
 }
-.profile {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  align-items: center;
-  margin: 30px 0;
-}
-.profile-identity {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-.rank-emblem {
-  height: 80px;
-  width: 72px;
-  border: 1px solid #6e9bc0;
-  border-radius: 14px 14px 25px 25px;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(140deg, #294662, #192638);
-  font-size: 2.3rem;
-  font-weight: 800;
-  color: #b2dcf9;
-  box-shadow: inset 0 0 0 5px #172435;
-}
-.profile h2 {
-  font-size: 1.6rem;
-  margin: 6px 0;
-}
-.profile h2 .muted {
-  font-size: 1rem;
-  font-weight: 400;
-}
-.profile p {
-  font-size: 0.85rem;
-  margin: 0;
-}
-.tier {
-  color: #a7c6ef;
-  font-weight: 600;
-}
-.profile-period {
-  text-align: right;
-}
-.profile-period p {
-  margin-top: 10px;
-}
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -387,26 +340,6 @@ main {
 .stat .form-number {
   font-size: 1.5rem;
   padding: 7px 0;
-}
-.analysis-note {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 15px 20px;
-  background: #142822;
-  border: 1px solid #294239;
-  border-radius: 8px;
-  margin-bottom: 28px;
-}
-.analysis-note > span:first-child {
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
-  color: var(--mint);
-}
-.analysis-note p {
-  margin: 0;
-  font-size: 0.9rem;
-  flex: 1;
 }
 .main-grid {
   display: grid;
@@ -622,40 +555,6 @@ td {
 }
 .deck-row + p {
   margin: 18px 0 0;
-}
-.miss-panel {
-  display: grid;
-  grid-template-columns: 1fr 1.8fr;
-  align-items: center;
-  gap: 10px 25px;
-}
-.miss-panel h2 {
-  margin-top: 9px;
-}
-.miss-values {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1.2fr;
-  gap: 22px;
-}
-.miss-values span {
-  font-size: 0.8rem;
-  color: var(--muted);
-  display: block;
-}
-.miss-values strong {
-  font-size: 1.8rem;
-  display: block;
-  margin-top: 10px;
-}
-.miss-values .trait-name {
-  font-size: 1rem;
-  overflow-wrap: anywhere;
-}
-.miss-panel > p {
-  grid-column: 1/-1;
-  margin: 0;
-  border-top: 1px solid var(--border);
-  padding-top: 14px;
 }
 .match {
   border-top: 1px solid var(--border);
@@ -919,47 +818,6 @@ footer p {
   .stat .form-number {
     font-size: 1.2rem;
   }
-  .analysis-note {
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  .analysis-note > span:last-child {
-    display: none;
-  }
-  .profile {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-  .profile-period {
-    text-align: left;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .profile-period p {
-    margin: 0;
-    font-size: 0.7rem;
-  }
-  .profile h2 {
-    font-size: 1.25rem;
-  }
-  .rank-emblem {
-    width: 54px;
-    height: 65px;
-  }
-  .miss-panel {
-    grid-template-columns: 1fr;
-  }
-  .miss-values {
-    padding: 10px 0 20px;
-    gap: 14px;
-  }
-  .miss-values span {
-    font-size: 0.75rem;
-  }
-  .miss-values strong {
-    font-size: 1.5rem;
-  }
   .match summary {
     gap: 12px;
   }
@@ -1034,9 +892,6 @@ footer p {
   .style-list {
     column-gap: 20px;
   }
-  .profile-identity {
-    gap: 14px;
-  }
 }
 @media (max-width: 370px) {
   .search-fields {
@@ -1046,12 +901,6 @@ footer p {
     width: 100%;
     padding: 12px;
     margin-top: 8px;
-  }
-  .profile h2 .muted {
-    display: block;
-  }
-  .miss-values {
-    grid-template-columns: 1fr 1fr;
   }
   .welcome h2 {
     font-size: 1.5rem;
@@ -1119,17 +968,6 @@ footer p {
   color: var(--text);
   margin: 6px 0;
   overflow-wrap: anywhere;
-}
-.profile-style {
-  font-size: 24px;
-  color: #8de6c8;
-  margin: 20px 0;
-}
-.profile-comment {
-  border-left: 3px solid #8de6c8;
-  padding-left: 14px;
-  line-height: 1.8;
-  margin-top: 24px;
 }
 .player-card h2 {
   overflow-wrap: anywhere;
