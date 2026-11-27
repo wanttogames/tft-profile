@@ -52,8 +52,10 @@ const percent = (v: number) => (v * 100).toFixed(1) + '%';
     <h1>상위 래더의 최종 보드<span>.</span></h1>
     <p class="muted">
       {{
-        data?.summary.current_patch
-          ? `현재 패치 ${data.summary.current_patch}`
+        data?.summary.preview_set_number
+          ? `패치 미확정 참고 통계 · 세트 ${data.summary.preview_set_number}`
+          : data?.summary.current_patch
+          ? `집계 패치 ${data.summary.current_patch}`
           : '현재 패치 확인 대기'
       }}
       · 최근 7일 · KR 랭크 경기
@@ -73,29 +75,41 @@ const percent = (v: number) => (v * 100).toFixed(1) + '%';
         {{ tab.name }}
       </a>
     </nav>
-    <p v-if="data && !data.summary.current_patch" class="muted">
-      경기 데이터에서 패치가 충분히 확인되면 통계가 표시됩니다. 패치가 불명확한 경기는 집계하지
-      않습니다.
+    <p v-if="data?.summary.preview_set_number" class="notice" role="status">
+      패치 미확정 참고 통계입니다. 동일 세트의 최근 7일 경기이며 여러 패치가 포함될 수 있습니다.
+      현재 패치 성적으로 해석하지 마세요.
     </p>
-    <p v-if="data?.summary.patch_source === 'official'" class="muted">
-      공식 패치 정보와 동일 세트·최초 등록 이후 경기 시각으로 검증한 표본입니다. 원본 버전에서 직접
+    <p v-else-if="data && !data.summary.current_patch" class="muted">
+      패치가 충분히 확인되면 확정 통계가 표시됩니다.
+    </p>
+    <p v-if="data?.summary.external_patch && data.summary.external_patch !== data.summary.current_patch" class="muted">
+      감지 패치 {{ data.summary.external_patch }} · 전환 검증 표본
+      {{ data.summary.external_eligible_count ?? 0 }} / {{ data.summary.confirm_min_samples ?? 30 }} 경기
+    </p>
+    <p v-if="data?.summary.patch_source === 'official' && !data.summary.preview_set_number" class="muted">
+      공식 패치 정보와 동일 세트·검증 기준 시각 이후 경기으로 검증한 표본입니다. 원본 버전에서 직접
       확인한 패치와 구분합니다.
     </p>
     <div class="stats-grid meta-summary" aria-live="polite">
       <section class="stat">
-        <span>수집 Match</span
+        <span>집계 Match</span
         ><strong>{{ data?.summary.match_count.toLocaleString() ?? '—' }}</strong>
+      </section>
+      <section v-if="data?.summary.stored_match_count !== undefined" class="stat">
+        <span>저장 경기 (7일)</span>
+        <strong>{{ data.summary.stored_match_count.toLocaleString() }}</strong>
+        <p class="small muted">패치 미확정 {{ data.summary.unresolved_match_count ?? 0 }}건</p>
       </section>
       <section class="stat">
         <span>Participant</span
         ><strong>{{ data?.summary.participant_count.toLocaleString() ?? '—' }}</strong>
       </section>
       <section class="stat">
-        <span>마지막 업데이트</span>
+        <span>마지막 수집</span>
         <p>
           {{
-            data?.summary.latest_collected_at
-              ? new Date(data.summary.latest_collected_at).toLocaleString('ko-KR')
+            (data?.summary.latest_stored_at ?? data?.summary.latest_collected_at)
+              ? new Date((data?.summary.latest_stored_at ?? data?.summary.latest_collected_at)!).toLocaleString('ko-KR')
               : '—'
           }}
         </p>
@@ -107,7 +121,7 @@ const percent = (v: number) => (v * 100).toFixed(1) + '%';
     </div>
     <p class="small muted meta-context">
       해당 래더에서 수집한 경기의 전체 참가자를 집계합니다. 모든 참가자가 Challenger·Grandmaster라는
-      뜻은 아닙니다. 여러 패치·세트가 섞일 수 있으며 공식 티어 순위가 아닙니다.
+      뜻은 아닙니다. 패치 미확정 참고 통계는 패치가 섞일 수 있으며 공식 티어 순위가 아닙니다.
     </p>
     <div class="meta-toolbar">
       <button class="secondary" :disabled="busy" @click="load" aria-label="메타 통계 새로고침">
@@ -133,7 +147,9 @@ const percent = (v: number) => (v * 100).toFixed(1) + '%';
     <div v-else-if="data && !data.rows.length" class="panel">
       {{
         data.summary.match_count === 0
-          ? '아직 수집된 랭크 경기가 없습니다.'
+          ? (data.summary.stored_match_count ?? 0) > 0
+            ? '저장된 경기가 있지만 패치 또는 세트 검증 조건을 충족하지 못했습니다.'
+            : '아직 집계 가능한 랭크 경기가 없습니다.'
           : '최소 표본 조건을 충족하는 데이터가 없습니다.'
       }}
     </div>

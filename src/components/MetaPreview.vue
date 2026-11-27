@@ -51,8 +51,7 @@ const id = (r: MetaData['rows'][number]) => r.character_id ?? r.item_name ?? r.t
       <a href="/meta">전체 통계 →</a>
     </div>
     <p class="small muted">
-      KR Challenger·Grandmaster 래더에서 찾은 경기의 전체 참가자 기준. 패치 구분 없이 집계하며, 사용
-      표본이 많은 순서입니다.
+      KR Challenger·Grandmaster 래더에서 찾은 경기의 전체 참가자 기준. 확정 패치 또는 명시된 패치 미확정 참고 범위에서 사용 표본이 많은 순서입니다.
     </p>
     <div class="preview-grid" :aria-busy="loading">
       <article v-for="g in groups" :key="g.kind">
@@ -64,7 +63,9 @@ const id = (r: MetaData['rows'][number]) => r.character_id ?? r.item_name ?? r.t
         <template v-else
           ><p class="small muted">
             최소 표본 {{ results[g.kind]!.minSampleSize }} ·
-            {{ results[g.kind]!.summary.match_count.toLocaleString() }}경기 수집
+            {{ results[g.kind]!.summary.match_count.toLocaleString() }}경기 집계
+            <template v-if="results[g.kind]!.summary.preview_set_number"> · 패치 미확정 (세트 {{ results[g.kind]!.summary.preview_set_number }}, 여러 패치 포함 가능)</template>
+            <template v-else-if="results[g.kind]!.summary.current_patch"> · 패치 {{ results[g.kind]!.summary.current_patch }}</template>
           </p>
           <div v-for="r in results[g.kind]!.rows.slice(0, 3)" :key="id(r)" class="preview-row">
             <AssetBadge

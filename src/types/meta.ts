@@ -30,6 +30,15 @@ export interface MetaData {
     as_of?: string | null;
     refreshed_at?: string | null;
     scope_ready?: boolean;
+    stored_match_count?: number;
+    unresolved_match_count?: number;
+    confirmed_match_count?: number;
+    external_eligible_count?: number;
+    confirm_min_samples?: number;
+    detected_patch?: string | null;
+    external_patch?: string | null;
+    preview_set_number?: number | null;
+    latest_stored_at?: string | null;
   };
   minSampleSize: number;
   hasMore: boolean;

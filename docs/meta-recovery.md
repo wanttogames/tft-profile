@@ -1,0 +1,7 @@
+# TFT-META-RECOVERY-1
+1. Apply `012_tft_meta_recovery.sql` after 011 in Supabase SQL Editor. Migration does not rewrite or delete matches.
+2. Run **Refresh TFT meta** to rebuild from stored boards, then **Collect TFT meta** (20 players / 10 IDs). Scheduled default hourly, Node 22. Repository variables override scheduled defaults; monitor quotas and DB size.
+3. Check storedMatchCount, unresolvedMatchCount, previewSetNumber, confirmedMatchCount, externalSampleSize and externalRequiredSamples.
+4. Official publication is NOT KR rollout completion. Only with independently verified rollout completion evidence, the SQL Editor owner can call `public.set_tft_verified_kr_boundary(patch, rollout_at, evidence_url)` with real values and refresh. The function requires matching registered patch and a timestamp between publication and current boundary, records evidence URL but does not verify it itself. No automatic backdating.
+5. Preview is used only with empty verified scope, fresh external candidate, all recent patch evidence unknown and a single known set. It may mix patches and must never be read as current-patch stats. Minimum per-item/champion/trait sample unchanged. During preview or external transition, patch-based deletion is suppressed; age retention continues subject to existing cleanup safety gate.
+6. Node 22 resolves engine warnings only. Run npm audit separately; do not force incompatible dependency upgrades.

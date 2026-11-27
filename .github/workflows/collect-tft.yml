@@ -4,12 +4,12 @@ on:
     inputs:
       players_limit:
         description: 'Players to scan'
-        default: '2'
+        default: '20'
       matches_per_player:
         description: 'Recent IDs per player'
-        default: '2'
+        default: '10'
   schedule:
-    - cron: '17 */6 * * *'
+    - cron: '17 * * * *'
 permissions:
   contents: read
 concurrency:
@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
       - run: npm ci
       - run: npm run collect:tft
@@ -31,6 +31,6 @@ jobs:
           RIOT_API_KEY: ${{ secrets.RIOT_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-          PLAYERS_LIMIT: ${{ inputs.players_limit || vars.PLAYERS_LIMIT || '2' }}
-          MATCHES_PER_PLAYER: ${{ inputs.matches_per_player || vars.MATCHES_PER_PLAYER || '2' }}
+          PLAYERS_LIMIT: ${{ inputs.players_limit || vars.PLAYERS_LIMIT || '20' }}
+          MATCHES_PER_PLAYER: ${{ inputs.matches_per_player || vars.MATCHES_PER_PLAYER || '10' }}
           RIOT_REQUEST_DELAY_MS: ${{ vars.RIOT_REQUEST_DELAY_MS || '1400' }}

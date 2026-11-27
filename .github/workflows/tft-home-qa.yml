@@ -7,6 +7,8 @@ on:
       - 'src/**'
       - 'tests/**'
       - 'scripts/qa/**'
+      - 'scripts/collector/**'
+      - 'supabase/migrations/**'
       - 'scripts/prerender.ts'
       - 'public/sitemap.xml'
       - 'index.html'
