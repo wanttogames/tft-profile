@@ -96,7 +96,7 @@ onBeforeUnmount(()=>{
 </header>
 </template>
 <style scoped>
-.site-header{position:sticky;top:0;z-index:40;background:#0c111b;border-bottom:1px solid #283141}
+.site-header{display:block;position:sticky;top:0;z-index:40;background:#0c111b;border-bottom:1px solid #283141}
 .header-inner{max-width:1312px;margin:auto;min-height:72px;padding:0 28px;display:flex;align-items:center;gap:clamp(12px,2vw,28px)}
 .site-brand{display:flex;align-items:center;gap:10px;flex:none;white-space:nowrap}
 .logo{width:32px;height:32px;display:grid;place-items:center;background:var(--mint);color:#102b27;border-radius:7px;font-weight:800}

@@ -59,6 +59,18 @@ try{
   assert(rootHtml.includes('href="'+item.href+'"'),'SSR link '+item.href);
  }
  pass('static home and 20 menu destinations');
+ const firstPaint=await context.newPage();
+ try{
+  await firstPaint.route('**/*',route=>
+   ['stylesheet','script'].includes(route.request().resourceType()) ? route.abort() : route.continue());
+  for(const path of ['/','/esports/lck/history/international']){
+   await firstPaint.goto(origin+path);
+   const header=firstPaint.locator('.site-header');
+   assert.equal(await header.count(),1,'header exists in prerendered HTML');
+   assert.equal(await header.evaluate(el=>getComputedStyle(el).display),'none','unstyled header must not paint');
+  }
+ }finally{await firstPaint.close();}
+ pass('no unstyled menu text before page assets load');
  await home();
  const trigger=page.locator('#global-nav-trigger-history');
  const menu=page.locator('#global-nav-panel-history');
