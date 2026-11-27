@@ -10,6 +10,8 @@ import LckContracts from './pages/LckContracts.vue';
 import LckDream from './pages/LckDream.vue';
 import LckHistory from './pages/LckHistory.vue';
 import LckResults from './pages/LckResults.vue';
+import LckInternational from './pages/LckInternational.vue';
+import { LCK_INTERNATIONAL_PATH } from './data/lckInternational';
 import { isResultPath } from './data/lckResults';
 import { historyRoute } from './data/lckHistory';
 import { LCK_DREAM_PATH } from './data/lckDream';
@@ -175,6 +177,7 @@ const deckName = (key: string) =>
       <RerollCalculator v-else-if="path === '/tools/reroll-calculator'" />
       <ItemCalculator v-else-if="path === '/tools/item-calculator'" />
       <EconomyCalculator v-else-if="path === '/tools/economy-calculator'" />
+      <LckInternational v-else-if="path === LCK_INTERNATIONAL_PATH" />
       <LckResults v-else-if="isLckResults" :path="path" />
       <LckHistory v-else-if="isLckHistory" :path="path" />
       <LckDream v-else-if="isLckDream" :query="query" />

@@ -3,10 +3,10 @@ import {NAV_GROUPS,SERVICE_LINKS,activeNavigation,navItems} from '../src/config/
 import {PUBLIC_PAGES} from '../src/seo/pages';
 import {readFileSync} from 'node:fs';
 describe('TFT-NAV-1',()=>{
- it('has five ordered categories and 19 unique content destinations',()=>{
+ it('has five ordered categories and 20 unique content destinations',()=>{
   expect(NAV_GROUPS.map(g=>g.id)).toEqual(['analysis','tools','season','lck','history']);
   const links=NAV_GROUPS.flatMap(g=>g.items.map(i=>i.href));
-  expect(links).toHaveLength(19);expect(new Set(links).size).toBe(19);
+  expect(links).toHaveLength(20);expect(new Set(links).size).toBe(20);
  });
  it('keeps all menu links on public pages and in sitemap',()=>{
   const sitemap=readFileSync(new URL('../public/sitemap.xml',import.meta.url),'utf8');
@@ -32,7 +32,7 @@ describe('TFT-NAV-1',()=>{
   expect(activeNavigation('/esports/lck/2027/free-agents')?.href).toBe('/esports/lck/2027/free-agents');
   expect(activeNavigation('/esports/lck/2027/timeline')?.href).toBe('/esports/lck/2027/timeline');
   expect(activeNavigation('/esports/lck/dream-team')?.group).toBe('lck');
-  expect(navItems('history')).toHaveLength(3);
+  expect(navItems('history')).toHaveLength(4);
  });
  it('does not mark policy pages or unrelated prefixes as active',()=>{
   expect(activeNavigation('/guide')).toBeNull();expect(activeNavigation('/privacy')).toBeNull();

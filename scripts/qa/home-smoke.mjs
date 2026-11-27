@@ -58,7 +58,7 @@ try{
   await access(item.href==='/'?'dist/index.html':'dist'+item.href+'/index.html');
   assert(rootHtml.includes('href="'+item.href+'"'),'SSR link '+item.href);
  }
- pass('static home and 19 menu destinations');
+ pass('static home and 20 menu destinations');
  await home();
  const trigger=page.locator('#global-nav-trigger-history');
  const menu=page.locator('#global-nav-panel-history');
@@ -199,6 +199,29 @@ try{
  await page.waitForURL('**/esports/lck/2027/contracts');
  assert.equal(await page.locator('.section-categories .category-active').innerText(),'FA·계약');
  pass('hierarchical LCK menus, team/year pickers and mobile nested disclosure');
+ const internationalPath='/esports/lck/history/international';
+ const internationalHtml=await readFile('dist'+internationalPath+'/index.html','utf8');
+ assert(internationalHtml.includes('LCK 국제대회 명예의 전당')&&internationalHtml.includes('2026-worlds-geng'),'international SSR');
+ for(const width of [1280,320]){
+  await page.setViewportSize({width,height:900});
+  await page.goto(origin+internationalPath);
+  const records=page.locator('.records tbody tr');
+  await records.first().waitFor();
+  assert.equal(await records.count(),26);
+  await overflow();
+  await page.getByRole('button',{name:'First Stand',exact:true}).click();
+  assert.equal(await records.count(),1);
+  await page.getByRole('link',{name:'Hanwha Life Esports 2025 시즌 로스터'}).click();
+  await page.waitForURL('**/history/teams/hle#roster-2025');
+  await page.locator('#roster-2025').waitFor();
+  await page.getByRole('button',{name:'MSI',exact:true}).click();
+  await page.locator('a[href$="#2026-msi-hle"]').waitFor();
+  assert.equal(await page.locator('a[href$="#2025-first-stand-hle"]').count(),0);
+  await page.locator('a[href$="#2026-msi-hle"]').click();
+  await page.waitForURL('**/history/international#2026-msi-hle');
+  await page.locator('[id="2026-msi-hle"]').waitFor();
+ }
+ pass('international results, filters and season roster links on desktop and mobile');
  await page.goto(origin+'/esports/lck/dream-team');
  const save=page.getByRole('button',{name:'PNG 카드 저장'});
  assert(await save.isDisabled());

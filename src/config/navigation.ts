@@ -1,3 +1,5 @@
+import { LCK_INTERNATIONAL_PATH } from '../data/lckInternational';
+
 export type NavGroupId = 'analysis' | 'tools' | 'season' | 'lck' | 'history';
 export type NavSectionId='roster'|'contracts'|'dream'|'people'|'results';
 export interface NavItem { label:string; href:string; description:string; match?:'prefix'; aliases?:readonly string[]; section?:NavSectionId }
@@ -32,6 +34,7 @@ export const NAV_GROUPS:readonly NavGroup[] = [
   {label:'역대 로스터',href:'/esports/lck/history',section:'people',description:'2015~2027 팀별 명단',match:'prefix'},
   {label:'선수 이력 도감',href:'/esports/lck/history/players',section:'people',description:'역대 소속팀 기록',match:'prefix'},
   {label:'역대 우승·순위',href:'/esports/lck/history/results',section:'results',description:'대회 성적과 MVP',match:'prefix'},
+  {label:'국제대회',href:LCK_INTERNATIONAL_PATH,section:'results',description:'First Stand·MSI·월즈 LCK 결승 기록'},
  ]},
 ];
 export const SERVICE_LINKS:readonly NavItem[]=[

@@ -5,6 +5,7 @@ import { LCK_HISTORY_PATH, HISTORY_PLAYERS_PATH, HISTORY_YEARS, HISTORY_TEAMS, H
 import LckChangesNav from '../components/LckChangesNav.vue';
 import RoutePicker from '../components/RoutePicker.vue';
 import { LCK_RESULTS_PATH, teamResults, finalsAwards, resultPath, resultTitle, rankLabel, filterResults } from '../data/lckResults';
+import { INTERNATIONAL_EVENTS, INTERNATIONAL_RESULTS, LCK_INTERNATIONAL_PATH, internationalPlaceLabel, internationalResultId, type InternationalFilter } from '../data/lckInternational';
 const props=defineProps<{path:string}>();
 const route=computed(()=>historyRoute(props.path));
 const yearOptions=[{href:LCK_HISTORY_PATH,label:'전체 아카이브'},...[...HISTORY_YEARS].reverse().map(y=>({href:historyYearPath(y),label:y+' 시즌'}))];
@@ -19,6 +20,15 @@ const players=computed(()=>filterHistoryPlayers(query.value,position.value));
 const entries=computed(()=>route.value.player?playerHistory(route.value.player.id):[]);
 const awards=computed(()=>route.value.player?finalsAwards(route.value.player.id):[]);
 const teamPlacements=computed(()=>route.value.team?teamResults(route.value.team.slug):[]);
+const resultFilter=ref<InternationalFilter | 'lck'>('all');
+const resultFilters={all:'전체',lck:'LCK',...INTERNATIONAL_EVENTS};
+const internationalPlacements=computed(() => INTERNATIONAL_RESULTS.filter(record =>
+  route.value.team ? record.team === route.value.team.slug : record.year === route.value.year,
+));
+const visibleInternationalPlacements=computed(() => internationalPlacements.value.filter(record =>
+  resultFilter.value === 'all' || record.event === resultFilter.value,
+));
+const showDomesticResults=computed(() => resultFilter.value === 'all' || resultFilter.value === 'lck');
 const yearEvents=computed(()=>route.value.year?filterResults(String(route.value.year)):[]);
 const playerYears=computed(()=>new Set(entries.value.map(e=>e.year)).size);
 const playerTeams=computed(()=>new Set(entries.value.map(e=>e.team)).size);
@@ -34,7 +44,24 @@ function currentTeamLink(slug:string){const t=TEAMS.find(t=>t.slug===slug);retur
   <header class="hero"><p class="eyebrow">LCK · ROSTER ARCHIVE</p><h1>{{heading}}</h1><p>2015~2027년 LCK 팀 구성과 선수의 소속팀 기록을 시즌별로 탐색하세요. 자료마다 확인 시점이 다르며 전체 계약 이력을 뜻하지 않습니다.</p></header>
   <LckChangesNav :path="path"/>
   <div v-if="!route.player&&!route.directory" class="archive-pickers"><RoutePicker label="연도별 상세 페이지" :path="path" :items="yearOptions" fallback="연도 선택"/><RoutePicker label="팀별 상세 페이지" :path="path" :items="teamOptions" fallback="팀 선택"/></div>
-  <section class="panel" v-if="route.team||route.year||route.player"><h2>{{route.player?'파이널 MVP 수상 기록':'대회 최종 성적'}}</h2><template v-if="route.player"><p class="small muted">개인 수상 확인 기록만 표시합니다. 로스터 소속만으로 개인 우승을 추정하지 않습니다.</p><div v-for="r in awards" :key="r.id" class="entry result-entry"><a :href="resultPath(r.id)">{{resultTitle(r)}}</a><strong>파이널 MVP</strong></div><p v-if="!awards.length" class="small muted">수록 범위에서 확인된 파이널 MVP 기록 없음</p></template><template v-else-if="route.team"><div v-for="item in teamPlacements" :key="item.result.id" class="entry result-entry"><a :href="resultPath(item.result.id)">{{resultTitle(item.result)}}</a><strong>{{rankLabel(item.placement)}}</strong></div><p v-if="!teamPlacements.length" class="small muted">수록 대회 성적 없음</p></template><template v-else><p v-for="r in yearEvents" :key="r.id"><a :href="resultPath(r.id)">{{resultTitle(r)}} 최종 순위 →</a></p><p v-if="!yearEvents.length" class="small muted">종료된 수록 대회 없음</p></template><a class="detail" :href="LCK_RESULTS_PATH">역대 우승팀·최종 순위 →</a></section>
+  <section class="panel" v-if="route.team||route.year||route.player"><h2>{{route.player?'파이널 MVP 수상 기록':'대회 최종 성적'}}</h2>
+    <div v-if="internationalPlacements.length" class="result-filters" role="group" aria-label="대회 성적 필터">
+      <button v-for="(label, key) in resultFilters" :key="key" type="button" :aria-pressed="resultFilter === key"
+        @click="resultFilter = key">{{label}}</button>
+    </div>
+    <template v-if="showDomesticResults">
+    <template v-if="route.player"><p class="small muted">개인 수상 확인 기록만 표시합니다. 로스터 소속만으로 개인 우승을 추정하지 않습니다.</p><div v-for="r in awards" :key="r.id" class="entry result-entry"><a :href="resultPath(r.id)">{{resultTitle(r)}}</a><strong>파이널 MVP</strong></div><p v-if="!awards.length" class="small muted">수록 범위에서 확인된 파이널 MVP 기록 없음</p></template><template v-else-if="route.team"><div v-for="item in teamPlacements" :key="item.result.id" class="entry result-entry"><a :href="resultPath(item.result.id)">{{resultTitle(item.result)}}</a><strong>{{rankLabel(item.placement)}}</strong></div><p v-if="!teamPlacements.length" class="small muted">수록 대회 성적 없음</p></template><template v-else><p v-for="r in yearEvents" :key="r.id"><a :href="resultPath(r.id)">{{resultTitle(r)}} 최종 순위 →</a></p><p v-if="!yearEvents.length" class="small muted">종료된 수록 대회 없음</p></template><a class="detail" :href="LCK_RESULTS_PATH">역대 우승팀·최종 순위 →</a>
+    </template>
+    <template v-if="visibleInternationalPlacements.length">
+      <h3>국제대회 우승·준우승</h3>
+      <div v-for="record in visibleInternationalPlacements" :key="internationalResultId(record)" class="entry result-entry">
+        <a :href="`${LCK_INTERNATIONAL_PATH}#${internationalResultId(record)}`">{{record.year}} {{INTERNATIONAL_EVENTS[record.event]}} · {{record.name}}</a>
+        <strong>{{internationalPlaceLabel(record.place)}}</strong>
+      </div>
+      <a class="detail" :href="LCK_INTERNATIONAL_PATH">LCK 국제대회 명예의 전당 →</a>
+    </template>
+    <p v-else-if="!showDomesticResults" class="small muted">선택한 대회의 우승·준우승 기록이 없습니다.</p>
+  </section>
   <div class="overview" v-if="!route.player"><div><span>수록 연도</span><b>{{HISTORY_YEARS.length}}</b></div><div><span>팀·시즌 기록</span><b>{{HISTORY_ROSTERS.length}}</b></div><div><span>선수 ID</span><b>{{HISTORY_PLAYERS.length}}</b></div><div><span>선수·포지션 기록</span><b>{{HISTORY_ENTRIES.length}}</b></div></div>
   <template v-if="route.player">
     <div class="overview"><div><span>수록 연도 수</span><b>{{playerYears}}</b></div><div><span>수록 소속팀 수</span><b>{{playerTeams}}</b></div></div>
@@ -50,7 +77,7 @@ function currentTeamLink(slug:string){const t=TEAMS.find(t=>t.slug===slug);retur
     <section class="panel filters"><label>연도<select v-model="year"><option value="all">전체 연도</option><option v-for="y in HISTORY_YEARS" :key="y" :value="String(y)">{{y}} · {{HISTORY_PERIODS[y].label}}</option></select></label><label>팀<select v-model="team"><option value="all">전체 팀</option><option v-for="t in selectableTeams" :key="t.slug" :value="t.slug">{{t.name}}</option></select></label><label>팀·선수 검색<input v-model="query" type="search" placeholder="Faker, 페이커, 광동…"/></label><button type="button" class="secondary" @click="reset">초기화</button></section>
     <p class="small muted" aria-live="polite">{{rosters.length}}개 팀·시즌 기록 표시</p>
     <div class="roster-grid">
-      <section v-for="r in rosters" :key="r.year+'-'+r.team" class="panel roster">
+      <section v-for="r in rosters" :key="r.year+'-'+r.team" class="panel roster" :id="route.team ? `roster-${r.year}` : undefined">
         <header><div><a class="year" :href="historyYearPath(r.year)">{{r.year}}</a><h2><a :href="historyTeamPath(r.team)">{{r.name}} ↗</a></h2><small>{{HISTORY_PERIODS[r.year].label}}</small></div><a v-if="TEAMS.some(t=>t.slug===r.team)" class="detail" :href="currentTeamLink(r.team)">2027 현황 →</a><span v-else class="small muted">과거 참가 팀</span></header>
         <div v-for="(names,i) in r.roles" :key="i" class="role"><span>{{POSITIONS[i]}}</span><div v-if="names.length" class="names"><template v-for="n in names" :key="n"><a v-if="hasHistoryDetail(historyPlayerId(n))" :href="playerLink(n)">{{n}}</a><strong v-else>{{n}}</strong></template></div><span v-else class="muted">발표 대기 / 확인되지 않음</span></div>
       </section>
@@ -62,6 +89,10 @@ function currentTeamLink(slug:string){const t=TEAMS.find(t=>t.slug===slug);retur
 </template>
 <style scoped>
 .history{max-width:1120px;margin:auto;display:grid;gap:16px}.crumb{font-size:12px;color:var(--muted)}.hero{padding:clamp(20px,4vw,36px);border:1px solid var(--border);border-radius:14px;background:linear-gradient(120deg,#192e32,#141b29)}.hero h1{font-size:clamp(25px,4vw,40px);margin:8px 0 12px;letter-spacing:-.05em}.hero p:not(.eyebrow){font-size:14px;color:#bdc8d7}.archive-pickers{display:grid;grid-template-columns:repeat(2,minmax(0,360px));gap:12px;min-width:0}@media(max-width:600px){.archive-pickers{grid-template-columns:1fr}}.overview{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}.overview>div{background:#141e2b;border:1px solid var(--border);border-radius:10px;padding:15px}.overview span{display:block;font-size:12px;color:var(--muted)}.overview b{display:block;font-size:28px;color:var(--mint);margin-top:6px}.filters{margin:0;display:flex;flex-wrap:wrap;gap:12px;align-items:end}.filters label{flex:1;min-width:140px;display:grid;gap:6px;font-size:12px;color:var(--muted)}.filters input,.filters select{width:100%;min-height:44px;background:#101a27;color:#ecf2f8;border:1px solid #405165;border-radius:8px;padding:10px;font:inherit;box-sizing:border-box}.roster-grid,.directory{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.roster,.person,.guide{margin:0;min-width:0}.roster header{display:flex;justify-content:space-between;align-items:start;gap:8px;padding-bottom:12px;border-bottom:1px solid var(--border)}.roster h2,.person h3{font-size:18px;margin:5px 0}.roster small,.entry small{font-size:11px;color:var(--muted);display:block}.year{color:var(--mint);font-size:13px;font-weight:700}.detail{font-size:12px;color:var(--mint)}.role{display:grid;grid-template-columns:60px minmax(0,1fr);gap:8px;padding:12px 0;border-bottom:1px solid var(--border);font-size:13px;align-items:start}.role>span:first-child{color:var(--muted);font-size:12px}.names{display:flex;gap:6px;flex-wrap:wrap}.names a,.names strong{border:1px solid #35475b;background:#182536;padding:5px 8px;border-radius:6px;font-weight:600;overflow-wrap:anywhere}.names a:hover,.detail:hover,.guide a:hover{text-decoration:underline}.directory{grid-template-columns:repeat(3,minmax(0,1fr))}.person-row{display:grid;grid-template-columns:42px minmax(0,1fr) 48px;gap:7px;padding:7px 0;border-top:1px solid var(--border)}.person-row span{color:var(--muted)}.entry{display:grid;grid-template-columns:65px minmax(0,1fr) auto;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--border)}.entry small{margin-top:4px}.guide p,.period a{font-size:13px;line-height:1.8;color:#afbed0}.period{border-top:1px solid var(--border);padding:12px 0}.period p{margin:5px 0}.period a{display:block;color:var(--mint);text-decoration:underline}@media(max-width:760px){.roster-grid,.directory{grid-template-columns:1fr}.overview{grid-template-columns:repeat(2,minmax(0,1fr))}.role{grid-template-columns:48px minmax(0,1fr)}}
+.result-filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.result-filters button{min-height:40px;padding:6px 10px;border:1px solid var(--border);border-radius:7px;background:#182536}
+.result-filters button[aria-pressed=true]{border-color:#548f81;background:#203931;color:var(--mint)}
+.roster[id]{scroll-margin-top:90px}
 .result-entry{grid-template-columns:minmax(0,1fr) auto}
 .result-entry>a{overflow-wrap:anywhere}
 .result-entry>strong{white-space:nowrap}
