@@ -16,6 +16,7 @@ const featured=SET19_FEATURED_SLUGS.map(slug=>findSet19Unlock(slug)).filter((val
     </div>
     <div class="tour-cta">
       <a class="tour-main-link" href="/set19/unlocks">32종 해금 조건 확인 →</a>
+      <a href="/set19/readiness">시즌19 전환 상태 →</a>
       <a href="#tour-features">시즌19 핵심 변경점</a>
     </div>
   </header>

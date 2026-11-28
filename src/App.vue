@@ -27,6 +27,8 @@ import { showHomeHub, initialSection } from './data/homeHub';
 import MetaTrends from './pages/MetaTrends.vue';
 import HomeTrendLink from './components/HomeTrendLink.vue';
 import { TREND_PATH, HISTORY_PATH, trendKind } from './meta/trends';
+import Set19Readiness from './pages/Set19Readiness.vue';
+import { READINESS_PATH } from './meta/readiness';
 import TierList from './pages/TierList.vue';
 import HomeTierPreview from './components/HomeTierPreview.vue';
 import { TIER_LIST_PATH, tierPageKind } from './meta/tierPages';
@@ -194,6 +196,7 @@ const deckName = (key: string) =>
       <LckContracts v-else-if="isLckContracts" :path="path" />
       <LckChanges v-else-if="isLckChanges" :path="path" />
       <LckStove v-else-if="isLckPage" :path="path" />
+      <Set19Readiness v-else-if="path === READINESS_PATH" />
       <Set19Overview v-else-if="path === '/set19'" />
       <Set19Unlocks v-else-if="path === '/set19/unlocks'" />
       <Set19UnlockDetail v-else-if="set19Slug" :slug="set19Slug" />

@@ -85,6 +85,7 @@ export const PUBLIC_PAGES = {
     title: '롤토체스 골드 계산기·레벨업 XP 계산기 - 시즌18 18.7 이자·연승·연패 | TFT Profile',
     description: '롤체 골드 계산기. 보유 골드와 이자, 연승·연패 보너스, 라운드 수입을 계산하고 자연 경험치를 반영해 목표 레벨업 비용을 확인하세요.',
   },
+  '/set19/readiness': { title: '롤토체스 시즌19 메타 전환 점검 | TFT Profile', description: '한국 랭크 경기 수집, 패치 검증, 챔피언 이름·아이콘·코스트 데이터 준비 상태를 확인하세요.' },
   '/set19': {
     title: '롤토체스 시즌19 프리즘 투어 - 출시일·특성·해금 챔피언 | TFT Profile',
     description:

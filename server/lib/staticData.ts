@@ -147,14 +147,32 @@ export async function loadMetaAssets(
   const source = await catalog(version);
   const assets: AssetMap = {};
   for (const request of requests) {
-    const asset =
-      strictSet
-        ? source.assets[assetKey(request.kind, request.id, request.set)]
-        : (lookupAsset(source.assets, request.kind, request.id) ??
-          Object.entries(source.assets).find(
-            ([key]) => key.startsWith(request.kind + ':') && key.endsWith(':' + request.id),
-          )?.[1]);
+    const asset = strictSet
+      ? source.assets[assetKey(request.kind, request.id, request.set)]
+      : (lookupAsset(source.assets, request.kind, request.id) ??
+        Object.entries(source.assets).find(
+          ([key]) => key.startsWith(request.kind + ':') && key.endsWith(':' + request.id),
+        )?.[1]);
     if (asset) assets[assetKey(request.kind, request.id)] = asset;
   }
   return assets;
+}
+
+export async function catalogReadiness(set: number, version?: string) {
+  const data = await catalog(version);
+  const units = [
+    ...new Set(
+      Object.entries(data.assets)
+        .filter(([key]) => key.startsWith(`unit:${set}:`))
+        .map(([, asset]) => asset),
+    ),
+  ];
+  return {
+    source: data.source,
+    version: data.version,
+    fetchedAt: data.fetchedAt,
+    champions: units.length,
+    icons: units.filter((asset) => asset.image).length,
+    costs: units.filter((asset) => Number.isInteger(asset.cost) && asset.cost! > 0).length,
+  };
 }

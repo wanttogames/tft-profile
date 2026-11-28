@@ -10,6 +10,7 @@ import { onRequest as tierList } from '../functions/api/meta/tier-list';
 import { onRequest as trends } from '../functions/api/meta/trends';
 import { onRequest as history } from '../functions/api/meta/patch-history';
 import { onRequest as entity } from '../functions/api/meta/trends/entity';
+import { onRequest as readiness } from '../functions/api/meta/readiness';
 const env = { ...process.env, ...loadEnv('development', process.cwd(), '') };
 const routes: Record<string, typeof profile> = {
   '/api/tft/profile': profile,
@@ -17,6 +18,7 @@ const routes: Record<string, typeof profile> = {
   '/api/meta/champions': champions,
   '/api/meta/traits': traits,
   '/api/meta/summary': summary,
+  '/api/meta/readiness': readiness,
   '/api/meta/tier-list': tierList,
   '/api/meta/trends': trends,
   '/api/meta/patch-history': history,
